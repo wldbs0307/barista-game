@@ -1,0 +1,389 @@
+<title>꼬마 바리스타 카페</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<style>
+/* 레이아웃: 16:9 무대 하나. 손님 장면과 제조대 장면 두 겹을 옆으로 밀어서 바꾸고, 말풍선과 안내판은 그 위에 얹는다. */
+:root{
+  --ink:#4a2c22; --paper:#fff7ea; --coral:#ff8a73; --coral-d:#e2634d; --mint:#d5e7d6;
+  --butter:#f6c667; --leaf:#5fb57f; --night:#2e211d; --muted:#8a5a44;
+  --font:'Jua','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--night);color:var(--ink);font-family:var(--font);box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#tip{display:none;margin:0;color:var(--paper);font-size:15px;text-align:center}
+@media (orientation:portrait) and (max-width:620px){#tip{display:block}}
+
+#stage{--u:8px;position:relative;width:800px;height:450px;max-width:100%;overflow:hidden;background:var(--mint);
+  border-radius:calc(var(--u)*1.2);touch-action:none}
+.layer{position:absolute;inset:0;transition:transform .85s cubic-bezier(.7,0,.2,1)}
+.layer>svg{display:block;width:100%;height:100%}
+#Lstation{transform:translateX(100%)}
+#stage.st #Lfront{transform:translateX(-100%)}
+#stage.st #Lstation{transform:translateX(0)}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(0,5px)}60%{transform:translate(0,-2px)}}
+#station.shake{animation:shake .22s ease-out}
+
+/* 그림 공통 */
+svg .o{stroke:var(--ink);stroke-width:5;stroke-linejoin:round;stroke-linecap:round}
+svg .o4{stroke:var(--ink);stroke-width:4;stroke-linejoin:round;stroke-linecap:round}
+svg .o3{stroke:var(--ink);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+svg .nf{fill:none}
+svg .np{pointer-events:none}
+svg .hit{cursor:pointer}
+svg text{font-family:var(--font)}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-5px) rotate(1.2deg)}}
+.bob{animation:bob 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 90%}
+@keyframes blink{0%,91%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.blink{animation:blink 4.2s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.sway{animation:sway 4.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes drift{from{transform:translateX(-50px)}to{transform:translateX(70px)}}
+.cloud{animation:drift 28s ease-in-out infinite alternate}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:.85}}
+.glow{animation:glow 3.2s ease-in-out infinite}
+@keyframes pick{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.pickme{animation:pick .9s ease-in-out infinite}
+@keyframes zoned{to{stroke-dashoffset:-48}}
+.zone{fill:rgba(255,138,115,.16);stroke:var(--coral);stroke-width:5;stroke-dasharray:14 10;stroke-linecap:round;animation:zoned 1.1s linear infinite;pointer-events:none}
+.zone.near{fill:rgba(95,181,127,.32);stroke:#3c9a63}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1.1s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes dripA{to{stroke-dashoffset:-44}}
+.drip{stroke-dasharray:16 28;animation:dripA .65s linear infinite}
+@keyframes ringp{0%,100%{opacity:1}50%{opacity:.35}}
+.ringp{animation:ringp .9s ease-in-out infinite}
+
+/* 위에 얹는 안내 */
+#hud{position:absolute;left:calc(var(--u)*1.6);top:calc(var(--u)*1.4);display:flex;gap:calc(var(--u)*1);align-items:center;z-index:5}
+.pill{display:flex;align-items:center;gap:calc(var(--u)*.6);background:var(--paper);border:calc(var(--u)*.4) solid var(--ink);
+  border-radius:calc(var(--u)*3);padding:calc(var(--u)*.35) calc(var(--u)*1.5);font-size:calc(var(--u)*2.6);line-height:1.2;
+  box-shadow:0 calc(var(--u)*.45) 0 rgba(74,44,34,.25)}
+.pill svg{width:calc(var(--u)*2.7);height:calc(var(--u)*2.7);display:block}
+#order b{font-weight:400;color:var(--coral-d)}
+#snd{flex:none;width:calc(var(--u)*5.2);height:calc(var(--u)*5.2);
+  border-radius:50%;background:var(--paper);border:calc(var(--u)*.4) solid var(--ink);padding:calc(var(--u)*.9);cursor:pointer;
+  box-shadow:0 calc(var(--u)*.45) 0 rgba(74,44,34,.25)}
+#snd svg{width:100%;height:100%;display:block}
+
+#bubble{position:absolute;left:57%;right:2.5%;top:6.5%;background:#fff;border:calc(var(--u)*.45) solid var(--ink);
+  border-radius:calc(var(--u)*3);padding:calc(var(--u)*2.3) calc(var(--u)*2.2) calc(var(--u)*1.7);font-size:calc(var(--u)*3.5);
+  line-height:1.3;text-align:center;word-break:keep-all;text-wrap:balance;z-index:5;transform-origin:0% 100%;box-shadow:0 calc(var(--u)*.6) 0 rgba(74,44,34,.2);
+  transition:transform .35s cubic-bezier(.3,1.5,.5,1),opacity .2s}
+#bubble.off{transform:scale(.6);opacity:0;pointer-events:none}
+#bubble::after{content:"";position:absolute;left:calc(var(--u)*-1.55);bottom:calc(var(--u)*2.4);width:calc(var(--u)*2.4);height:calc(var(--u)*2.4);
+  background:#fff;border-left:calc(var(--u)*.45) solid var(--ink);border-bottom:calc(var(--u)*.45) solid var(--ink);transform:rotate(45deg)}
+#bname{position:absolute;left:calc(var(--u)*2);top:calc(var(--u)*-1.9);background:var(--butter);border:calc(var(--u)*.4) solid var(--ink);
+  border-radius:calc(var(--u)*1.6);padding:calc(var(--u)*.1) calc(var(--u)*1.5);font-size:calc(var(--u)*2.2)}
+.stars{display:flex;justify-content:center;gap:calc(var(--u)*.4)}
+.stars svg{width:calc(var(--u)*5);height:calc(var(--u)*5)}
+
+#panel{position:absolute;left:3%;right:3%;bottom:3.5%;min-height:19%;box-sizing:border-box;display:flex;align-items:center;
+  gap:calc(var(--u)*2);background:var(--paper);border:calc(var(--u)*.45) solid var(--ink);border-radius:calc(var(--u)*2.6);
+  padding:calc(var(--u)*1.5) calc(var(--u)*2.4) calc(var(--u)*1.1);box-shadow:0 calc(var(--u)*.6) 0 rgba(74,44,34,.3);z-index:6;
+  transition:transform .35s cubic-bezier(.3,1.3,.5,1),opacity .25s}
+#panel.off{transform:translateY(140%);opacity:0;pointer-events:none}
+#ptag{position:absolute;left:calc(var(--u)*2.2);top:calc(var(--u)*-1.9);background:var(--coral);color:#fff;
+  border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*1.6);padding:calc(var(--u)*.1) calc(var(--u)*1.5);font-size:calc(var(--u)*2.2)}
+#ptext{flex:1;min-width:0;font-size:calc(var(--u)*3.5);line-height:1.3;text-wrap:balance;word-break:keep-all}
+#btext .sm{font-size:.84em}
+#ptext small{display:block;font-size:.6em;color:var(--muted);margin-top:calc(var(--u)*.3)}
+#ptext em{font-style:normal;color:var(--coral-d)}
+#pbtn{flex:none;font:inherit;color:#fff;cursor:pointer;background:var(--coral);border:calc(var(--u)*.5) solid var(--ink);
+  box-shadow:0 calc(var(--u)*.7) 0 var(--ink);display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*.8)}
+#pbtn:active{transform:translateY(calc(var(--u)*.4));box-shadow:0 calc(var(--u)*.3) 0 var(--ink)}
+#pbtn.mic{width:calc(var(--u)*9.4);height:calc(var(--u)*9.4);border-radius:50%;padding:calc(var(--u)*1.9)}
+#pbtn.next{border-radius:calc(var(--u)*4);padding:calc(var(--u)*1.2) calc(var(--u)*3);font-size:calc(var(--u)*3.2)}
+#pbtn svg{width:100%;height:100%;display:block}
+#pbtn.next svg{width:calc(var(--u)*3);height:calc(var(--u)*3)}
+@keyframes hear{0%{box-shadow:0 0 0 0 rgba(95,181,127,.7),0 calc(var(--u)*.7) 0 var(--ink)}100%{box-shadow:0 0 0 calc(var(--u)*3.2) rgba(95,181,127,0),0 calc(var(--u)*.7) 0 var(--ink)}}
+#pbtn.listening{background:var(--leaf);animation:hear 1s ease-out infinite}
+button:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9;outline-offset:calc(var(--u)*.4)}
+
+#toast{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) scale(.5);opacity:0;background:var(--paper);
+  border:calc(var(--u)*.5) solid var(--ink);border-radius:calc(var(--u)*3);padding:calc(var(--u)*1.6) calc(var(--u)*3.6);
+  font-size:calc(var(--u)*4.4);z-index:8;pointer-events:none;white-space:nowrap;display:flex;flex-direction:column;align-items:center;
+  gap:calc(var(--u)*.3);box-shadow:0 calc(var(--u)*.8) 0 rgba(74,44,34,.3);transition:transform .3s cubic-bezier(.3,1.6,.5,1),opacity .2s}
+#toast.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+
+#title{position:absolute;inset:0;z-index:20;background:rgba(255,247,234,.93);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:calc(var(--u)*1.6);transition:opacity .4s}
+#title.off{opacity:0;pointer-events:none}
+#title svg{width:calc(var(--u)*17);height:calc(var(--u)*15)}
+#title h1{margin:0;font-size:calc(var(--u)*8);font-weight:400;letter-spacing:.02em}
+#title p{margin:0;font-size:calc(var(--u)*2.9);color:var(--muted)}
+#go{font:inherit;font-size:calc(var(--u)*4.2);color:#fff;background:var(--coral);border:calc(var(--u)*.5) solid var(--ink);
+  border-radius:calc(var(--u)*5);padding:calc(var(--u)*1.3) calc(var(--u)*6);box-shadow:0 calc(var(--u)*.8) 0 var(--ink);cursor:pointer;
+  margin-top:calc(var(--u)*1)}
+#go:active{transform:translateY(calc(var(--u)*.5));box-shadow:0 calc(var(--u)*.3) 0 var(--ink)}
+@media (prefers-reduced-motion:reduce){.bob,.sway,.cloud,.glow,.pickme{animation:none}.layer{transition:none}}
+</style>
+
+<p id="tip">휴대폰을 가로로 돌리면 크게 보여요</p>
+<div id="stage">
+
+<!-- ===================== 손님 장면 ===================== -->
+<div class="layer" id="Lfront">
+<svg id="front" viewBox="0 0 1600 900" aria-hidden="true">
+<defs>
+  <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3f2"/><stop offset="1" stop-color="#eef8f4"/></linearGradient>
+  <radialGradient id="gLamp"><stop offset="0" stop-color="#fff3b8" stop-opacity=".95"/><stop offset="1" stop-color="#fff3b8" stop-opacity="0"/></radialGradient>
+  <clipPath id="cWin"><rect x="96" y="112" width="508" height="352" rx="6"/></clipPath>
+  <pattern id="pDot" width="72" height="72" patternUnits="userSpaceOnUse"><circle cx="18" cy="18" r="4.5" fill="#f5dabb"/><circle cx="54" cy="54" r="4.5" fill="#f5dabb"/></pattern>
+</defs>
+<rect width="1600" height="900" fill="#fbe9d3"/>
+<rect width="1600" height="620" fill="url(#pDot)"/>
+<rect width="1600" height="44" fill="#f1c9a0"/><path d="M0 44H1600" class="o3 nf"/>
+
+<!-- 창문 -->
+<rect x="74" y="90" width="552" height="396" rx="16" fill="#7fb8a4" class="o"/>
+<rect x="96" y="112" width="508" height="352" rx="6" fill="url(#gSky)" class="o4"/>
+<g clip-path="url(#cWin)">
+  <g class="cloud"><ellipse cx="190" cy="172" rx="54" ry="20" fill="#fff"/><ellipse cx="226" cy="156" rx="34" ry="21" fill="#fff"/><ellipse cx="158" cy="162" rx="26" ry="15" fill="#fff"/></g>
+  <g class="cloud" style="animation-duration:36s"><ellipse cx="470" cy="206" rx="46" ry="17" fill="#fff"/><ellipse cx="500" cy="194" rx="28" ry="16" fill="#fff"/></g>
+  <rect x="96" y="292" width="122" height="180" fill="#f6c9b8"/><path d="M88 294l69-46 69 46z" fill="#e79a86"/>
+  <rect x="218" y="238" width="150" height="234" fill="#f9e2ae"/><rect x="210" y="226" width="166" height="16" rx="5" fill="#e8c476"/>
+  <rect x="368" y="302" width="110" height="170" fill="#cfe0f3"/><path d="M360 304l63-38 63 38z" fill="#9fbbd8"/>
+  <rect x="478" y="264" width="130" height="208" fill="#f4b9a7"/><rect x="470" y="252" width="146" height="16" rx="5" fill="#dd8f7b"/>
+  <g fill="#fff8e8"><rect x="116" y="314" width="30" height="38" rx="5"/><rect x="168" y="314" width="30" height="38" rx="5"/><rect x="116" y="374" width="30" height="38" rx="5"/><rect x="168" y="374" width="30" height="38" rx="5"/>
+    <rect x="242" y="264" width="36" height="42" rx="5"/><rect x="306" y="264" width="36" height="42" rx="5"/><rect x="242" y="326" width="36" height="42" rx="5"/><rect x="306" y="326" width="36" height="42" rx="5"/>
+    <rect x="388" y="326" width="28" height="36" rx="5"/><rect x="432" y="326" width="28" height="36" rx="5"/>
+    <rect x="500" y="290" width="34" height="42" rx="5"/><rect x="554" y="290" width="34" height="42" rx="5"/><rect x="500" y="352" width="34" height="42" rx="5"/><rect x="554" y="352" width="34" height="42" rx="5"/></g>
+  <path d="M228 396h130l12 28H216z" fill="#ff8a73"/><path d="M254 396l-6 28h22l4-28zM306 396l-2 28h22l-2-28z" fill="#fff7ea"/>
+  <rect x="408" y="420" width="10" height="40" fill="#a66d3e"/><circle cx="412" cy="408" r="34" fill="#8fcf9a"/><circle cx="440" cy="424" r="24" fill="#7cc48b"/><circle cx="388" cy="424" r="22" fill="#7cc48b"/>
+  <rect x="96" y="444" width="508" height="30" fill="#9bd3a0"/>
+  <path d="M150 112l-62 352h54l62-352zM262 112l-62 352h22l62-352z" fill="#fff" opacity=".22"/>
+</g>
+<rect x="342" y="112" width="16" height="352" fill="#7fb8a4" class="o3"/>
+<rect x="96" y="280" width="508" height="16" fill="#7fb8a4" class="o3"/>
+<rect x="56" y="478" width="588" height="26" rx="9" fill="#6aa692" class="o"/>
+<!-- 창틀 위 화분 -->
+<g transform="translate(150 478)"><g class="sway"><path d="M0 -34Q-34 -52 -30 -88Q-6 -70 0 -34Z" fill="#6fbf8b" class="o4"/><path d="M0 -34Q34 -56 28 -94Q4 -72 0 -34Z" fill="#8fd3a3" class="o4"/></g><path d="M-26 -38H26L20 0H-20Z" fill="#e0764f" class="o4"/><rect x="-30" y="-46" width="60" height="12" rx="5" fill="#ee8d68" class="o4"/></g>
+
+<!-- 조명 -->
+<g><path d="M250 0V98" class="o3 nf"/><circle cx="250" cy="156" r="96" fill="url(#gLamp)" class="glow"/><path d="M194 152Q198 96 250 96Q302 96 306 152Z" fill="#ff8a73" class="o"/><path d="M210 140Q214 108 242 104" stroke="#fff" stroke-width="7" opacity=".5" fill="none" stroke-linecap="round"/><ellipse cx="250" cy="152" rx="56" ry="9" fill="#ffd9a8" class="o3"/><circle cx="250" cy="160" r="10" fill="#fff6c9" class="o3"/></g>
+<g><path d="M520 0V78" class="o3 nf"/><circle cx="520" cy="136" r="96" fill="url(#gLamp)" class="glow" style="animation-delay:-1.4s"/><path d="M464 132Q468 76 520 76Q572 76 576 132Z" fill="#7fb8d8" class="o"/><path d="M480 120Q484 88 512 84" stroke="#fff" stroke-width="7" opacity=".5" fill="none" stroke-linecap="round"/><ellipse cx="520" cy="132" rx="56" ry="9" fill="#ffd9a8" class="o3"/><circle cx="520" cy="140" r="10" fill="#fff6c9" class="o3"/></g>
+
+<!-- 메뉴판 -->
+<rect x="1084" y="298" width="340" height="262" rx="16" fill="#b9794d" class="o"/>
+<rect x="1104" y="318" width="300" height="222" rx="6" fill="#3f5a4f" class="o4"/>
+<text x="1254" y="368" text-anchor="middle" font-size="40" fill="#fff7ea" letter-spacing="8">MENU</text>
+<path d="M1138 386H1370" stroke="#fff7ea" stroke-width="3" stroke-dasharray="2 11" stroke-linecap="round"/>
+<g transform="translate(-52 0)">
+<path d="M1184 430h36q0 26-18 26t-18-26zM1220 434q13 0 11 10t-13 8" fill="none" stroke="#fff7ea" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1246" y="456" font-size="34" fill="#fff7ea">에스프레소</text>
+<path d="M1182 480h40v30q0 8-8 8h-24q-8 0-8-8zM1222 488q15 0 13 12t-13 10M1194 472q-5-6 0-12M1208 472q-5-6 0-12" fill="none" stroke="#ffd9a8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1246" y="516" font-size="34" fill="#ffd9a8">카푸치노</text>
+</g>
+
+<g id="custBody"></g>
+
+<!-- 카운터 -->
+<rect y="604" width="1600" height="74" fill="#f3cb9c"/>
+<rect y="604" width="1600" height="12" fill="#fbe3c2"/>
+<rect y="678" width="1600" height="22" fill="#dba672"/>
+<rect y="700" width="1600" height="200" fill="#c98f5c"/>
+<path d="M0 604H1600M0 678H1600M0 700H1600" class="o nf"/>
+<g fill="#bf8350" stroke="#a66d3e" stroke-width="4"><rect x="40" y="730" width="480" height="200" rx="14"/><rect x="560" y="730" width="480" height="200" rx="14"/><rect x="1080" y="730" width="480" height="200" rx="14"/></g>
+<rect y="702" width="1600" height="14" fill="#4a2c22" opacity=".12"/>
+
+<!-- 계산대 -->
+<g transform="translate(200 0)">
+  <ellipse cx="0" cy="640" rx="96" ry="12" fill="#4a2c22" opacity=".15"/>
+  <path d="M-20 634L-12 560H12L20 634Z" fill="#cfd8dd" class="o4"/>
+  <ellipse cx="0" cy="634" rx="64" ry="13" fill="#e6ecef" class="o4"/>
+  <g transform="rotate(-6 0 520)"><rect x="-100" y="450" width="200" height="132" rx="16" fill="#fffaf2" class="o"/><rect x="-84" y="466" width="168" height="100" rx="7" fill="#bfe3f2" class="o3"/>
+    <path d="M-62 494h56M-62 516h92M-62 538h40" stroke="#fff" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="498" r="14" fill="#ff8a73"/></g>
+</g>
+<!-- 팁 병 -->
+<g transform="translate(404 0)">
+  <ellipse cx="0" cy="644" rx="48" ry="8" fill="#4a2c22" opacity=".15"/>
+  <path d="M-36 574Q-46 608 -36 640Q0 650 36 640Q46 608 36 574Z" fill="#fff" fill-opacity=".6" class="o4"/>
+  <ellipse cx="-10" cy="632" rx="13" ry="5" fill="#f6c667" class="o3"/><ellipse cx="12" cy="626" rx="13" ry="5" fill="#f6c667" class="o3"/><ellipse cx="-2" cy="620" rx="13" ry="5" fill="#ffd98a" class="o3"/>
+  <ellipse cx="0" cy="574" rx="36" ry="9" fill="#fff" fill-opacity=".75" class="o4"/>
+  <path d="M0 606c-4-9-17-4-13 6c3 6 10 10 13 13c3-3 10-7 13-13c4-10-9-15-13-6z" fill="#ff8a73" transform="translate(0 -6)"/>
+</g>
+<!-- 꽃병 -->
+<g transform="translate(1506 0)">
+  <ellipse cx="0" cy="646" rx="50" ry="8" fill="#4a2c22" opacity=".15"/>
+  <g class="sway">
+    <path d="M0 566Q-10 506 -36 462M0 566Q4 496 8 446M0 566Q18 512 46 476" stroke="#5fa873" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <g transform="translate(-36 458)"><g fill="#ff9aa8" class="o3"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/></g><circle r="9" fill="#f6c667" class="o3"/></g>
+    <g transform="translate(8 440)"><g fill="#fff" class="o3"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/></g><circle r="9" fill="#f6c667" class="o3"/></g>
+    <g transform="translate(48 472)"><g fill="#ffb46b" class="o3"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/></g><circle r="9" fill="#fff7ea" class="o3"/></g>
+  </g>
+  <path d="M-34 560Q-46 612 -26 644H26Q46 612 34 560Z" fill="#8ec5e0" class="o"/>
+  <path d="M-38 586Q0 596 38 586M-36 612Q0 622 36 612" stroke="#fff" stroke-width="6" fill="none" opacity=".8"/>
+  <ellipse cx="0" cy="560" rx="34" ry="8" fill="#b9dff0" class="o4"/>
+</g>
+<!-- 종 -->
+<g transform="translate(548 642)"><ellipse cx="0" cy="4" rx="44" ry="7" fill="#4a2c22" opacity=".15"/><rect x="-38" y="-8" width="76" height="12" rx="6" fill="#b07748" class="o4"/><path d="M-30 -8Q-30 -44 0 -44Q30 -44 30 -8Z" fill="#f6c667" class="o4"/><path d="M-20 -16Q-20 -34 -4 -37" stroke="#fff" stroke-width="5" opacity=".6" fill="none" stroke-linecap="round"/><circle cx="0" cy="-48" r="7" fill="#e5a94a" class="o3"/></g>
+
+<g id="custPaws"></g>
+<g id="servedL"></g>
+<g id="fxF"></g>
+</svg>
+</div>
+
+<!-- ===================== 제조대 장면 ===================== -->
+<div class="layer" id="Lstation">
+<svg id="station" viewBox="0 0 1600 900" aria-hidden="true">
+<defs>
+  <linearGradient id="gChrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafb"/><stop offset=".5" stop-color="#d3dce1"/><stop offset="1" stop-color="#a7b5be"/></linearGradient>
+  <linearGradient id="gChromeH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#aebbc4"/><stop offset=".3" stop-color="#f5f8f9"/><stop offset=".65" stop-color="#cdd7dd"/><stop offset="1" stop-color="#98a7b1"/></linearGradient>
+  <pattern id="pTile" width="104" height="116" patternUnits="userSpaceOnUse"><rect width="104" height="116" fill="#edf5ea"/><path d="M0 1.5H104M0 59.5H104M1.5 0V58M53.5 58V116" stroke="#c9ddc8" stroke-width="3" fill="none"/></pattern>
+  <pattern id="pWood" width="260" height="226" patternUnits="userSpaceOnUse"><path d="M1.5 0V226" stroke="#b07748" stroke-width="3"/><path d="M40 40q30 8 60 0M150 120q36 10 70 0M60 180q24 6 50 0" stroke="#b9804f" stroke-width="3" fill="none" stroke-linecap="round"/></pattern>
+  <clipPath id="clPit"><ellipse cx="0" cy="-126" rx="47" ry="10"/></clipPath>
+</defs>
+
+<!-- 벽과 조리대 -->
+<rect width="1600" height="900" fill="#d5e7d6"/>
+<rect y="318" width="1600" height="240" fill="url(#pTile)"/>
+<rect y="302" width="1600" height="18" fill="#fff7ea" class="o3"/>
+<rect y="544" width="1600" height="14" fill="#4a2c22" opacity=".1"/>
+<rect y="556" width="1600" height="98" fill="#f3cb9c"/>
+<rect y="556" width="1600" height="10" fill="#fbe3c2"/>
+<rect y="654" width="1600" height="22" fill="#dba672"/>
+<rect y="676" width="1600" height="224" fill="#c98f5c"/>
+<rect y="676" width="1600" height="224" fill="url(#pWood)" opacity=".6"/>
+<path d="M0 556H1600M0 654H1600M0 676H1600" class="o nf"/>
+<rect y="678" width="1600" height="14" fill="#4a2c22" opacity=".12"/>
+
+<!-- 벽 장식 -->
+<g transform="translate(414 212)"><path d="M0 -100L-20 -80M0 -100L20 -80" class="o3 nf"/><circle cy="-100" r="5" fill="#4a2c22"/>
+  <rect x="-66" y="-80" width="132" height="160" rx="12" fill="#c98f5c" class="o"/><rect x="-50" y="-64" width="100" height="128" rx="4" fill="#fff7ea" class="o3"/>
+  <path d="M-24 2h48q0 36-24 36t-24-36z" fill="#ff8a73" class="o3"/><path d="M24 8q17 0 15 13t-19 10" class="o3 nf"/><path d="M-10 -16q-8-10 0-20M8 -16q-8-10 0-20" class="o3 nf"/><path d="M-32 46h64" class="o3 nf"/></g>
+<g>
+  <rect x="1176" y="258" width="396" height="18" rx="7" fill="#c98f5c" class="o"/>
+  <path d="M1212 276v24l-22-24zM1538 276v24l22-24z" fill="#b07748" class="o3"/>
+  <g transform="translate(1240 258)"><rect x="-34" y="-84" width="68" height="84" rx="13" fill="#fff" fill-opacity=".6" class="o4"/><path d="M-32 -52h64v40q0 10-10 10h-44q-10 0-10-10z" fill="#7b4a30"/><path d="M-22 -72v50" stroke="#fff" stroke-width="7" opacity=".6" stroke-linecap="round"/><rect x="-38" y="-98" width="76" height="18" rx="8" fill="#ff8a73" class="o4"/></g>
+  <g transform="translate(1346 258)"><path d="M-40 0L-36 -98Q0 -110 36 -98L40 0Z" fill="#e3b98a" class="o4"/><path d="M-36 -98Q0 -86 36 -98" class="o3 nf"/><circle cx="0" cy="-44" r="23" fill="#fff7ea" class="o3"/><ellipse cx="0" cy="-44" rx="9" ry="14" fill="#7b4a30" transform="rotate(25 0 -44)"/><path d="M-4 -56Q4 -44 -3 -32" stroke="#c98f5c" stroke-width="2.5" fill="none" transform="rotate(25 0 -44)"/></g>
+  <g transform="translate(1486 258)"><g class="sway"><path d="M0 -40Q-52 -72 -46 -124Q-8 -98 0 -40Z" fill="#6fbf8b" class="o4"/><path d="M0 -40Q52 -78 42 -132Q6 -102 0 -40Z" fill="#8fd3a3" class="o4"/><path d="M0 -40Q-8 -102 2 -146Q24 -98 0 -40Z" fill="#5aa878" class="o4"/></g><path d="M-34 -46H34L26 0H-26Z" fill="#e0764f" class="o4"/><rect x="-38" y="-56" width="76" height="14" rx="6" fill="#ee8d68" class="o4"/></g>
+</g>
+
+<!-- 그라인더 -->
+<g id="grinder" transform="translate(205 0)">
+  <ellipse cx="0" cy="616" rx="124" ry="12" fill="#4a2c22" opacity=".16"/>
+  <rect x="-64" y="420" width="128" height="176" fill="#6f8496" class="o"/>
+  <rect x="-50" y="444" width="100" height="146" rx="6" fill="#56697a"/>
+  <rect x="-104" y="584" width="208" height="32" rx="12" fill="#5d7182" class="o"/>
+  <rect x="-90" y="591" width="180" height="6" rx="3" fill="#fff" opacity=".25"/>
+  <path d="M-62 478h18v13h-18zM44 478h18v13h-18z" fill="#c9d3d9" class="o3"/>
+  <rect x="-96" y="286" width="192" height="152" rx="28" fill="#8fa6b8" class="o"/>
+  <rect x="62" y="304" width="20" height="116" rx="10" fill="#7a92a5"/>
+  <path d="M-78 312q-7 50 0 100" stroke="#fff" stroke-width="9" opacity=".4" fill="none" stroke-linecap="round"/>
+  <path d="M-24 436h48l-8 22h-32z" fill="#5d7182" class="o4"/>
+  <circle cx="0" cy="362" r="47" fill="#fff7ea" class="o4"/>
+  <circle id="gRing" cx="0" cy="362" r="47" fill="none" stroke="#ff8a73" stroke-width="10" stroke-linecap="round" stroke-dasharray="295.3" stroke-dashoffset="295.3" transform="rotate(-90 0 362)"/>
+  <g id="gBtn" class="hit"><circle cx="0" cy="362" r="35" fill="#7fd08a" class="o4"/><ellipse cx="-11" cy="349" rx="13" ry="7" fill="#fff" opacity=".6" transform="rotate(-25 -11 349)"/>
+    <path d="M-9 356a13 13 0 1 0 18 0M0 348v12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></g>
+  <path d="M-84 150H84L58 288H-58Z" fill="#fff" fill-opacity=".5"/>
+  <g id="beans"><path d="M-77 188H77L58 288H-58Z" fill="#7b4a30"/>
+    <g fill="#5b3320"><g transform="translate(-48 208) rotate(20)"><ellipse rx="12" ry="8"/></g><g transform="translate(-14 202) rotate(-30)"><ellipse rx="12" ry="8"/></g><g transform="translate(22 210) rotate(10)"><ellipse rx="12" ry="8"/></g><g transform="translate(54 204) rotate(-15)"><ellipse rx="12" ry="8"/></g>
+      <g transform="translate(-54 236) rotate(-40)"><ellipse rx="12" ry="8"/></g><g transform="translate(-22 238) rotate(15)"><ellipse rx="12" ry="8"/></g><g transform="translate(12 240) rotate(-20)"><ellipse rx="12" ry="8"/></g><g transform="translate(46 236) rotate(35)"><ellipse rx="12" ry="8"/></g>
+      <g transform="translate(-38 266) rotate(10)"><ellipse rx="12" ry="8"/></g><g transform="translate(-4 270) rotate(-25)"><ellipse rx="12" ry="8"/></g><g transform="translate(30 266) rotate(20)"><ellipse rx="12" ry="8"/></g></g>
+    <g stroke="#a67450" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M-9 0Q0 -4 9 0" transform="translate(-48 208) rotate(20)"/><path d="M-9 0Q0 -4 9 0" transform="translate(-14 202) rotate(-30)"/><path d="M-9 0Q0 -4 9 0" transform="translate(22 210) rotate(10)"/><path d="M-9 0Q0 -4 9 0" transform="translate(54 204) rotate(-15)"/>
+      <path d="M-9 0Q0 -4 9 0" transform="translate(-54 236) rotate(-40)"/><path d="M-9 0Q0 -4 9 0" transform="translate(-22 238) rotate(15)"/><path d="M-9 0Q0 -4 9 0" transform="translate(12 240) rotate(-20)"/><path d="M-9 0Q0 -4 9 0" transform="translate(46 236) rotate(35)"/>
+      <path d="M-9 0Q0 -4 9 0" transform="translate(-38 266) rotate(10)"/><path d="M-9 0Q0 -4 9 0" transform="translate(-4 270) rotate(-25)"/><path d="M-9 0Q0 -4 9 0" transform="translate(30 266) rotate(20)"/></g>
+  </g>
+  <path d="M-84 150H84L58 288H-58Z" class="o nf"/>
+  <path d="M-66 166l13 104" stroke="#fff" stroke-width="11" opacity=".55" stroke-linecap="round"/>
+  <rect x="-92" y="126" width="184" height="30" rx="13" fill="#5d7182" class="o"/>
+  <rect x="-24" y="110" width="48" height="20" rx="10" fill="#5d7182" class="o"/>
+</g>
+
+<!-- 탬핑 매트 -->
+<ellipse cx="414" cy="618" rx="110" ry="9" fill="#4a2c22" opacity=".14"/>
+<rect x="316" y="594" width="196" height="22" rx="9" fill="#4d4543" class="o"/>
+<rect x="330" y="599" width="168" height="5" rx="2.5" fill="#fff" opacity=".18"/>
+
+<!-- 에스프레소 머신 -->
+<g id="machine">
+  <ellipse cx="780" cy="634" rx="296" ry="14" fill="#4a2c22" opacity=".16"/>
+  <path d="M548 164H1012Q1040 164 1040 192V612Q1040 630 1022 630H538Q520 630 520 612V192Q520 164 548 164Z" fill="#f6c667" class="o"/>
+  <path d="M1004 172Q1030 174 1030 198V608Q1030 622 1016 622H1000Z" fill="#e7aa49"/>
+  <path d="M536 204V590" stroke="#fde7b0" stroke-width="9" stroke-linecap="round"/>
+  <rect x="532" y="146" width="496" height="24" rx="10" fill="url(#gChrome)" class="o4"/>
+  <rect x="544" y="186" width="472" height="100" rx="22" fill="#fff6e3" class="o4"/>
+  <!-- 시간 표시 -->
+  <rect x="562" y="198" width="346" height="76" rx="14" fill="#2c2626" class="o4"/>
+  <text id="tDig" x="632" y="254" text-anchor="middle" font-size="50" fill="#b8ffd2">0초</text>
+  <rect x="704" y="214" width="190" height="30" rx="8" fill="#4c4444"/>
+  <rect x="799" y="214" width="47.5" height="30" fill="#52d98a"/>
+  <path d="M846.5 214H886Q894 214 894 222V236Q894 244 886 244H846.5Z" fill="#ff7a6b"/>
+  <rect id="tMark" x="701" y="208" width="7" height="42" rx="3.5" fill="#fff" stroke="#2c2626" stroke-width="2"/>
+  <text x="799" y="266" text-anchor="middle" font-size="17" fill="#b8ffd2">20</text><text x="846.5" y="266" text-anchor="middle" font-size="17" fill="#b8ffd2">30</text>
+  <!-- 추출 버튼 -->
+  <g id="bBtn" class="hit"><circle cx="962" cy="236" r="38" fill="url(#gChrome)" class="o4"/><circle id="bFace" cx="962" cy="236" r="28" fill="#7fd08a" class="o3"/>
+    <path id="bPlay" d="M954 223l22 13-22 13z" fill="#fff" class="o3"/><rect id="bStop" x="950" y="224" width="24" height="24" rx="5" fill="#fff" class="o3" style="display:none"/></g>
+  <!-- 추출 칸 -->
+  <rect x="560" y="302" width="440" height="290" rx="10" fill="#ebe4d8" class="o4"/>
+  <path d="M606 312V584M650 312V584" stroke="#fff" stroke-width="16" opacity=".5"/>
+  <rect x="562" y="304" width="436" height="24" fill="#4a2c22" opacity=".13"/>
+  <rect x="714" y="294" width="132" height="28" rx="7" fill="url(#gChrome)" class="o4"/>
+  <!-- 압력계 -->
+  <circle cx="622" cy="386" r="36" fill="url(#gChrome)" class="o4"/><circle cx="622" cy="386" r="27" fill="#fff" class="o3"/>
+  <path d="M604 400A22 22 0 1 1 640 400" fill="none" stroke="#7fd08a" stroke-width="5" stroke-linecap="round"/>
+  <path id="needle" d="M622 386L622 366" class="o3 nf" transform="rotate(-120 622 386)"/><circle cx="622" cy="386" r="5" fill="#4a2c22"/>
+  <!-- 물받이 -->
+  <rect x="550" y="586" width="460" height="30" rx="9" fill="url(#gChrome)" class="o4"/>
+  <path d="M586 597v9M618 597v9M650 597v9M682 597v9M714 597v9M746 597v9M778 597v9M810 597v9M842 597v9M874 597v9M906 597v9M938 597v9M970 597v9" stroke="#7d8a93" stroke-width="6" stroke-linecap="round"/>
+  <ellipse id="puddle" cx="780" cy="589" rx="0" ry="0" fill="#5a3220" class="o3" style="display:none"/>
+  <g id="runoff" style="display:none"><path class="drip" d="M692 592V640" stroke="#5a3220" stroke-width="7" fill="none" stroke-linecap="round"/><path class="drip" d="M772 594V644" stroke="#5a3220" stroke-width="7" fill="none" stroke-linecap="round" style="animation-delay:-.25s"/><path class="drip" d="M856 592V640" stroke="#5a3220" stroke-width="7" fill="none" stroke-linecap="round" style="animation-delay:-.45s"/>
+    <ellipse id="floorPud" cx="776" cy="644" rx="0" ry="0" fill="#5a3220" class="o3"/></g>
+</g>
+
+<!-- 잔 받침 -->
+<g id="saucer"><ellipse cx="1305" cy="612" rx="92" ry="10" fill="#4a2c22" opacity=".14"/><ellipse cx="1305" cy="606" rx="80" ry="15" fill="#fffaf2" class="o4"/><ellipse cx="1305" cy="604" rx="46" ry="8" fill="#efe4d6"/></g>
+
+<g id="Lcups"></g>
+<g id="Lstream" class="np"><path id="st1" fill="none" stroke-linecap="round"/><path id="st2" fill="none" stroke-linecap="round"/></g>
+<g id="pf" class="hit"></g>
+<rect id="collar" x="720" y="316" width="120" height="26" rx="10" fill="url(#gChrome)" class="o4 np"/>
+<g id="rimFront" class="np" style="display:none"><path d="M-50 0A50 13 0 0 0 50 0L40 0A40 9 0 0 1 -40 0Z" fill="#dfe6ea" class="o3"/></g>
+<g id="tamp" class="hit"></g>
+<g id="pitB"></g>
+<g id="wand">
+  <rect x="1036" y="246" width="48" height="36" rx="10" fill="url(#gChrome)" class="o4"/>
+  <path d="M1078 272C1100 274 1106 296 1110 316L1132 468" fill="none" stroke="#4a2c22" stroke-width="19" stroke-linecap="round"/>
+  <path d="M1078 272C1100 274 1106 296 1110 316L1132 468" fill="none" stroke="#c7d2d8" stroke-width="11" stroke-linecap="round"/>
+  <path d="M1084 270C1098 274 1102 292 1106 316L1126 452" fill="none" stroke="#fff" stroke-width="3" opacity=".8" stroke-linecap="round"/>
+  <path d="M1113 336L1122 400" fill="none" stroke="#4a2c22" stroke-width="23" stroke-linecap="round"/>
+  <path d="M1113 336L1122 400" fill="none" stroke="#3b3b40" stroke-width="15" stroke-linecap="round"/>
+  <path d="M1130 456L1133 474" fill="none" stroke="#4a2c22" stroke-width="17" stroke-linecap="round"/>
+  <path d="M1130 456L1133 474" fill="none" stroke="#8d9aa3" stroke-width="9" stroke-linecap="round"/>
+  <g id="resid" style="display:none"><circle cx="1126" cy="436" r="7" fill="#fff" class="o3"/><circle cx="1136" cy="456" r="6" fill="#fff" class="o3"/><circle cx="1124" cy="462" r="5" fill="#fff" class="o3"/></g>
+  <g id="knob"><circle cx="1060" cy="264" r="26" fill="#ff8a73" class="o4"/><ellipse cx="1051" cy="254" rx="9" ry="5" fill="#fff" opacity=".6" transform="rotate(-30 1051 254)"/><path d="M1060 244V258" stroke="#fff" stroke-width="6" stroke-linecap="round"/></g>
+</g>
+<g id="pitF" class="hit"></g>
+<g id="cloth" class="hit"></g>
+<g id="fx" class="np"></g>
+<ellipse id="zone" class="zone" cx="0" cy="0" rx="60" ry="60" style="display:none"/>
+<path id="wandHit" class="hit" d="M1026 226H1100L1150 420H1090L1070 300H1026Z" fill="#fff" fill-opacity="0" style="display:none"/>
+<g id="hand" class="np" style="display:none"><g transform="rotate(-20) translate(0 4)"><path d="M0 0C9 0 13 7 13 14V44C30 40 46 50 46 66V84C46 104 30 116 8 116C-12 116 -26 106 -30 88L-37 62C-39 52 -28 46 -20 55L-13 64V14C-13 7 -9 0 0 0Z" fill="#fffaf2" class="o4"/><path d="M13 48V62M28 50V64" class="o3 nf" opacity=".5"/></g></g>
+</svg>
+</div>
+
+<!-- ===================== 안내 ===================== -->
+<div id="hud"><div class="pill" id="score"></div><button id="snd" type="button" aria-label="소리 켜고 끄기"></button><div class="pill" id="order" hidden></div></div>
+<div id="bubble" class="off"><span id="bname"></span><div id="btext"></div></div>
+<div id="panel" class="off"><span id="ptag"></span><div id="ptext"></div><button id="pbtn" type="button"></button></div>
+<div id="toast"></div>
+
+<div id="title">
+  <svg viewBox="0 0 170 150" aria-hidden="true"><ellipse cx="80" cy="138" rx="66" ry="9" fill="#4a2c22" opacity=".14"/>
+    <path d="M56 26q-12-12 0-24M82 26q-12-12 0-24M108 26q-12-12 0-24" fill="none" stroke="#4a2c22" stroke-width="5" stroke-linecap="round"/>
+    <path d="M124 60Q164 56 160 92Q156 118 118 114" fill="none" stroke="#4a2c22" stroke-width="20" stroke-linecap="round"/>
+    <path d="M124 60Q164 56 160 92Q156 118 118 114" fill="none" stroke="#fffaf2" stroke-width="10" stroke-linecap="round"/>
+    <path d="M24 44H136L128 118Q126 134 108 134H52Q34 134 32 118Z" fill="#fffaf2" stroke="#4a2c22" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M80 110c-8-17-34-9-26 12c6 12 20 20 26 26c6-6 20-14 26-26c8-21-18-29-26-12z" fill="#ff8a73" transform="translate(0 -28) scale(1)"/>
+    <ellipse cx="80" cy="44" rx="56" ry="11" fill="#c58a4e" stroke="#4a2c22" stroke-width="5"/></svg>
+  <h1>꼬마 바리스타 카페</h1>
+  <p>바리스타 2급 · 에스프레소와 카푸치노</p>
+  <button id="go" type="button">시작하기</button>
+  <p>소리가 나고, 마이크로 말해요</p>
+</div>
+</div>
