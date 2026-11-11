@@ -466,14 +466,22 @@ function sim(a,b){a=jamo(a);b=jamo(b);if(!a.length)return 0;const d=Array.from({
 const Speech={dict:null,dictBad:false,srBad:false,log:[]};window.__speechLog=Speech.log;
 try{if(window.claude&&window.claude.use)window.claude.use('dictation').then(d=>{Speech.dict=d||null},()=>{})}catch(e){}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const inApp=/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent);
+function whyText(){const w=Speech.why||(SR?'':'nosr');
+  if(w==='denied')return '마이크가 막혀 있어요. 주소창 왼쪽 아이콘 → 권한 → 마이크 허용 후 새로고침해요.';
+  if(w==='nomic')return '마이크를 찾지 못했어요. 다른 앱이 마이크를 쓰고 있는지 확인해요.';
+  if(w==='service')return '이 브라우저에서는 음성인식을 쓸 수 없어요. Chrome으로 열어요.';
+  if(inApp)return '카카오톡 같은 앱 안에서 열렸어요. 메뉴(⋮)에서 다른 브라우저(Chrome)로 열어요.';
+  if(w==='nosr')return '이 브라우저는 음성인식이 안 돼요. Chrome으로 열어요.';
+  return '지금은 마이크를 쓸 수 없어요.'}
 const canListen=()=>!!((Speech.dict&&!Speech.dictBad)||(SR&&!Speech.srBad));
-function listenSR(){return new Promise(res=>{let done=false,to=0,audio=false;const fin=v=>{if(!done){done=true;clearTimeout(to);res(v)}};let r;try{r=new SR()}catch(e){Speech.srBad=true;return res(null)}
-  /* 마이크가 한 번도 열리지 않은 채 끝나면 쓸 수 없는 환경으로 본다 */
-  const quiet=hard=>{if(audio)return fin([]);Speech.srMiss=(Speech.srMiss||0)+1;if(hard||Speech.srMiss>=2){Speech.srBad=true;fin(null)}else fin([])};
-  r.lang='ko-KR';r.maxAlternatives=5;r.interimResults=false;r.onaudiostart=()=>{audio=true;Speech.srMiss=0};
-  r.onresult=e=>{audio=true;const o=[];for(let i=0;i<e.results[0].length;i++)o.push(e.results[0][i].transcript);fin(o)};
-  r.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){Speech.srBad=true;fin(null)}else quiet(false)};
-  r.onend=()=>quiet(false);to=setTimeout(()=>{try{r.stop()}catch(e){}quiet(true)},9000);
+function listenSR(){return new Promise(res=>{let done=false,to=0;const fin=v=>{if(!done){done=true;clearTimeout(to);res(v)}};let r;
+  const bad=w=>{Speech.srBad=true;Speech.why=w;fin(null)};
+  try{r=new SR()}catch(e){return bad('nosr')}
+  r.lang='ko-KR';r.maxAlternatives=5;r.interimResults=false;
+  r.onresult=e=>{const o=[];for(let i=0;i<e.results[0].length;i++)o.push(e.results[0][i].transcript);fin(o)};
+  r.onerror=e=>{Speech.lastErr=e.error;if(e.error==='not-allowed')bad('denied');else if(e.error==='service-not-allowed')bad('service');else if(e.error==='audio-capture')bad('nomic');else fin([])};
+  r.onend=()=>fin([]);to=setTimeout(()=>{try{r.stop()}catch(e){}fin([])},20000);
   try{r.start()}catch(e){Speech.srBad=true;fin(null)}})}
 function listenDict(){const d=Speech.dict;return new Promise(res=>{let fin_='',part='',done=false,to=0,endT=0;const offs=[];
   const out=()=>[fin_.trim(),part.trim()].filter(Boolean);
@@ -492,7 +500,7 @@ function tts(text,pitch=1){return new Promise(res=>{let done=false;const fin=()=
 async function sayLine(target){
   let tries=0;Panel.show('따라 말해요',esc(target),'mic');
   for(;;){
-    if(!canListen()){Panel.show('소리 내어 말해요',esc(target)+'<small>지금은 마이크를 쓸 수 없어요. 말한 다음 버튼을 눌러요.</small>','next','말했어요');await Panel.click();return 1}
+    if(!canListen()){Panel.show('소리 내어 말해요',esc(target)+'<small>'+whyText()+'</small>','next','말했어요');await Panel.click();return 1}
     const heard=await new Promise(res=>{Panel.btn.onclick=()=>{Panel.btn.onclick=null;Panel.btn.classList.add('listening');Panel.tag.textContent='듣고 있어요';SFX.pick();res(listenNow())}});
     Panel.btn.classList.remove('listening');
     if(heard===null){Panel.show('따라 말해요',esc(target),'mic');continue}
