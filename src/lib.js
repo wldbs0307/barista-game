@@ -167,13 +167,13 @@ const svgS=$('#station');
 const spt=(e,s=svgS)=>new DOMPoint(e.clientX,e.clientY).matrixTransform(s.getScreenCTM().inverse());
 function tap(el){return new Promise(res=>{const h=()=>{el.removeEventListener('click',h);res()};el.addEventListener('click',h)})}
 /* o.zones:[{x,y,r}] 중 하나에 놓으면 그 번호를 돌려준다. o.accept(i)가 거짓이면 o.reject(i) 후 되돌아감. o.tap(): 거의 안 움직이고 뗐을 때 */
-function drag(spr,el,o){return new Promise(res=>{const zones=o.zones||[o.zone],sv=o.svg||svgS,B=o.bounds||[30,40,1570,870];let home={x:spr.x,y:spr.y,r:spr.r};let g=null,ended=false;
+function drag(spr,el,o){return new Promise(res=>{const zones=o.zones||[o.zone],sv=o.svg||svgS,B=o.bounds||[30,40,1570,870];let home={x:spr.x,y:spr.y,r:spr.r},base=[spr.sx,spr.sy];let g=null,ended=false;
   const anc=()=>o.anchor?o.anchor():spr,hit=()=>{const a=anc();for(let i=0;i<zones.length;i++){const z=zones[i];if(z&&!z.used&&Math.hypot(a.x-z.x,a.y-z.y)<z.r)return i}return -1};
-  const dn=e=>{if(ended||(o.alive&&!o.alive()))return;e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e,sv);home={x:spr.x,y:spr.y,r:spr.r};g={dx:p.x-spr.x,dy:p.y-spr.y,lx:p.x,sx:p.x,sy:p.y,moved:false};Guide.pause();SFX.pick();spr.to({sx:1.07,sy:1.07},130,E.out)};
+  const dn=e=>{if(ended||(o.alive&&!o.alive()))return;e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e,sv);home={x:spr.x,y:spr.y,r:spr.r};base=[spr.sx,spr.sy];g={dx:p.x-spr.x,dy:p.y-spr.y,lx:p.x,sx:p.x,sy:p.y,moved:false};Guide.pause();SFX.pick();spr.to({sx:base[0]*1.07,sy:base[1]*1.07},130,E.out)};
   const mv=e=>{if(!g)return;const p=spt(e,sv),vx=p.x-g.lx;g.lx=p.x;if(Math.hypot(p.x-g.sx,p.y-g.sy)>10)g.moved=true;if(!g.moved)return;spr.x=clamp(p.x-g.dx,B[0],B[2]);spr.y=clamp(p.y-g.dy,B[1],B[3]);spr.r=lerp(spr.r,home.r+clamp(vx*1.4,-13,13),.25);spr.set();if(zoneEl)zoneEl.classList.toggle('near',hit()>=0)};
-  const back=()=>{SFX.back();if(zoneEl)zoneEl.classList.remove('near');spr.to({x:home.x,y:home.y,r:home.r,sx:1,sy:1},420,E.back).then(()=>{if(!ended)Guide.resume()})};
+  const back=()=>{SFX.back();if(zoneEl)zoneEl.classList.remove('near');spr.to({x:home.x,y:home.y,r:home.r,sx:base[0],sy:base[1]},420,E.back).then(()=>{if(!ended)Guide.resume()})};
   const up=()=>{if(!g)return;const moved=g.moved;g=null;
-    if(!moved&&o.tap){spr.to({sx:1,sy:1},150);o.tap();return}
+    if(!moved&&o.tap){spr.to({sx:base[0],sy:base[1]},150);o.tap();return}
     const i=hit();if(i<0)return back();
     if(o.accept&&!o.accept(i)){o.reject&&o.reject(i);return back()}
     ended=true;off();if(o.zones===undefined)zone();Guide.stop();res(i)};

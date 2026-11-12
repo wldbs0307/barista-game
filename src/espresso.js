@@ -40,9 +40,10 @@ function glassCup(uid,scale=1,kind='demi'){const g=document.createElementNS(NS,'
   </g></g>`;
   const c={g,kind,sp:new Sp(g),ml:0,milk:0,mlY,mline:$('.mline',g),liq:$('.liq',g),milkR:$('.milk',g),crema:$('.crema',g),spill:$('.spill',g),mlt:$('.mlt',g),inner:$('.cin',g)};
   c.set=ml=>{c.ml=ml;const y=mlY(ml);c.liq.setAttribute('y',y.toFixed(1));c.liq.setAttribute('height',(-y).toFixed(1));
-    const top=mlY(ml+c.milk),cr=c.milk>0?clamp(c.milk*.12,4,16):ml>2?clamp(2+ml*.18,2,7):0;c.milkR.setAttribute('y',top.toFixed(1));c.milkR.setAttribute('height',(y-top).toFixed(1));
+    const top=mlY(ml+c.milk),cr=c.water?0:c.milk>0?clamp(c.milk*.12,4,16):ml>2?clamp(2+ml*.18,2,7):0;c.milkR.setAttribute('y',top.toFixed(1));c.milkR.setAttribute('height',(y-top).toFixed(1));
     c.crema.setAttribute('y',top.toFixed(1));c.crema.setAttribute('height',cr.toFixed(1));c.crema.setAttribute('fill',c.milk>0?'#fffaf0':'#c98a4b');c.spill.style.display=kind==='demi'&&ml>cap?'':'none'};
-  c.addMilk=m=>{c.milk=m;c.set(c.ml)};
+  c.addMilk=m=>{c.milk=m;c.set(c.ml)};c.cap=cap;
+  c.setWater=on=>{c.water=on;c.liq.setAttribute('fill',on?'#bfe2f2':'#3a1d10');c.set(c.ml)};
   c.line=on=>{c.mline.style.display=on?'':'none'};c.set(0);return c}
 const saucerSide=(rx=46)=>`<ellipse cx="0" cy="2" rx="${rx}" ry="${rx*.22}" fill="#fff" class="o3"/><ellipse cx="0" cy="0" rx="${rx*.55}" ry="${rx*.11}" fill="#eee6dc"/>`;
 const spoonSide=`<path d="M-40 -2H18" stroke="#4a2c22" stroke-width="7" stroke-linecap="round"/><path d="M-40 -2H18" stroke="#cdd6dc" stroke-width="3" stroke-linecap="round"/><ellipse cx="26" cy="-2" rx="10" ry="4.5" fill="#cdd6dc" class="o3"/>`;
@@ -145,16 +146,16 @@ let R=null;   /* 이번 판 기록 */
 let STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];
 const step=n=>{$('#step').innerHTML=M.name+' <b>'+n+'/'+STEPS.length+'</b> '+STEPS[n-1]};
 function resetBar(){
-  $('#Lcups').innerHTML='';Cup.all=[];
-  for(const kind of ['demi','capp'])KIND[kind].warm.forEach((w,i)=>{const c=glassCup('w'+kind+i,kind==='demi'?CS:1,kind);c.line(SHOW_LINE&&kind===M.cup);$('#Lcups').appendChild(c.g);c.sp.set({...w,r:0,sx:1,sy:1});
+  $('#Lcups').innerHTML='';Cup.all=[];Cup.every=[];
+  for(const kind of ['demi','capp'])KIND[kind].warm.forEach((w,i)=>{const c=glassCup('w'+kind+i,kind==='demi'?CS:1,kind);c.line(SHOW_LINE&&kind===M.cup);$('#Lcups').appendChild(c.g);c.sp.set({...w,r:0,sx:1,sy:1});Cup.every.push(c);
     if(kind===M.cup)Cup.all.push(c);else c.g.setAttribute('class','np')});Cup.at=[null,null];
-  const deco=document.createElementNS(NS,'g');deco.setAttribute('class','np');
+  const deco=document.createElementNS(NS,'g');deco.setAttribute('class','np');deco.id='decoP';
   deco.innerHTML=[930,1004].map(x=>`<g transform="translate(${x} 186)"><path d="M-26 -62L-30 -6Q-30 0 -24 0H24Q30 0 30 -6L26 -62Z" fill="url(#gChromeH)" class="o4"/><path d="M-26 -62L-38 -70L-24 -50Z" fill="#cfd9df" class="o3"/><path d="M26 -54Q46 -50 42 -28Q40 -16 28 -16" fill="none" stroke="#4a2c22" stroke-width="5"/></g>`).join('');
   $('#Lcups').prepend(deco);
   PF.set({...M.grp,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';$('#collar').setAttribute('transform',`translate(${M.grp.x-910} 0)`);
-  $('#pf2').setAttribute('transform',`translate(${M.other.x} ${M.other.y})`);$('#collar2').setAttribute('transform',`translate(${M.other.x-910} 0)`);setBrewBtn(false);setGrounds(0,false);TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
+  $('#pf2').setAttribute('transform',`translate(${M.other.x} ${M.other.y})`);$('#collar2').setAttribute('transform',`translate(${M.other.x-910} 0)`);setBrewBtn(false);setGrounds(0,false);$('#pf2').innerHTML=$('#pf').innerHTML.replace(/ id="[^"]+"/g,'');TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
   $('#tDig').textContent='0초';needle(0);puddle(0);stream(false);zone();$('#zone2').style.display='none';Guide.stop();
-  $('#rimFront').style.display='none';$('#gRing').setAttribute('stroke-dashoffset',251.3);$('#dirt').innerHTML='';$('#trayItems').innerHTML='';fx.innerHTML='';
+  $('#rimFront').style.display='none';$('#gRing').setAttribute('stroke-dashoffset',251.3);$('#dirt').innerHTML='';$('#dirt2').innerHTML='';$('#Lprep').innerHTML='';$('#trayItems').innerHTML='';fx.innerHTML='';$('#clock').hidden=true;
   $('#gauge').classList.add('off')}
 function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none';return}e.setAttribute('cx',x);e.setAttribute('cy',y);e.setAttribute('rx',rx);e.setAttribute('ry',ry||rx);e.style.display=''}
 
@@ -236,9 +237,9 @@ function cupsDown(alive){
     const i=await drag(c.sp,c.g,{zones,alive,anchor:()=>({x:c.sp.x,y:c.sp.y-20})});c.inner.classList.remove('pickme');
     Cup.at[i]=c;if(R.cupT==null||R.cupT<R.t)R.cupT=R.t;(i?zone2:zone)();await c.sp.to({...M.slots[i],r:0,sx:1,sy:1},160,E.out);SFX.clink();
     const n=Cup.at.filter(Boolean).length;if(n<2){Panel.hint('<em>'+M.cupName+'</em>을 내려서 받쳐요 <em>('+n+'/2)</em>');point()}}))}
-function brushDirt(alive){return new Promise(res=>{const el=$('#brush'),home={...P.brush};let g=null,done=false;
+function brushDirt(alive,hint){return new Promise(res=>{const el=$('#brush'),home={...P.brush};let g=null,done=false;
   const dots=()=>[...$('#dirt').querySelectorAll('.dt')];if(!dots().length)return res();
-  Panel.hint('추출하는 동안 <em>붓</em>으로 그라인더 주변을 쓸어요');zone(1330,618,110,32);Guide.drag({x:BR.x,y:BR.y},{x:1300,y:612});
+  Panel.hint(hint||'추출하는 동안 <em>붓</em>으로 그라인더 주변을 쓸어요');zone(1330,618,110,32);Guide.drag({x:BR.x,y:BR.y},{x:1300,y:612});
   const tip=()=>{const a=BR.r*Math.PI/180;return{x:BR.x+Math.cos(a)*44,y:BR.y+Math.sin(a)*44}};
   const dn=e=>{if(done||!alive())return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e);g={dx:p.x-BR.x,dy:p.y-BR.y,lx:p.x};Guide.pause();SFX.pick()};
   const mv=e=>{if(!g||done)return;const p=spt(e),vx=p.x-g.lx;g.lx=p.x;BR.set({x:clamp(p.x-g.dx,60,1560),y:clamp(p.y-g.dy,200,700),r:lerp(BR.r,clamp(vx*1.2,-18,18),.3)});
@@ -371,7 +372,7 @@ const snd=$('#snd');snd.innerHTML=IC.sndOn;snd.onclick=()=>{SFX.mute(!SFX.muted)
 $('#home').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#4a2c22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h12v-9" fill="#ff8a73"/><path d="M10 19v-5h4v5"/></svg>';
 const goHome=()=>{try{speechSynthesis.cancel()}catch(e){}location.reload()};
 $('#home').onclick=goHome;$('#tohome').onclick=goHome;
-$('#again').onclick=()=>{$('#result').classList.add('off');Bubble.hide();(M.key==='cap'?cappuccino:espresso)()};
+$('#again').onclick=()=>{$('#result').classList.add('off');Bubble.hide();({cap:cappuccino,prep,clean:cleanup}[M.key]||espresso)()};
 $('#inNo').value=store.get('no','1');$('#inName').value=store.get('name','');
 const startWith=fn=>()=>{SFX.unlock();SFX.ok();store.set('no',$('#inNo').value);store.set('name',$('#inName').value.trim());$('#title').classList.add('off');fn()};
 $('#goEsp').onclick=startWith(()=>espresso());$('#goCap').onclick=startWith(()=>cappuccino());
