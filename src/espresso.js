@@ -9,21 +9,28 @@ const store={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d
 function judgeOf(s){if(s<20)return{k:'fail',t:'실격',c:'var(--red)',why:'20초보다 짧아요'};if(s<=24)return{k:'good',t:'좋아요',c:'var(--g1)'};
   if(s<=30)return{k:'best',t:'아주 좋아요',c:'var(--g2)'};if(s<=40)return{k:'try',t:'노력해요',c:'var(--yel)'};return{k:'fail',t:'실격',c:'var(--red)',why:'40초를 넘었어요'}}
 const COL={g2:'var(--g2)',g1:'var(--g1)',yel:'var(--yel)',red:'var(--red)'};
+/* 메뉴마다 쓰는 그룹·버튼·잔 */
+const MODES={
+  esp:{key:'esp',name:'에스프레소',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'demi',cupName:'데미타세 잔',
+    slots:[{x:864,y:548},{x:956,y:548}],other:{x:590,y:366}},
+  cap:{key:'cap',name:'카푸치노',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'capp',cupName:'카푸치노 잔',
+    slots:[{x:528,y:548},{x:654,y:548}],other:{x:910,y:366}}};
+let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */
 const CS=1;                    /* 데미타세 크기 (카푸치노 잔보다 작게) */
 const SHOW_LINE=true;          /* 30ml 표시선: 연습 때만. 실전 15분에서는 false */
-const GH=58,GR=30,GLINE=-GH*30/CAP*.92;
-const mlY=ml=>-clamp(ml,0,CAP)/CAP*GH*.92;
-function glassCup(uid,scale=1){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
+const KIND={demi:{GH:58,GR:30,cap:CAP,warm:[{x:520,y:186},{x:600,y:186}]},capp:{GH:72,GR:47,cap:150,warm:[{x:722,y:186},{x:838,y:186}]}};
+function glassCup(uid,scale=1,kind='demi'){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
+  const {GH,GR,cap}=KIND[kind],mlY=ml=>-clamp(ml,0,cap)/cap*GH*.92,GLINE=mlY(30);
   const body=`M-${GR} -${GH}C-${GR} -16 -18 0 -8 0L8 0C18 0 ${GR} -16 ${GR} -${GH}Z`;
   g.innerHTML=`<g class="cin"><g transform="scale(${scale})">
   <ellipse cx="0" cy="3" rx="${GR*.8}" ry="5" fill="#4a2c22" opacity=".14"/>
-  <path d="M-${GR-3} -46C-${GR+20} -50 -${GR+20} -20 -${GR-10} -16" fill="none" stroke="#4a2c22" stroke-width="12" stroke-linecap="round"/>
-  <path d="M-${GR-3} -46C-${GR+20} -50 -${GR+20} -20 -${GR-10} -16" fill="none" stroke="#f3fafb" stroke-width="5" stroke-linecap="round"/>
+  <path d="M-${GR-3} -${GH*.8}C-${GR+22} -${GH*.86} -${GR+22} -${GH*.34} -${GR-10} -${GH*.27}" fill="none" stroke="#4a2c22" stroke-width="12" stroke-linecap="round"/>
+  <path d="M-${GR-3} -${GH*.8}C-${GR+22} -${GH*.86} -${GR+22} -${GH*.34} -${GR-10} -${GH*.27}" fill="none" stroke="#f3fafb" stroke-width="5" stroke-linecap="round"/>
   <ellipse cx="0" cy="-${GH}" rx="${GR}" ry="7" fill="#e9f3f5"/>
   <clipPath id="gc${uid}"><path d="${body}"/></clipPath>
-  <g clip-path="url(#gc${uid})"><rect class="liq" x="-40" y="0" width="80" height="0" fill="#3a1d10"/><rect class="crema" x="-40" y="0" width="80" height="0" fill="#c98a4b"/></g>
+  <g clip-path="url(#gc${uid})"><rect class="liq" x="-60" y="0" width="120" height="0" fill="#3a1d10"/><rect class="milk" x="-60" y="0" width="120" height="0" fill="#d9a877"/><rect class="crema" x="-60" y="0" width="120" height="0" fill="#c98a4b"/></g>
   <path d="${body}" fill="#dff1f5" fill-opacity=".32" class="o4"/>
   <path d="M-${GR-8} -${GH-10}Q-${GR-7} -26 -${GR-14} -12" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>
   <path class="mline" d="M-${GR-3} ${GLINE.toFixed(1)}H${GR-3}" stroke="#e2634d" stroke-width="2.5" stroke-dasharray="5 4"/>
@@ -31,9 +38,11 @@ function glassCup(uid,scale=1){const g=document.createElementNS(NS,'g');g.setAtt
   <ellipse cx="0" cy="-${GH}" rx="${GR}" ry="7" class="o3 nf"/>
   <g class="spill" style="display:none"><path class="drip" d="M-${GR-2} -${GH-4}V-4" stroke="#5a3220" stroke-width="5" fill="none" stroke-linecap="round"/><path class="drip" d="M${GR-4} -${GH-4}V-8" stroke="#5a3220" stroke-width="5" fill="none" stroke-linecap="round" style="animation-delay:-.3s"/></g>
   </g></g>`;
-  const c={g,sp:new Sp(g),ml:0,mline:$('.mline',g),liq:$('.liq',g),crema:$('.crema',g),spill:$('.spill',g),mlt:$('.mlt',g),inner:$('.cin',g)};
-  c.set=ml=>{c.ml=ml;const y=mlY(ml),cr=ml>2?clamp(2+ml*.18,2,7):0;c.liq.setAttribute('y',y.toFixed(1));c.liq.setAttribute('height',(-y).toFixed(1));
-    c.crema.setAttribute('y',y.toFixed(1));c.crema.setAttribute('height',cr.toFixed(1));c.spill.style.display=ml>CAP?'':'none'};
+  const c={g,kind,sp:new Sp(g),ml:0,milk:0,mlY,mline:$('.mline',g),liq:$('.liq',g),milkR:$('.milk',g),crema:$('.crema',g),spill:$('.spill',g),mlt:$('.mlt',g),inner:$('.cin',g)};
+  c.set=ml=>{c.ml=ml;const y=mlY(ml);c.liq.setAttribute('y',y.toFixed(1));c.liq.setAttribute('height',(-y).toFixed(1));
+    const top=mlY(ml+c.milk),cr=c.milk>0?clamp(c.milk*.12,4,16):ml>2?clamp(2+ml*.18,2,7):0;c.milkR.setAttribute('y',top.toFixed(1));c.milkR.setAttribute('height',(y-top).toFixed(1));
+    c.crema.setAttribute('y',top.toFixed(1));c.crema.setAttribute('height',cr.toFixed(1));c.crema.setAttribute('fill',c.milk>0?'#fffaf0':'#c98a4b');c.spill.style.display=kind==='demi'&&ml>cap?'':'none'};
+  c.addMilk=m=>{c.milk=m;c.set(c.ml)};
   c.line=on=>{c.mline.style.display=on?'':'none'};c.set(0);return c}
 const saucerSide=(rx=46)=>`<ellipse cx="0" cy="2" rx="${rx}" ry="${rx*.22}" fill="#fff" class="o3"/><ellipse cx="0" cy="0" rx="${rx*.55}" ry="${rx*.11}" fill="#eee6dc"/>`;
 const spoonSide=`<path d="M-40 -2H18" stroke="#4a2c22" stroke-width="7" stroke-linecap="round"/><path d="M-40 -2H18" stroke="#cdd6dc" stroke-width="3" stroke-linecap="round"/><ellipse cx="26" cy="-2" rx="10" ry="4.5" fill="#cdd6dc" class="o3"/>`;
@@ -61,16 +70,17 @@ $('#brush').innerHTML=`
   <rect x="6" y="-12" width="18" height="22" rx="3" fill="url(#gChromeH)" class="o3"/>
   <path d="M24 -12L66 -18L66 16L24 10Z" fill="#e9c98f" class="o4"/>
   <path d="M30 -8L62 -12M30 0L62 0M30 6L62 10" stroke="#b8925a" stroke-width="3"/>`;
+$('#pf2').innerHTML=$('#pf').innerHTML.replace(/ id="[^"]+"/g,'');
 const PF=new Sp($('#pf')),TAMP=new Sp($('#tamp')),RIMF=new Sp($('#rimFront')),BR=new Sp($('#brush'));
-const P={grpR:{x:910,y:366},grind:{x:1330,y:494},gBtn:{x:1330,y:398},tamp:{x:1450,y:594},tampReady:{x:1450,y:536},tampRest:{x:1556,y:640},
-  bBtn:{x:980,y:252},slots:[{x:864,y:548},{x:956,y:548}],warm:[{x:520,y:186},{x:600,y:186}],tray:[{x:160,y:624},{x:300,y:624}],brush:{x:1206,y:652}};
+const P={grind:{x:1330,y:494},gBtn:{x:1330,y:398},tamp:{x:1450,y:594},tampReady:{x:1450,y:536},tampRest:{x:1556,y:640},
+  tray:[{x:160,y:624},{x:300,y:624}],brush:{x:1206,y:652}};
 function setGrounds(g,tamped){const m=$('#pfMound'),f=$('#pfFlat');if(tamped){m.style.display='none';f.style.display='';return}
   f.style.display='none';if(g<=.02){m.style.display='none';return}m.style.display='';const h=(15*g*1.4).toFixed(1);m.setAttribute('d',`M-38 0C-30 ${-h} 30 ${-h} 38 0A38 8 0 0 1 -38 0Z`)}
 let handleS=1;
 function setHandle(s){handleS=s;$('#pfH').setAttribute('transform',`scale(${s.toFixed(3)} 1)`)}
 /* 손잡이를 옆으로 끌어서 돌린다. out: 오른쪽 → 왼쪽(빼기), in: 왼쪽 → 오른쪽(끼우기) */
-function twistPF(dir){return new Promise(res=>{const el=$('#pf'),from=dir==='out'?1:-.7,to=dir==='out'?-.7:1,y0=P.grpR.y,y1=P.grpR.y+30;let g=null,done=false;
-  setHandle(from);$('#collar').style.display='';PF.set({x:P.grpR.x,y:dir==='out'?y0:y1});
+function twistPF(dir){return new Promise(res=>{const el=$('#pf'),from=dir==='out'?1:-.7,to=dir==='out'?-.7:1,y0=M.grp.y,y1=M.grp.y+30;let g=null,done=false;
+  setHandle(from);$('#collar').style.display='';PF.set({x:M.grp.x,y:dir==='out'?y0:y1});
   Panel.hint(dir==='out'?'포터필터 손잡이를 <em>왼쪽으로 돌려서</em> 빼요':'손잡이를 <em>오른쪽으로 돌려서</em> 끼워요');
   const hx=dir==='out'?PF.x+150:PF.x-110;Guide.drag({x:hx,y:PF.y+30},{x:dir==='out'?PF.x-110:PF.x+150,y:PF.y+30});
   const prog=s=>(s-from)/(to-from);
@@ -84,12 +94,12 @@ function twistPF(dir){return new Promise(res=>{const el=$('#pf'),from=dir==='out
     else{await PF.to({y:y0},160,E.back);floatText(PF.x,PF.y-60,'딱!')}
     res()}
   el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}
-function setBrewBtn(on){$('#bPlay').style.display=on?'none':'';$('#bStop').style.display=on?'':'none';$('#bFace').setAttribute('fill',on?'#ff7a6b':'#7fd08a')}
+function setBrewBtn(on){const s=M.bs;$('#bPlay'+s).style.display=on?'none':'';$('#bStop'+s).style.display=on?'':'none';$('#bFace'+s).setAttribute('fill',on?'#ff7a6b':'#7fd08a')}
 const needle=p=>$('#needle').setAttribute('transform',`rotate(${-120+clamp(p,0,1)*240} 750 430)`);
 function puddle(k){const e=$('#puddle');e.style.display=k>.01?'':'none';e.setAttribute('rx',30+120*k);e.setAttribute('ry',3+5*k);
   const r=clamp((k-.35)/.65,0,1);$('#runoff').style.display=r>0?'':'none';$('#floorPud').setAttribute('rx',20+110*r);$('#floorPud').setAttribute('ry',2+7*r)}
 function stream(on,t,now){[['#st1',0],['#st2',1]].forEach(([id,i])=>{const e=$(id);if(!on){e.setAttribute('d','');return}
-  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=P.slots[i].x,ty=c?P.slots[i].y+mlY(c.ml)*CS:P.slots[i].y-4,w=Math.sin(now/110+i)*1.4;
+  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=M.slots[i].x,ty=c?M.slots[i].y+c.mlY(c.ml)*(c.kind==='demi'?CS:1):M.slots[i].y-4,w=Math.sin(now/110+i)*1.4;
   e.setAttribute('d',`M${sx} ${sy}C${sx+w} ${lerp(sy,ty,.4)} ${tx-w} ${lerp(sy,ty,.7)} ${tx} ${ty}`);
   e.setAttribute('stroke',mix('#2a140c','#b9773f',clamp((t-FLOW)/26,0,1)));e.setAttribute('stroke-width',t<FLOW+2?3:4.5);
   if(t<FLOW+2){e.setAttribute('stroke-dasharray','7 12');e.setAttribute('stroke-dashoffset',(-(now/9)%19).toFixed(1))}else e.removeAttribute('stroke-dasharray')})}
@@ -132,33 +142,35 @@ async function judgeSay(i,text){Bubble.show(JUDGES[i].name,esc(text));SFX.pop();
 /* ---------- 상태 ---------- */
 const Cup={all:[],at:[null,null]};
 let R=null;   /* 이번 판 기록 */
-const STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];
-const step=n=>{$('#step').innerHTML='에스프레소 <b>'+n+'/6</b> '+STEPS[n-1]};
+let STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];
+const step=n=>{$('#step').innerHTML=M.name+' <b>'+n+'/'+STEPS.length+'</b> '+STEPS[n-1]};
 function resetBar(){
-  $('#Lcups').innerHTML='';Cup.all=P.warm.map((w,i)=>{const c=glassCup('w'+i,CS);c.line(SHOW_LINE);$('#Lcups').appendChild(c.g);c.sp.set({...w,r:0,sx:1,sy:1});return c});Cup.at=[null,null];
-  /* 장식용 카푸치노 잔과 피쳐 */
+  $('#Lcups').innerHTML='';Cup.all=[];
+  for(const kind of ['demi','capp'])KIND[kind].warm.forEach((w,i)=>{const c=glassCup('w'+kind+i,kind==='demi'?CS:1,kind);c.line(SHOW_LINE&&kind===M.cup);$('#Lcups').appendChild(c.g);c.sp.set({...w,r:0,sx:1,sy:1});
+    if(kind===M.cup)Cup.all.push(c);else c.g.setAttribute('class','np')});Cup.at=[null,null];
   const deco=document.createElementNS(NS,'g');deco.setAttribute('class','np');
-  deco.innerHTML=[705,812].map(x=>`<g transform="translate(${x} 186)"><path d="M46 -54C78 -58 78 -16 38 -16" fill="none" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M46 -54C78 -58 78 -16 38 -16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M-48 -68Q-48 0 -16 0H16Q48 0 48 -68Z" fill="#fff" class="o4"/><ellipse cx="0" cy="-68" rx="48" ry="10" fill="#efe6db" class="o3"/></g>`).join('')
-    +[930,1004].map(x=>`<g transform="translate(${x} 186)"><path d="M-26 -62L-30 -6Q-30 0 -24 0H24Q30 0 30 -6L26 -62Z" fill="url(#gChromeH)" class="o4"/><path d="M-26 -62L-38 -70L-24 -50Z" fill="#cfd9df" class="o3"/><path d="M26 -54Q46 -50 42 -28Q40 -16 28 -16" fill="none" stroke="#4a2c22" stroke-width="5"/></g>`).join('');
+  deco.innerHTML=[930,1004].map(x=>`<g transform="translate(${x} 186)"><path d="M-26 -62L-30 -6Q-30 0 -24 0H24Q30 0 30 -6L26 -62Z" fill="url(#gChromeH)" class="o4"/><path d="M-26 -62L-38 -70L-24 -50Z" fill="#cfd9df" class="o3"/><path d="M26 -54Q46 -50 42 -28Q40 -16 28 -16" fill="none" stroke="#4a2c22" stroke-width="5"/></g>`).join('');
   $('#Lcups').prepend(deco);
-  PF.set({...P.grpR,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';setGrounds(0,false);TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
-  $('#tDig').textContent='0초';setBrewBtn(false);needle(0);puddle(0);stream(false);zone();$('#zone2').style.display='none';Guide.stop();
+  PF.set({...M.grp,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';$('#collar').setAttribute('transform',`translate(${M.grp.x-910} 0)`);
+  $('#pf2').setAttribute('transform',`translate(${M.other.x} ${M.other.y})`);$('#collar2').setAttribute('transform',`translate(${M.other.x-910} 0)`);setBrewBtn(false);setGrounds(0,false);TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
+  $('#tDig').textContent='0초';needle(0);puddle(0);stream(false);zone();$('#zone2').style.display='none';Guide.stop();
   $('#rimFront').style.display='none';$('#gRing').setAttribute('stroke-dashoffset',251.3);$('#dirt').innerHTML='';$('#trayItems').innerHTML='';fx.innerHTML='';
   $('#gauge').classList.add('off')}
 function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none';return}e.setAttribute('cx',x);e.setAttribute('cy',y);e.setAttribute('rx',rx);e.setAttribute('ry',ry||rx);e.style.display=''}
 
 /* ---------- 4) 서빙 준비: 위에서 본 트레이 ---------- */
-const saucerTop=`<circle r="62" fill="#4a2c22" opacity=".14" cx="4" cy="6"/><circle r="62" fill="#fff" class="o4"/><circle r="38" fill="#f3ece3" class="o3"/><circle r="26" fill="#fff" opacity=".7"/>`;
+const saucerTopR=r=>`<circle r="${r}" fill="#4a2c22" opacity=".14" cx="4" cy="6"/><circle r="${r}" fill="#fff" class="o4"/><circle r="${r*.61}" fill="#f3ece3" class="o3"/><circle r="${r*.42}" fill="#fff" opacity=".7"/>`;
+const SR_=()=>M.cup==='capp'?78:62,SXS=()=>M.cup==='capp'?[225,455]:[240,440];
 const spoonTop=`<path d="M-62 0H14" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M-62 0H14" stroke="#d6dee3" stroke-width="7" stroke-linecap="round"/><ellipse cx="34" cy="0" rx="24" ry="15" fill="#d6dee3" class="o4"/><ellipse cx="30" cy="-4" rx="9" ry="5" fill="#fff" opacity=".8"/>`;
 async function trayPrep(){
-  const G=[{x:240,y:330,k:'s'},{x:440,y:330,k:'s'},{x:240,y:282,k:'p'},{x:440,y:282,k:'p'}];
-  $('#prepGhost').innerHTML=G.map((g,i)=>g.k==='s'?`<circle id="pg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="62"/>`
+  const [xa,xb]=SXS(),sr=SR_(),G=[{x:xa,y:330,k:'s'},{x:xb,y:330,k:'s'},{x:xa,y:330-sr+14,k:'p'},{x:xb,y:330-sr+14,k:'p'}];
+  $('#prepGhost').innerHTML=G.map((g,i)=>g.k==='s'?`<circle id="pg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="${sr}"/>`
     :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y}) scale(.72)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
     +`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">스푼은 받침 위에, 손잡이는 왼쪽</text>`;
   const it=$('#prepItems');it.innerHTML='';
   const flipFirst=Math.random()<.5;
   const items=[{k:'s',x:845,y:175},{k:'s',x:845,y:160},{k:'p',x:845,y:330,left:!flipFirst},{k:'p',x:845,y:450,left:flipFirst}].map(o=>{
-    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTop:`<g class="sp"><g transform="scale(.72)">${spoonTop}</g></g>`;it.appendChild(g);
+    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTopR(SR_()):`<g class="sp"><g transform="scale(.72)">${spoonTop}</g></g>`;it.appendChild(g);
     o.g=g;o.sp=new Sp(g,o.x,o.y);if(o.k==='p')o.sp.set({r:o.left?0:180});return o});
   $('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
   Panel.hint('먼저 <em>잔 받침 2개</em>, 그다음 <em>스푼 2개</em>를 놓아요<small>스푼을 톡 누르면 방향이 바뀌어요</small>');
@@ -174,7 +186,7 @@ async function trayPrep(){
     G[i].used=true;o.done=true;$('#pg'+i).classList.add('done');SFX.clink();await o.sp.to({x:G[i].x,y:G[i].y,r:o.k==='p'?0:0,sx:1,sy:1},200,E.back);
     left--;if(!left)Panel.hint('다 놓았어요!');else Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
   Guide.stop();SFX.great();await toast('서빙 준비 끝!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;
-  $('#trayItems').innerHTML=P.tray.map(p=>`<g transform="translate(${p.x} ${p.y})">${saucerSide()}<g transform="translate(-6 -22) scale(.9)">${spoonSide}</g></g>`).join('');
+  $('#trayItems').innerHTML=P.tray.map(p=>`<g transform="translate(${p.x} ${p.y})">${saucerSide(M.cup==='capp'?58:46)}<g transform="translate(-6 -22) scale(.9)">${spoonSide}</g></g>`).join('');
   R.prep=mistakes}
 
 /* ---------- 5) 추출 ---------- */
@@ -206,24 +218,24 @@ async function grindTamp(){
     async function fin(){off();Guide.stop();SFX.thud();shake();setGrounds(0,true);floatText(P.tamp.x,P.tamp.y-96,'꾹!');await sleep(380);
       await TAMP.to({y:P.tampReady.y-10},220,E.out);$('#rimFront').style.display='none';await TAMP.hop(P.tampRest.x,P.tampRest.y,420,30,.08);SFX.ok();res()}
     el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});
-  Panel.hint('<em>포터필터</em>를 오른쪽 그룹 아래로 가져가요');zone(P.grpR.x,P.grpR.y+40,80,64);Guide.drag({x:PF.x,y:PF.y+20},{x:P.grpR.x,y:P.grpR.y+40});
-  await drag(PF,$('#pf'),{zone:{x:P.grpR.x,y:P.grpR.y+20,r:110}});
-  await Promise.all([PF.to({x:P.grpR.x,y:P.grpR.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
+  Panel.hint('<em>포터필터</em>를 '+M.side+' 그룹 아래로 가져가요');zone(M.grp.x,M.grp.y+40,80,64);Guide.drag({x:PF.x,y:PF.y+20},{x:M.grp.x,y:M.grp.y+40});
+  await drag(PF,$('#pf'),{zone:{x:M.grp.x,y:M.grp.y+20,r:110}});
+  await Promise.all([PF.to({x:M.grp.x,y:M.grp.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
   await twistPF('in');
 }
 function gaugeSet(t){const s=Math.floor(t),j=s<20?{t:'기다려요',c:'var(--muted)'}:judgeOf(s);
   $('#gsec').textContent=s+'초';$('#glabel').textContent=j.t;$('#glabel').style.background=j.c;$('#gmark').style.left=(clamp(t,0,45)/45*100)+'%';
   const d=$('#tDig');d.textContent=s+'초';d.setAttribute('fill',s<20?'#b8ffd2':s<=30?'#63ffa0':s<=40?'#ffe07a':'#ff9484')}
 function cupsDown(alive){
-  Panel.hint('<em>데미타세 잔</em>을 내려서 받쳐요 <em>(0/2)</em>');
-  const zones=P.slots.map((s,i)=>({x:s.x,y:s.y-24,r:56,get used(){return !!Cup.at[i]}}));
+  Panel.hint('<em>'+M.cupName+'</em>을 내려서 받쳐요 <em>(0/2)</em>');
+  const zones=M.slots.map((s,i)=>({x:s.x,y:s.y-24,r:M.cup==='capp'?62:56,get used(){return !!Cup.at[i]}}));
   const free=()=>Cup.all.filter(c=>!Cup.at.includes(c));
-  const point=()=>{const c=free()[0],i=Cup.at.findIndex(x=>!x);if(c&&i>=0)Guide.drag({x:c.sp.x,y:c.sp.y-30},{x:P.slots[i].x,y:P.slots[i].y-30})};
-  zone(P.slots[0].x,P.slots[0].y-18,44,34);zone2(P.slots[1].x,P.slots[1].y-18,44,34);point();
+  const point=()=>{const c=free()[0],i=Cup.at.findIndex(x=>!x);if(c&&i>=0)Guide.drag({x:c.sp.x,y:c.sp.y-30},{x:M.slots[i].x,y:M.slots[i].y-30})};
+  const zw=M.cup==='capp'?56:44;zone(M.slots[0].x,M.slots[0].y-18,zw,34);zone2(M.slots[1].x,M.slots[1].y-18,zw,34);point();
   return Promise.all(Cup.all.map(async c=>{c.inner.classList.add('pickme');
     const i=await drag(c.sp,c.g,{zones,alive,anchor:()=>({x:c.sp.x,y:c.sp.y-20})});c.inner.classList.remove('pickme');
-    Cup.at[i]=c;if(R.cupT==null||R.cupT<R.t)R.cupT=R.t;(i?zone2:zone)();await c.sp.to({...P.slots[i],r:0,sx:1,sy:1},160,E.out);SFX.clink();
-    const n=Cup.at.filter(Boolean).length;if(n<2){Panel.hint('<em>데미타세 잔</em>을 내려서 받쳐요 <em>('+n+'/2)</em>');point()}}))}
+    Cup.at[i]=c;if(R.cupT==null||R.cupT<R.t)R.cupT=R.t;(i?zone2:zone)();await c.sp.to({...M.slots[i],r:0,sx:1,sy:1},160,E.out);SFX.clink();
+    const n=Cup.at.filter(Boolean).length;if(n<2){Panel.hint('<em>'+M.cupName+'</em>을 내려서 받쳐요 <em>('+n+'/2)</em>');point()}}))}
 function brushDirt(alive){return new Promise(res=>{const el=$('#brush'),home={...P.brush};let g=null,done=false;
   const dots=()=>[...$('#dirt').querySelectorAll('.dt')];if(!dots().length)return res();
   Panel.hint('추출하는 동안 <em>붓</em>으로 그라인더 주변을 쓸어요');zone(1330,618,110,32);Guide.drag({x:BR.x,y:BR.y},{x:1300,y:612});
@@ -238,16 +250,16 @@ function brushDirt(alive){return new Promise(res=>{const el=$('#brush'),home={..
   el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}
 async function brew(){
   for(;;){
-    R.t=0;R.cupT=null;gaugeSet(0);Panel.hint('<em>추출 버튼</em>을 눌러요');Guide.tap(P.bBtn);
-    await tap($('#bBtn'));Guide.stop();SFX.pick();setBrewBtn(true);const pump=SFX.pump();$('#gauge').classList.remove('off');
+    R.t=0;R.cupT=null;gaugeSet(0);Panel.hint('<em>추출 버튼</em>을 눌러요');Guide.tap(M.btn);
+    await tap($('#bBtn'+M.bs));Guide.stop();SFX.pick();setBrewBtn(true);const pump=SFX.pump();$('#gauge').classList.remove('off');
     let stopped=false,cue=false,warn=false,last=performance.now(),run=true;const alive=()=>run;
-    $('#bBtn').addEventListener('click',()=>{stopped=true},{once:true});
+    $('#bBtn'+M.bs).addEventListener('click',()=>{stopped=true},{once:true});
     const t0=performance.now();
     const loop=new Promise(res=>{const f=now=>{if(stopped)return res();const dt=(now-last)/1000*SCALE;last=now;const t=(now-t0)/1000*SCALE;R.t=t;gaugeSet(t);
       needle(clamp(t/2,0,1)*.72+Math.sin(now/130)*.015);
-      if(t>=FLOW){stream(true,t,now);for(let i=0;i<2;i++){const c=Cup.at[i];if(c){c.set(c.ml+RATE*dt);if(c.ml>CAP)puddle(clamp((c.ml-CAP)/12,0,1))}else if(Math.random()<.2)drop(P.slots[i].x,P.grpR.y+92,P.slots[i].y-6,'#5a3220',3)}}
+      if(t>=FLOW){stream(true,t,now);for(let i=0;i<2;i++){const c=Cup.at[i];if(c){c.set(c.ml+RATE*dt);if(c.kind==='demi'&&c.ml>CAP)puddle(clamp((c.ml-CAP)/12,0,1))}else if(Math.random()<.2)drop(M.slots[i].x,M.grp.y+92,M.slots[i].y-6,'#5a3220',3)}}
       if(!cue&&t>=25){cue=true;SFX.tick();if(R.tries===0)Panel.hint('<em>진한 초록</em>이 됐어요! 멈출 때를 잘 봐요')}
-      if(!warn&&t>40){warn=true;SFX.no();Guide.delay=0;Guide.tap(P.bBtn);Panel.hint('40초가 넘었어요! <em>버튼을 눌러 멈춰요</em>');Guide.delay=350}
+      if(!warn&&t>40){warn=true;SFX.no();Guide.delay=0;Guide.tap(M.btn);Panel.hint('40초가 넘었어요! <em>버튼을 눌러 멈춰요</em>');Guide.delay=350}
       requestAnimationFrame(f)};requestAnimationFrame(f)});
     /* 추출하는 동안 할 일 */
     (async()=>{await cupsDown(alive);if(!run)return;zone();zone2();await brushDirt(alive);if(!run)return;
@@ -264,23 +276,28 @@ async function brew(){
     $('#gauge').classList.add('off');
     /* 다시: 잔을 비우고 컵 워머로 */
     Panel.hint('잔을 비우고 <em>다시</em> 추출해요');puddle(0);
-    for(let i=0;i<2;i++){const c=Cup.all[i];c.set(0);Cup.at[i]=null;c.sp.hop(P.warm[i].x,P.warm[i].y,520,80,.06)}
+    for(let i=0;i<2;i++){const c=Cup.all[i],w=KIND[c.kind].warm[i];c.set(0);Cup.at[i]=null;c.sp.hop(w.x,w.y,520,80,.06)}
     await sleep(700);floatText(PF.x,PF.y-40,'커피를 새로 담았어요');await sleep(600);
   }
 }
-const cupTop=`<circle r="44" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M-36 -10H-66Q-76 -10 -76 0Q-76 10 -66 10H-36Z" fill="#fff" class="o4"/>
+const cupTopDemi=`<circle r="44" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M-36 -10H-66Q-76 -10 -76 0Q-76 10 -66 10H-36Z" fill="#fff" class="o4"/>
   <circle r="42" fill="#fff" class="o4"/><circle r="33" fill="#7a4a28" class="o3"/><circle r="27" fill="#c98a4b"/><circle r="27" fill="none" stroke="#a96a35" stroke-width="3" stroke-dasharray="6 7" opacity=".7"/>
   <path d="M-14 -18Q-4 -24 8 -20" stroke="#e7b77d" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+const cupTopCapp=`<circle r="60" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M-52 -12H-86Q-98 -12 -98 0Q-98 12 -86 12H-52Z" fill="#fff" class="o4"/>
+  <circle r="58" fill="#fff" class="o4"/><circle r="48" fill="#b98352" class="o3"/><circle r="42" fill="#fffaf0"/><circle r="30" fill="#fff"/>
+  <path d="M-20 -26Q-6 -34 10 -28" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+const cupTop=()=>M.cup==='capp'?cupTopCapp:cupTopDemi;
 async function toTray(){
   /* 추출한 잔을 위에서 본 트레이로 가져가 받침 위에 올린다 */
-  $('#prepGhost').innerHTML=[240,440].map((x,i)=>`<circle id="cg${i}" class="ghost" cx="${x}" cy="330" r="46"/>`).join('')+`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">잔은 받침 한가운데에</text>`;
+  const X=SXS(),sr=SR_(),cr=M.cup==='capp'?62:46;
+  $('#prepGhost').innerHTML=X.map((x,i)=>`<circle id="cg${i}" class="ghost" cx="${x}" cy="330" r="${cr}"/>`).join('')+`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">잔은 받침 한가운데에</text>`;
   const it=$('#prepItems');
-  it.innerHTML=[240,440].map(x=>`<g transform="translate(${x} 330)">${saucerTop}</g><g transform="translate(${x} 282) scale(.72)">${spoonTop}</g>`).join('');
-  const cups=[230,420].map(y=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=cupTop;it.appendChild(g);return{g,sp:new Sp(g,845,y)}});
+  it.innerHTML=X.map(x=>`<g transform="translate(${x} 330)">${saucerTopR(sr)}</g><g transform="translate(${x} ${330-sr+14}) scale(.72)">${spoonTop}</g>`).join('');
+  const cups=[230,420].map(y=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=cupTop();it.appendChild(g);return{g,sp:new Sp(g,845,y)}});
   $('#prep .ttl').textContent='잔 올리기';$('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
-  Panel.hint('에스프레소 잔을 <em>잔 받침 위</em>에 올려요');
-  const zones=[240,440].map(x=>({x,y:330,r:70,used:false}));
-  Guide.drag({x:845,y:230},{x:240,y:330});
+  Panel.hint(M.name+' 잔을 <em>잔 받침 위</em>에 올려요');
+  const zones=X.map(x=>({x,y:330,r:76,used:false}));
+  Guide.drag({x:845,y:230},{x:X[0],y:330});
   await Promise.all(cups.map(async (c,k)=>{const i=await drag(c.sp,c.g,{svg:svgP,zones,bounds:[60,60,960,560]});zones[i].used=true;$('#cg'+i).classList.add('done');
     await c.sp.to({x:zones[i].x,y:330,r:0,sx:1,sy:1},180,E.out);SFX.clink();Cup.at[k].tray=i;
     const o=cups.find(x=>x!==c);if(zones.some(z=>!z.used))Guide.drag({x:o.sp.x,y:o.sp.y},{x:zones[1-i].x,y:330})}));
@@ -296,8 +313,8 @@ async function serveJudges(){
   const spots=JUDGES.map(j=>({x:j.x,y:592,r:120}));
   $('#jSpots').innerHTML=spots.map((s,i)=>`<ellipse id="js${i}" class="ghost" cx="${s.x}" cy="${s.y}" rx="80" ry="20" style="display:none"/>`).join('');
   const sets=Cup.at.slice().sort((a,b)=>a.tray-b.tray).map((c,i)=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
-    g.innerHTML=`<g transform="scale(1.45)">${saucerSide()}<g transform="translate(-4 -20) scale(.9)">${spoonSide}</g></g>`;
-    const cc=glassCup('j'+i,1.3);cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
+    g.innerHTML=`<g transform="scale(1.45)">${saucerSide(M.cup==='capp'?58:46)}<g transform="translate(-4 -20) scale(.9)">${spoonSide}</g></g>`;
+    const cc=glassCup('j'+i,c.kind==='demi'?1.3:1,c.kind);cc.milk=c.milk;cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
   await anim(1100,t=>{tray.set({x:lerp(-320,800,t)});sets.forEach(s=>s.sp.set({x:lerp(-320,800,t)+s.off}))},E.out);SFX.clink();
   R.lines.push(await sayLine('실례하겠습니다.',lineTag()));
   Panel.hint('잔을 <em>심사위원 앞</em>에 하나씩 놓아요');spots.forEach((s,i)=>$('#js'+i).style.display='');
@@ -306,7 +323,7 @@ async function serveJudges(){
     await s.sp.to({x:spots[i].x,y:spots[i].y,r:0,sx:1,sy:1},200,E.out);SFX.clink();nod(i);jface(i,'happy');
     const o=sets.find(x=>x!==s);if(spots.some(z=>!z.used))Guide.drag({x:o.sp.x,y:o.sp.y-40},{x:spots[1-i].x,y:spots[1-i].y-40})}));
   Guide.stop();
-  R.lines.push(await sayLine('주문하신 에스프레소 두 잔 나왔습니다.',lineTag()));
+  R.lines.push(await sayLine('주문하신 '+M.name+' 두 잔 나왔습니다.',lineTag()));
   Panel.hint('<em>트레이</em>를 눌러 옆에 끼고 한 발 물러나요');$('.tin',T).classList.add('pickme');Guide.tap({x:800,y:600});
   await tap(T);Guide.stop();$('.tin',T).classList.remove('pickme');SFX.pick();await tray.to({x:-340},700,E.io);
   R.lines.push(await sayLine('맛있게 드십시오.',lineTag().replace('따라 말해요','말하면서 목례해요')));
@@ -316,9 +333,10 @@ async function serveJudges(){
 }
 
 /* ---------- 진행 ---------- */
-let lineNo=0;const LINES_TOTAL=7;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
+let lineNo=0,LINES_TOTAL=7;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
 function who(){const no=($('#inNo').value||'1').replace(/\D/g,'')||'1',name=$('#inName').value.trim();return{no,name}}
 async function espresso(){
+  M=MODES.esp;STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];LINES_TOTAL=7;$('#rtitle').textContent='에스프레소 결과';
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>jface(i,'idle'));JUDGES.forEach((j,i)=>{const c=$('#J'+i+' .check');c.style.opacity=0});
   const {no,name}=who();
@@ -334,7 +352,7 @@ async function espresso(){
   step(6);Panel.hide();await serveJudges();
   showResult();
 }
-function showResult(){
+function showResult(){if(M.key==='cap')return showCapResult();$('#rlist').classList.remove('two');
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;
   const row=(name,val,c)=>`<div><span>${name}</span><b style="background:${COL[c]}">${val}</b></div>`;
   const late=R.cupT!=null&&R.cupT>FLOW;
@@ -353,8 +371,9 @@ const snd=$('#snd');snd.innerHTML=IC.sndOn;snd.onclick=()=>{SFX.mute(!SFX.muted)
 $('#home').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#4a2c22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h12v-9" fill="#ff8a73"/><path d="M10 19v-5h4v5"/></svg>';
 const goHome=()=>{try{speechSynthesis.cancel()}catch(e){}location.reload()};
 $('#home').onclick=goHome;$('#tohome').onclick=goHome;
-$('#again').onclick=()=>{$('#result').classList.add('off');Bubble.hide();espresso()};
+$('#again').onclick=()=>{$('#result').classList.add('off');Bubble.hide();(M.key==='cap'?cappuccino:espresso)()};
 $('#inNo').value=store.get('no','1');$('#inName').value=store.get('name','');
-$('#goEsp').onclick=()=>{SFX.unlock();SFX.ok();store.set('no',$('#inNo').value);store.set('name',$('#inName').value.trim());$('#title').classList.add('off');espresso()};
+const startWith=fn=>()=>{SFX.unlock();SFX.ok();store.set('no',$('#inNo').value);store.set('name',$('#inName').value.trim());$('#title').classList.add('off');fn()};
+$('#goEsp').onclick=startWith(()=>espresso());$('#goCap').onclick=startWith(()=>cappuccino());
 step(1);resetBar();
-window.__game={P,PF,TAMP,BR,Cup,get R(){return R},JUDGES};
+window.__game={P,PF,TAMP,BR,Cup,get R(){return R},JUDGES,get M(){return M}};

@@ -137,6 +137,7 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
 #result h2{margin:0;font-weight:400;font-size:calc(var(--u)*4.4);text-align:center}
 #rlist{display:flex;flex-direction:column;gap:calc(var(--u)*.6);font-size:calc(var(--u)*2.7)}
 #rlist div{display:flex;justify-content:space-between;align-items:center;gap:calc(var(--u)*2);border-bottom:calc(var(--u)*.25) dashed #e1cdb4;padding-bottom:calc(var(--u)*.5)}
+#rlist.two{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(var(--u)*3);font-size:calc(var(--u)*2.3)}
 #rlist b{font-weight:400;padding:0 calc(var(--u)*1.2);border-radius:calc(var(--u)*1.4);color:#fff;white-space:nowrap}
 #rbtns{display:flex;gap:calc(var(--u)*1.6);justify-content:center;margin-top:calc(var(--u)*.8)}
 .cbtn{font:inherit;font-size:calc(var(--u)*3);color:#fff;background:var(--coral);border:calc(var(--u)*.45) solid var(--ink);border-radius:calc(var(--u)*4);
@@ -159,7 +160,7 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
 #chap{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*1.2);width:44%}
 .ch{font:inherit;text-align:left;display:flex;flex-direction:column;gap:calc(var(--u)*.2);background:#fff;color:var(--ink);border:calc(var(--u)*.45) solid var(--ink);
   border-radius:calc(var(--u)*2);padding:calc(var(--u)*1.2) calc(var(--u)*1.6);box-shadow:0 calc(var(--u)*.6) 0 var(--ink);cursor:pointer;font-size:calc(var(--u)*3)}
-.ch small{font-size:.66em;color:var(--muted)}
+.ch small{font-size:.66em;color:var(--muted);word-break:keep-all}
 .ch.on{background:var(--coral);color:#fff}.ch.on small{color:#fff}
 .ch:disabled{opacity:.5;cursor:default;box-shadow:none}
 .ch.big{grid-column:span 2;align-items:center;text-align:center;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*1.8) calc(var(--u)*1.6);background:var(--butter)}
@@ -252,7 +253,7 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
   <!-- 조작판 -->
   <rect x="448" y="214" width="604" height="78" rx="12" fill="url(#gSteel)" class="o4"/>
   <text x="474" y="244" font-size="20" fill="#e2634d">♨ CAFE</text>
-  <g fill="#3b3b40"><rect x="540" y="236" width="22" height="22" rx="5"/><rect x="568" y="236" width="22" height="22" rx="5"/><rect x="596" y="236" width="22" height="22" rx="5"/><rect x="624" y="236" width="22" height="22" rx="5"/>
+  <g fill="#3b3b40"><rect x="572" y="236" width="22" height="22" rx="5"/><rect x="600" y="236" width="22" height="22" rx="5"/><rect x="628" y="236" width="22" height="22" rx="5"/>
     <rect x="856" y="236" width="22" height="22" rx="5"/><rect x="884" y="236" width="22" height="22" rx="5"/><rect x="912" y="236" width="22" height="22" rx="5"/></g>
   <!-- 가운데 시간 표시 -->
   <rect x="668" y="226" width="164" height="56" rx="10" fill="#2c2626" class="o4"/>
@@ -260,7 +261,8 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
   <!-- 오른쪽 추출 버튼 -->
   <g id="bBtn" class="hit"><circle cx="980" cy="252" r="34" fill="url(#gChrome)" class="o4"/><circle id="bFace" cx="980" cy="252" r="25" fill="#7fd08a" class="o3"/>
     <path id="bPlay" d="M972 240l20 12-20 12z" fill="#fff" class="o3"/><rect id="bStop" x="969" y="241" width="22" height="22" rx="5" fill="#fff" class="o3" style="display:none"/></g>
-  <circle cx="490" cy="270" r="14" fill="#3b3b40" class="o3"/><circle cx="1012" cy="270" r="0"/>
+  <g id="bBtnL" class="hit"><circle cx="520" cy="252" r="34" fill="url(#gChrome)" class="o4"/><circle id="bFaceL" cx="520" cy="252" r="25" fill="#7fd08a" class="o3"/>
+    <path id="bPlayL" d="M512 240l20 12-20 12z" fill="#fff" class="o3"/><rect id="bStopL" x="509" y="241" width="22" height="22" rx="5" fill="#fff" class="o3" style="display:none"/></g>
   <!-- 앞판 (스테인리스) -->
   <rect x="448" y="300" width="604" height="240" rx="6" fill="url(#gSteel)" class="o4"/>
   <path d="M470 314V530M1030 314V530" stroke="#fff" stroke-width="8" opacity=".5"/>
@@ -328,7 +330,9 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
 
 <g id="Lcups"></g>
 <g id="Lstream" class="np"><path id="st1" fill="none" stroke-linecap="round"/><path id="st2" fill="none" stroke-linecap="round"/></g>
+<g id="pf2" class="np"></g>
 <g id="pf" class="hit"></g>
+<g id="collar2" class="np"><rect x="850" y="348" width="120" height="24" rx="9" fill="url(#gChrome)" class="o4"/><path d="M864 356H956" stroke="#fff" stroke-width="4" opacity=".7" stroke-linecap="round"/></g>
 <g id="collar" class="np"><rect x="850" y="348" width="120" height="24" rx="9" fill="url(#gChrome)" class="o4"/><path d="M864 356H956" stroke="#fff" stroke-width="4" opacity=".7" stroke-linecap="round"/></g>
 <g id="tamp" class="hit"></g>
 <g id="rimFront" class="np" style="display:none"><path d="M-50 0A50 13 0 0 0 50 0L40 0A40 9 0 0 1 -40 0Z" fill="#dfe6ea" class="o3"/></g>
@@ -352,12 +356,12 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
 
 <div id="prep" class="off"><div class="box"><span class="ttl">서빙 준비</span>
 <svg id="prepSvg" viewBox="0 0 1000 600" aria-hidden="true">
-  <rect width="1000" height="600" fill="#fbeedd"/>
+  <g id="prepBg">  <rect width="1000" height="600" fill="#fbeedd"/>
   <rect x="690" y="0" width="310" height="600" fill="#f3e2cb"/><path d="M690 0V600" class="o3 nf" opacity=".4"/>
   <text x="845" y="70" text-anchor="middle" font-size="30" fill="#8a5a44">기물</text>
   <circle cx="345" cy="320" r="252" fill="#4a2c22" opacity=".14"/>
   <circle cx="340" cy="312" r="252" fill="#6b4434" class="o"/>
-  <circle cx="340" cy="312" r="222" fill="#7d5040"/>
+  <circle cx="340" cy="312" r="222" fill="#7d5040"/></g>
   <g id="prepItems"></g>
   <g id="prepGhost" class="np"></g>
   <g id="fxP" class="np"></g>
@@ -386,7 +390,7 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
   <div id="chap">
     <button class="ch" type="button" disabled>준비 과정<small>만드는 중</small></button>
     <button class="ch on" id="goEsp" type="button">에스프레소<small>인사부터 서빙까지</small></button>
-    <button class="ch" type="button" disabled>카푸치노<small>만드는 중</small></button>
+    <button class="ch on" id="goCap" type="button">카푸치노<small>우유부터 서빙까지</small></button>
     <button class="ch" type="button" disabled>정리<small>만드는 중</small></button>
     <button class="ch big" type="button" disabled>실전 15분<small>준비 5분 + 시연 10분 · 만드는 중</small></button>
   </div>
