@@ -41,7 +41,7 @@ async def main():
         if h[:6] not in done: done.add(h[:6]); await pg.wait_for_timeout(250); await shot('say')
         await pg.click('#pbtn'); await pg.wait_for_timeout(1600); log.append('say:'+h.split('\n')[0][:12]); continue
 
-      if '트레이에' in h and 'prep' not in done:
+      if '잔 받침 2개' in h and 'prep' not in done:
         done.add('prep'); await pg.wait_for_timeout(900); await shot('prep')
         sp=await pg.evaluate("()=>[...document.querySelectorAll('#prepItems>g')].map(g=>g.getAttribute('transform'))")
         # 받침 2개
@@ -56,13 +56,19 @@ async def main():
             await click(845,y,'prepSvg'); await pg.wait_for_timeout(450)
           await drag(845,y,gx,282,'prepSvg'); await pg.wait_for_timeout(450)
         await pg.wait_for_timeout(250); await shot('prep_done'); log.append('prep'); await pg.wait_for_timeout(1800); continue
+      if '왼쪽으로 돌려서' in h and 'tw1' not in done:
+        done.add('tw1'); await pg.wait_for_timeout(700); await shot('bar_start'); x,y=await G('[g.PF.x,g.PF.y]')
+        await drag(x+150,y+28,x+20,y+28,up=False); await shot('twisting_out'); c=await cl(x-130,y+28); await pg.mouse.move(*c,steps=6); await pg.mouse.up(); log.append('twist out'); await pg.wait_for_timeout(700); await shot('unlocked'); continue
+      if '오른쪽으로 돌려서' in h and 'tw2' not in done:
+        done.add('tw2'); await pg.wait_for_timeout(500); x,y=await G('[g.PF.x,g.PF.y]'); await shot('insert')
+        await drag(x-120,y+28,x+180,y+28); log.append('twist in'); await pg.wait_for_timeout(700); await shot('locked'); continue
       if '그라인더에 걸어요' in h and 'g1' not in done:
-        done.add('g1'); await pg.wait_for_timeout(700); await shot('bar_start'); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,1330,520); log.append('pf>grinder'); await pg.wait_for_timeout(500); continue
+        done.add('g1'); await pg.wait_for_timeout(300); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,1330,520); log.append('pf>grinder'); await pg.wait_for_timeout(500); continue
       if '꾹 누르고' in h and 'grind' not in done:
         done.add('grind'); a=await cl(1330,398); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(1300); await shot('grinding'); await pg.wait_for_timeout(1300); await pg.mouse.up(); log.append('grind'); await pg.wait_for_timeout(600); continue
       if '탬퍼' in h and 'tamp' not in done:
         done.add('tamp'); await pg.wait_for_timeout(1200); await shot('tamp'); x,y=await G('[g.TAMP.x,g.TAMP.y]'); a=await cl(x,y-40); await pg.mouse.move(*a); await pg.mouse.down(); c=await cl(x,y+100); await pg.mouse.move(*c,steps=10); await pg.mouse.up(); log.append('tamp'); await pg.wait_for_timeout(1500); continue
-      if '오른쪽 그룹에 끼워요' in h and 'lock' not in done:
+      if '오른쪽 그룹 아래로' in h and 'lock' not in done:
         done.add('lock'); await pg.wait_for_timeout(400); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,910,400); log.append('lock'); await pg.wait_for_timeout(800); continue
       if '추출 버튼</em>을 눌러요' in await pg.inner_html('#ptext'):
         brewN+=1; await pg.wait_for_timeout(400); await click(980,252); mode=MODE if brewN==1 else 'good'

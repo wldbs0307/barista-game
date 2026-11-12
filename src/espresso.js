@@ -11,21 +11,23 @@ function judgeOf(s){if(s<20)return{k:'fail',t:'실격',c:'var(--red)',why:'20초
 const COL={g2:'var(--g2)',g1:'var(--g1)',yel:'var(--yel)',red:'var(--red)'};
 
 /* ---------- 그림: 투명 데미타세 ---------- */
+const CS=1;                    /* 데미타세 크기 (카푸치노 잔보다 작게) */
+const SHOW_LINE=true;          /* 30ml 표시선: 연습 때만. 실전 15분에서는 false */
 const GH=58,GR=30,GLINE=-GH*30/CAP*.92;
 const mlY=ml=>-clamp(ml,0,CAP)/CAP*GH*.92;
 function glassCup(uid,scale=1){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
   const body=`M-${GR} -${GH}C-${GR} -16 -18 0 -8 0L8 0C18 0 ${GR} -16 ${GR} -${GH}Z`;
   g.innerHTML=`<g class="cin"><g transform="scale(${scale})">
   <ellipse cx="0" cy="3" rx="${GR*.8}" ry="5" fill="#4a2c22" opacity=".14"/>
-  <path d="M${GR-3} -46C${GR+20} -50 ${GR+20} -20 ${GR-10} -16" fill="none" stroke="#4a2c22" stroke-width="12" stroke-linecap="round"/>
-  <path d="M${GR-3} -46C${GR+20} -50 ${GR+20} -20 ${GR-10} -16" fill="none" stroke="#f3fafb" stroke-width="5" stroke-linecap="round"/>
+  <path d="M-${GR-3} -46C-${GR+20} -50 -${GR+20} -20 -${GR-10} -16" fill="none" stroke="#4a2c22" stroke-width="12" stroke-linecap="round"/>
+  <path d="M-${GR-3} -46C-${GR+20} -50 -${GR+20} -20 -${GR-10} -16" fill="none" stroke="#f3fafb" stroke-width="5" stroke-linecap="round"/>
   <ellipse cx="0" cy="-${GH}" rx="${GR}" ry="7" fill="#e9f3f5"/>
   <clipPath id="gc${uid}"><path d="${body}"/></clipPath>
   <g clip-path="url(#gc${uid})"><rect class="liq" x="-40" y="0" width="80" height="0" fill="#3a1d10"/><rect class="crema" x="-40" y="0" width="80" height="0" fill="#c98a4b"/></g>
   <path d="${body}" fill="#dff1f5" fill-opacity=".32" class="o4"/>
   <path d="M-${GR-8} -${GH-10}Q-${GR-7} -26 -${GR-14} -12" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>
   <path class="mline" d="M-${GR-3} ${GLINE.toFixed(1)}H${GR-3}" stroke="#e2634d" stroke-width="2.5" stroke-dasharray="5 4"/>
-  <text class="mlt" x="${GR+8}" y="${(GLINE+5).toFixed(1)}" font-size="13" fill="#e2634d" style="display:none">30ml</text>
+  <text class="mlt" x="${GR+6}" y="${(GLINE+5).toFixed(1)}" font-size="13" fill="#e2634d" style="display:none">30ml</text>
   <ellipse cx="0" cy="-${GH}" rx="${GR}" ry="7" class="o3 nf"/>
   <g class="spill" style="display:none"><path class="drip" d="M-${GR-2} -${GH-4}V-4" stroke="#5a3220" stroke-width="5" fill="none" stroke-linecap="round"/><path class="drip" d="M${GR-4} -${GH-4}V-8" stroke="#5a3220" stroke-width="5" fill="none" stroke-linecap="round" style="animation-delay:-.3s"/></g>
   </g></g>`;
@@ -46,13 +48,13 @@ $('#pf').innerHTML=`
   <ellipse cx="0" cy="0" rx="40" ry="9" fill="#5b4840" class="o3"/>
   <ellipse id="pfFlat" cx="0" cy="1.5" rx="36.5" ry="7" fill="#3f2314" style="display:none"/>
   <path id="pfMound" d="" fill="#6b3f26" class="o3" style="display:none"/>
-  <path d="M46 2L120 12" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M46 2L120 12" stroke="#b7c3cb" stroke-width="7" stroke-linecap="round"/>
-  <path d="M112 10L178 20Q190 22 188 32Q186 42 174 40L110 30Z" fill="#3b2a26" class="o4"/>`;
+  <g id="pfH"><path d="M46 2L120 12" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M46 2L120 12" stroke="#b7c3cb" stroke-width="7" stroke-linecap="round"/>
+  <path d="M112 10L178 20Q190 22 188 32Q186 42 174 40L110 30Z" fill="#3b2a26" class="o4"/></g>`;
 $('#tamp').innerHTML=`
-  <rect x="-35" y="-15" width="70" height="15" rx="4" fill="url(#gChromeH)" class="o4"/>
-  <path d="M-13 -15L-9 -36H9L13 -15Z" fill="#b7c3cb" class="o4"/>
-  <path d="M-9 -36C-32 -42 -32 -80 0 -82C32 -80 32 -42 9 -36Z" fill="#6b4434" class="o4"/>
-  <path d="M-16 -64Q-10 -75 2 -75" stroke="#fff" stroke-width="5" opacity=".5" fill="none" stroke-linecap="round"/>`;
+  <rect x="-38" y="-18" width="76" height="18" rx="5" fill="url(#gChromeH)" class="o4"/>
+  <rect x="-15" y="-30" width="30" height="13" rx="3" fill="url(#gChromeH)" class="o3"/>
+  <path d="M-13 -30C-15 -46 -27 -58 -27 -74Q-27 -94 0 -94Q27 -94 27 -74C27 -58 15 -46 13 -30Z" fill="#6b4434" class="o4"/>
+  <path d="M-16 -76Q-14 -86 -2 -88" stroke="#fff" stroke-width="5" opacity=".45" fill="none" stroke-linecap="round"/>`;
 $('#brush').innerHTML=`
   <ellipse cx="0" cy="14" rx="70" ry="6" fill="#4a2c22" opacity=".14"/>
   <path d="M-70 4Q-74 -4 -66 -8L8 -10L8 8L-66 8Q-72 8 -70 4Z" fill="#c98f5c" class="o4"/>
@@ -60,16 +62,34 @@ $('#brush').innerHTML=`
   <path d="M24 -12L66 -18L66 16L24 10Z" fill="#e9c98f" class="o4"/>
   <path d="M30 -8L62 -12M30 0L62 0M30 6L62 10" stroke="#b8925a" stroke-width="3"/>`;
 const PF=new Sp($('#pf')),TAMP=new Sp($('#tamp')),RIMF=new Sp($('#rimFront')),BR=new Sp($('#brush'));
-const P={grpR:{x:910,y:366},grind:{x:1330,y:494},gBtn:{x:1330,y:398},tamp:{x:1470,y:548},tampReady:{x:1470,y:492},tampRest:{x:1550,y:640},
+const P={grpR:{x:910,y:366},grind:{x:1330,y:494},gBtn:{x:1330,y:398},tamp:{x:1450,y:594},tampReady:{x:1450,y:536},tampRest:{x:1556,y:640},
   bBtn:{x:980,y:252},slots:[{x:864,y:548},{x:956,y:548}],warm:[{x:520,y:186},{x:600,y:186}],tray:[{x:160,y:624},{x:300,y:624}],brush:{x:1206,y:652}};
 function setGrounds(g,tamped){const m=$('#pfMound'),f=$('#pfFlat');if(tamped){m.style.display='none';f.style.display='';return}
   f.style.display='none';if(g<=.02){m.style.display='none';return}m.style.display='';const h=(15*g*1.4).toFixed(1);m.setAttribute('d',`M-38 0C-30 ${-h} 30 ${-h} 38 0A38 8 0 0 1 -38 0Z`)}
+let handleS=1;
+function setHandle(s){handleS=s;$('#pfH').setAttribute('transform',`scale(${s.toFixed(3)} 1)`)}
+/* 손잡이를 옆으로 끌어서 돌린다. out: 오른쪽 → 왼쪽(빼기), in: 왼쪽 → 오른쪽(끼우기) */
+function twistPF(dir){return new Promise(res=>{const el=$('#pf'),from=dir==='out'?1:-.7,to=dir==='out'?-.7:1,y0=P.grpR.y,y1=P.grpR.y+30;let g=null,done=false;
+  setHandle(from);$('#collar').style.display='';PF.set({x:P.grpR.x,y:dir==='out'?y0:y1});
+  Panel.hint(dir==='out'?'포터필터 손잡이를 <em>왼쪽으로 돌려서</em> 빼요':'손잡이를 <em>오른쪽으로 돌려서</em> 끼워요');
+  const hx=dir==='out'?PF.x+150:PF.x-110;Guide.drag({x:hx,y:PF.y+30},{x:dir==='out'?PF.x-110:PF.x+150,y:PF.y+30});
+  const prog=s=>(s-from)/(to-from);
+  const dn=e=>{if(done)return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}g={x0:spt(e).x,s0:handleS};Guide.pause();SFX.pick()};
+  const mv=e=>{if(!g||done)return;const dx=spt(e).x-g.x0;let s=clamp(g.s0+dx/150,-.7,1);setHandle(s);const k=clamp(prog(s),0,1);PF.set({y:dir==='out'?y0+6*k:y1-(y1-y0)*k});
+    if(k>=.97){done=true;off();fin()}};
+  const up=()=>{if(!g||done)return;g=null;anim(250,t=>{setHandle(lerp(handleS,from,t));PF.set({y:dir==='out'?y0:y1})}).then(()=>{if(!done)Guide.resume()})};
+  const off=()=>{el.removeEventListener('pointerdown',dn);el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up)};
+  async function fin(){Guide.stop();SFX.snap();setHandle(to);
+    if(dir==='out'){await PF.to({y:y1+4},220,E.out);$('#collar').style.display='none';floatText(PF.x,PF.y-40,'빠졌어요!')}
+    else{await PF.to({y:y0},160,E.back);floatText(PF.x,PF.y-60,'딱!')}
+    res()}
+  el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}
 function setBrewBtn(on){$('#bPlay').style.display=on?'none':'';$('#bStop').style.display=on?'':'none';$('#bFace').setAttribute('fill',on?'#ff7a6b':'#7fd08a')}
 const needle=p=>$('#needle').setAttribute('transform',`rotate(${-120+clamp(p,0,1)*240} 750 430)`);
 function puddle(k){const e=$('#puddle');e.style.display=k>.01?'':'none';e.setAttribute('rx',30+120*k);e.setAttribute('ry',3+5*k);
   const r=clamp((k-.35)/.65,0,1);$('#runoff').style.display=r>0?'':'none';$('#floorPud').setAttribute('rx',20+110*r);$('#floorPud').setAttribute('ry',2+7*r)}
 function stream(on,t,now){[['#st1',0],['#st2',1]].forEach(([id,i])=>{const e=$(id);if(!on){e.setAttribute('d','');return}
-  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=P.slots[i].x,ty=c?P.slots[i].y+mlY(c.ml)*1.25:P.slots[i].y-4,w=Math.sin(now/110+i)*1.4;
+  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=P.slots[i].x,ty=c?P.slots[i].y+mlY(c.ml)*CS:P.slots[i].y-4,w=Math.sin(now/110+i)*1.4;
   e.setAttribute('d',`M${sx} ${sy}C${sx+w} ${lerp(sy,ty,.4)} ${tx-w} ${lerp(sy,ty,.7)} ${tx} ${ty}`);
   e.setAttribute('stroke',mix('#2a140c','#b9773f',clamp((t-FLOW)/26,0,1)));e.setAttribute('stroke-width',t<FLOW+2?3:4.5);
   if(t<FLOW+2){e.setAttribute('stroke-dasharray','7 12');e.setAttribute('stroke-dashoffset',(-(now/9)%19).toFixed(1))}else e.removeAttribute('stroke-dasharray')})}
@@ -115,13 +135,13 @@ let R=null;   /* 이번 판 기록 */
 const STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];
 const step=n=>{$('#step').innerHTML='에스프레소 <b>'+n+'/6</b> '+STEPS[n-1]};
 function resetBar(){
-  $('#Lcups').innerHTML='';Cup.all=P.warm.map((w,i)=>{const c=glassCup('w'+i,1.25);$('#Lcups').appendChild(c.g);c.sp.set({...w,r:0,sx:1,sy:1});return c});Cup.at=[null,null];
+  $('#Lcups').innerHTML='';Cup.all=P.warm.map((w,i)=>{const c=glassCup('w'+i,CS);c.line(SHOW_LINE);$('#Lcups').appendChild(c.g);c.sp.set({...w,r:0,sx:1,sy:1});return c});Cup.at=[null,null];
   /* 장식용 카푸치노 잔과 피쳐 */
   const deco=document.createElementNS(NS,'g');deco.setAttribute('class','np');
-  deco.innerHTML=[700,790].map(x=>`<g transform="translate(${x} 186)"><path d="M38 -44C66 -48 66 -14 30 -14" fill="none" stroke="#4a2c22" stroke-width="13" stroke-linecap="round"/><path d="M38 -44C66 -48 66 -14 30 -14" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M-40 -56Q-40 0 -14 0H14Q40 0 40 -56Z" fill="#fff" class="o4"/><ellipse cx="0" cy="-56" rx="40" ry="9" fill="#efe6db" class="o3"/></g>`).join('')
-    +[900,980].map(x=>`<g transform="translate(${x} 186)"><path d="M-26 -62L-30 -6Q-30 0 -24 0H24Q30 0 30 -6L26 -62Z" fill="url(#gChromeH)" class="o4"/><path d="M-26 -62L-38 -70L-24 -50Z" fill="#cfd9df" class="o3"/><path d="M26 -54Q46 -50 42 -28Q40 -16 28 -16" fill="none" stroke="#4a2c22" stroke-width="5"/></g>`).join('');
+  deco.innerHTML=[705,812].map(x=>`<g transform="translate(${x} 186)"><path d="M46 -54C78 -58 78 -16 38 -16" fill="none" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M46 -54C78 -58 78 -16 38 -16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M-48 -68Q-48 0 -16 0H16Q48 0 48 -68Z" fill="#fff" class="o4"/><ellipse cx="0" cy="-68" rx="48" ry="10" fill="#efe6db" class="o3"/></g>`).join('')
+    +[930,1004].map(x=>`<g transform="translate(${x} 186)"><path d="M-26 -62L-30 -6Q-30 0 -24 0H24Q30 0 30 -6L26 -62Z" fill="url(#gChromeH)" class="o4"/><path d="M-26 -62L-38 -70L-24 -50Z" fill="#cfd9df" class="o3"/><path d="M26 -54Q46 -50 42 -28Q40 -16 28 -16" fill="none" stroke="#4a2c22" stroke-width="5"/></g>`).join('');
   $('#Lcups').prepend(deco);
-  PF.set({...P.grpR,r:0,sx:1,sy:1});setGrounds(0,false);TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
+  PF.set({...P.grpR,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';setGrounds(0,false);TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
   $('#tDig').textContent='0초';setBrewBtn(false);needle(0);puddle(0);stream(false);zone();$('#zone2').style.display='none';Guide.stop();
   $('#rimFront').style.display='none';$('#gRing').setAttribute('stroke-dashoffset',251.3);$('#dirt').innerHTML='';$('#trayItems').innerHTML='';fx.innerHTML='';
   $('#gauge').classList.add('off')}
@@ -141,7 +161,7 @@ async function trayPrep(){
     const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTop:`<g class="sp"><g transform="scale(.72)">${spoonTop}</g></g>`;it.appendChild(g);
     o.g=g;o.sp=new Sp(g,o.x,o.y);if(o.k==='p')o.sp.set({r:o.left?0:180});return o});
   $('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
-  Panel.hint('트레이에 <em>잔 받침 2개</em>와 <em>스푼 2개</em>를 놓아요<small>스푼을 톡 누르면 방향이 바뀌어요</small>');
+  Panel.hint('먼저 <em>잔 받침 2개</em>, 그다음 <em>스푼 2개</em>를 놓아요<small>스푼을 톡 누르면 방향이 바뀌어요</small>');
   let mistakes=0,left=4;
   const pointNext=()=>{const o=items.find(o=>!o.done);if(!o)return Guide.stop();const z=G.findIndex(g=>!g.used&&g.k===o.k);Guide.drag({x:o.sp.x,y:o.sp.y},{x:G[z].x,y:G[z].y})};
   pointNext();
@@ -149,8 +169,8 @@ async function trayPrep(){
     const zones=G.map(g=>g.k===o.k?{x:g.x,y:g.y,r:80,get used(){return g.used}}:null);
     const i=await drag(o.sp,o.g,{svg:svgP,zones,bounds:[60,60,960,560],
       tap:o.k==='p'?()=>{o.left=!o.left;SFX.pick();o.sp.to({r:o.left?0:180},280,E.back)}:null,
-      accept:()=>o.k==='s'||o.left,
-      reject:()=>{mistakes++;SFX.no();Panel.hint('손잡이가 <em>왼쪽</em>으로 가게 해요<small>스푼을 톡 눌러서 돌려요</small>')}});
+      accept:i=>o.k==='s'||(G[i-2].used&&o.left),
+      reject:i=>{SFX.no();if(!G[i-2].used){Panel.hint('<em>잔 받침</em>을 먼저 놓아요');return}mistakes++;Panel.hint('손잡이가 <em>왼쪽</em>으로 가게 해요<small>스푼을 톡 눌러서 돌려요</small>')}});
     G[i].used=true;o.done=true;$('#pg'+i).classList.add('done');SFX.clink();await o.sp.to({x:G[i].x,y:G[i].y,r:o.k==='p'?0:0,sx:1,sy:1},200,E.back);
     left--;if(!left)Panel.hint('다 놓았어요!');else Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
   Guide.stop();SFX.great();await toast('서빙 준비 끝!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;
@@ -159,9 +179,10 @@ async function trayPrep(){
 
 /* ---------- 5) 추출 ---------- */
 async function grindTamp(){
-  Panel.hint('<em>오른쪽 포터필터</em>를 빼서 그라인더에 걸어요');zone(P.grind.x,P.grind.y+30,74,64);Guide.drag({x:PF.x,y:PF.y+20},{x:P.grind.x,y:P.grind.y+20});
+  await twistPF('out');
+  Panel.hint('<em>포터필터</em>를 그라인더에 걸어요');zone(P.grind.x,P.grind.y+30,74,64);Guide.drag({x:PF.x,y:PF.y+20},{x:P.grind.x,y:P.grind.y+20});
   await drag(PF,$('#pf'),{zone:{x:P.grind.x,y:P.grind.y,r:110}});
-  await PF.to({...P.grind,r:0,sx:1,sy:1},240,E.back);SFX.snap();
+  await PF.to({...P.grind,r:0,sx:1,sy:1},240,E.back);SFX.snap();anim(300,t=>setHandle(lerp(-.7,1,t)));
   Panel.hint('초록 버튼을 <em>꾹 누르고</em> 있어요');Guide.hold(P.gBtn);
   const ring=$('#gRing'),gEl=$('#grinder'),beans=$('#beans'),btn=$('#gBtn');let snd=null;ring.classList.add('ringp');
   await hold(btn,2400,(p,down)=>{ring.setAttribute('stroke-dashoffset',(251.3*(1-p)).toFixed(1));setGrounds(p,false);
@@ -173,7 +194,7 @@ async function grindTamp(){
   const D=[[1262,604],[1290,618],[1318,600],[1352,624],[1384,606],[1412,620],[1300,632],[1372,636],[1338,612],[1246,626]];
   $('#dirt').innerHTML=D.map(([x,y],i)=>`<circle class="dt" cx="${x}" cy="${y}" r="${4+i%3}" fill="#6b3f26"/>`).join('');
   await sleep(350);ring.setAttribute('stroke-dashoffset',251.3);
-  await PF.hop(P.tamp.x,P.tamp.y,520,60,0);SFX.pick();RIMF.set({...P.tamp});
+  await Promise.all([PF.hop(P.tamp.x,P.tamp.y,520,60,0),anim(500,t=>setHandle(lerp(1,.45,t)))]);SFX.pick();RIMF.set({...P.tamp});
   await TAMP.hop(P.tampReady.x,P.tampReady.y,460,40,0);$('#rimFront').style.display='';
   Panel.hint('<em>탬퍼</em>를 아래로 <em>꾹</em> 눌러요');Guide.drag({x:P.tampReady.x,y:P.tampReady.y-50},{x:P.tampReady.x,y:P.tamp.y-6});
   await new Promise(res=>{const el=$('#tamp'),cY=P.tamp.y-15,endY=P.tamp.y+3;let g=null,done=false,best=0;
@@ -185,9 +206,10 @@ async function grindTamp(){
     async function fin(){off();Guide.stop();SFX.thud();shake();setGrounds(0,true);floatText(P.tamp.x,P.tamp.y-96,'꾹!');await sleep(380);
       await TAMP.to({y:P.tampReady.y-10},220,E.out);$('#rimFront').style.display='none';await TAMP.hop(P.tampRest.x,P.tampRest.y,420,30,.08);SFX.ok();res()}
     el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});
-  Panel.hint('<em>포터필터</em>를 오른쪽 그룹에 끼워요');zone(P.grpR.x,P.grpR.y+40,80,64);Guide.drag({x:PF.x,y:PF.y+20},{x:P.grpR.x,y:P.grpR.y+40});
+  Panel.hint('<em>포터필터</em>를 오른쪽 그룹 아래로 가져가요');zone(P.grpR.x,P.grpR.y+40,80,64);Guide.drag({x:PF.x,y:PF.y+20},{x:P.grpR.x,y:P.grpR.y+40});
   await drag(PF,$('#pf'),{zone:{x:P.grpR.x,y:P.grpR.y+20,r:110}});
-  await PF.to({x:P.grpR.x,y:P.grpR.y+20,r:0,sx:1,sy:1},180,E.out);await PF.to({y:P.grpR.y},160,E.back);SFX.snap();
+  await Promise.all([PF.to({x:P.grpR.x,y:P.grpR.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
+  await twistPF('in');
 }
 function gaugeSet(t){const s=Math.floor(t),j=s<20?{t:'기다려요',c:'var(--muted)'}:judgeOf(s);
   $('#gsec').textContent=s+'초';$('#glabel').textContent=j.t;$('#glabel').style.background=j.c;$('#gmark').style.left=(clamp(t,0,45)/45*100)+'%';
@@ -246,7 +268,7 @@ async function brew(){
     await sleep(700);floatText(PF.x,PF.y-40,'커피를 새로 담았어요');await sleep(600);
   }
 }
-const cupTop=`<circle r="44" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M36 -10H66Q76 -10 76 0Q76 10 66 10H36Z" fill="#fff" class="o4"/>
+const cupTop=`<circle r="44" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M-36 -10H-66Q-76 -10 -76 0Q-76 10 -66 10H-36Z" fill="#fff" class="o4"/>
   <circle r="42" fill="#fff" class="o4"/><circle r="33" fill="#7a4a28" class="o3"/><circle r="27" fill="#c98a4b"/><circle r="27" fill="none" stroke="#a96a35" stroke-width="3" stroke-dasharray="6 7" opacity=".7"/>
   <path d="M-14 -18Q-4 -24 8 -20" stroke="#e7b77d" stroke-width="5" fill="none" stroke-linecap="round"/>`;
 async function toTray(){
@@ -275,7 +297,7 @@ async function serveJudges(){
   $('#jSpots').innerHTML=spots.map((s,i)=>`<ellipse id="js${i}" class="ghost" cx="${s.x}" cy="${s.y}" rx="80" ry="20" style="display:none"/>`).join('');
   const sets=Cup.at.slice().sort((a,b)=>a.tray-b.tray).map((c,i)=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
     g.innerHTML=`<g transform="scale(1.45)">${saucerSide()}<g transform="translate(-4 -20) scale(.9)">${spoonSide}</g></g>`;
-    const cc=glassCup('j'+i,1.45);cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
+    const cc=glassCup('j'+i,1.3);cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
   await anim(1100,t=>{tray.set({x:lerp(-320,800,t)});sets.forEach(s=>s.sp.set({x:lerp(-320,800,t)+s.off}))},E.out);SFX.clink();
   R.lines.push(await sayLine('실례하겠습니다.',lineTag()));
   Panel.hint('잔을 <em>심사위원 앞</em>에 하나씩 놓아요');spots.forEach((s,i)=>$('#js'+i).style.display='');
