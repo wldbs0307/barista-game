@@ -1,8 +1,8 @@
 /* ================= 에스프레소 단계 (실기 시연 1~6) ================= */
 const SCALE=2;                 /* 화면의 1초가 실제로는 0.5초 */
-const FLOW=5;                  /* 버튼을 누르고 화면 5초부터 커피가 나온다 */
-const RATE=30/25;              /* 화면 30초에 30ml */
-const CAP=41;                  /* 잔이 넘치는 양: 40초를 넘기면 넘친다 */
+const FLOW=9;                  /* 버튼을 누르고 화면 9초(실제 4.5초)부터 커피가 나온다: 잔 내릴 시간 */
+const RATE=30/(30-FLOW);       /* 화면 30초에 30ml */
+const CAP=Math.round((41-FLOW)*RATE);  /* 잔이 넘치는 양: 40초를 넘기면 넘친다 */
 const svgJ=$('#judge'),svgP=$('#prepSvg');
 const scene=w=>stage.classList.toggle('st',w==='bar');
 const store={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,v)}catch(e){}}};
@@ -131,14 +131,14 @@ function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none'
 const saucerTop=`<circle r="62" fill="#4a2c22" opacity=".14" cx="4" cy="6"/><circle r="62" fill="#fff" class="o4"/><circle r="38" fill="#f3ece3" class="o3"/><circle r="26" fill="#fff" opacity=".7"/>`;
 const spoonTop=`<path d="M-62 0H14" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M-62 0H14" stroke="#d6dee3" stroke-width="7" stroke-linecap="round"/><ellipse cx="34" cy="0" rx="24" ry="15" fill="#d6dee3" class="o4"/><ellipse cx="30" cy="-4" rx="9" ry="5" fill="#fff" opacity=".8"/>`;
 async function trayPrep(){
-  const G=[{x:240,y:350,k:'s'},{x:440,y:350,k:'s'},{x:240,y:238,k:'p'},{x:440,y:238,k:'p'}];
+  const G=[{x:240,y:330,k:'s'},{x:440,y:330,k:'s'},{x:240,y:310,k:'p'},{x:440,y:310,k:'p'}];
   $('#prepGhost').innerHTML=G.map((g,i)=>g.k==='s'?`<circle id="pg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="62"/>`
-    :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y})"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
-    +`<text x="340" y="150" text-anchor="middle" font-size="26" fill="#fbeedd">숟가락: 받침 위쪽, 손잡이는 왼쪽</text>`;
+    :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y}) scale(.72)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
+    +`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">스푼은 받침 위에, 손잡이는 왼쪽</text>`;
   const it=$('#prepItems');it.innerHTML='';
   const flipFirst=Math.random()<.5;
   const items=[{k:'s',x:845,y:175},{k:'s',x:845,y:160},{k:'p',x:845,y:330,left:!flipFirst},{k:'p',x:845,y:450,left:flipFirst}].map(o=>{
-    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTop:`<g class="sp">${spoonTop}</g>`;it.appendChild(g);
+    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTop:`<g class="sp"><g transform="scale(.72)">${spoonTop}</g></g>`;it.appendChild(g);
     o.g=g;o.sp=new Sp(g,o.x,o.y);if(o.k==='p')o.sp.set({r:o.left?0:180});return o});
   $('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
   Panel.hint('트레이에 <em>잔 받침 2개</em>와 <em>스푼 2개</em>를 놓아요<small>스푼을 톡 누르면 방향이 바뀌어요</small>');
@@ -152,7 +152,7 @@ async function trayPrep(){
       accept:()=>o.k==='s'||o.left,
       reject:()=>{mistakes++;SFX.no();Panel.hint('손잡이가 <em>왼쪽</em>으로 가게 해요<small>스푼을 톡 눌러서 돌려요</small>')}});
     G[i].used=true;o.done=true;$('#pg'+i).classList.add('done');SFX.clink();await o.sp.to({x:G[i].x,y:G[i].y,r:o.k==='p'?0:0,sx:1,sy:1},200,E.back);
-    left--;if(left)Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
+    left--;if(!left)Panel.hint('다 놓았어요!');else Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
   Guide.stop();SFX.great();await toast('서빙 준비 끝!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;
   $('#trayItems').innerHTML=P.tray.map(p=>`<g transform="translate(${p.x} ${p.y})">${saucerSide()}<g transform="translate(-6 -22) scale(.9)">${spoonSide}</g></g>`).join('');
   R.prep=mistakes}
@@ -284,16 +284,17 @@ async function serveJudges(){
 }
 
 /* ---------- 진행 ---------- */
-let lineNo=0;const LINES_TOTAL=12;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
+let lineNo=0;const LINES_TOTAL=7;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
 function who(){const no=($('#inNo').value||'1').replace(/\D/g,'')||'1',name=$('#inName').value.trim();return{no,name}}
 async function espresso(){
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>jface(i,'idle'));JUDGES.forEach((j,i)=>{const c=$('#J'+i+' .check');c.style.opacity=0});
   const {no,name}=who();
   step(1);await sleep(500);await judgeSay(0,'준비되면 시작해 주세요.');Bubble.hide();
-  const L=[[1,'시연 시작하겠습니다.'],[1,`안녕하세요. 수험번호 ${no}번 ${name?name+'입니다.':'입니다.'}`.replace(' 입니다','입니다')],[1,'바리스타 직업 수업을 통해 커피를 알게 되었고'],[1,'자격증 시험에 도전하게 되었습니다.'],
-    [2,'오늘 준비한 원두는'],[2,'아라비카 100%로 중강 배전된 원두입니다.'],
-    [3,'첫 번째로 추출해 드릴 커피는'],[3,'크레마가 풍부한 30ml 에스프레소 두 잔을 준비해 드리겠습니다.'],[3,'잠시만 기다려주십시오.']];
+  const me=`수험번호 ${no}번`+(name?` ${name}입니다.`:'입니다.');
+  const L=[[1,'시연 시작하겠습니다.'],[1,`안녕하세요. ${me} 바리스타 직업 수업을 통해 커피를 알게 되었고 자격증 시험에 도전하게 되었습니다.`],
+    [2,'오늘 준비한 원두는 아라비카 100%로 중강 배전된 원두입니다.'],
+    [3,'첫 번째로 추출해 드릴 커피는 크레마가 풍부한 30ml 에스프레소 두 잔을 준비해 드리겠습니다. 잠시만 기다려주십시오.']];
   for(const [s,l] of L){step(s);R.lines.push(await sayLine(l,lineTag()));nod(R.lines.length%2)}
   step(4);Panel.hide();await trayPrep();
   step(5);scene('bar');Guide.use('#hand');await sleep(900);

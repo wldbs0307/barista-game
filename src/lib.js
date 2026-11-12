@@ -60,7 +60,7 @@ const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const Panel={el:$('#panel'),tag:$('#ptag'),text:$('#ptext'),btn:$('#pbtn'),
   show(tag,html,btn,label){this.tag.textContent=tag||'';this.tag.hidden=!tag;this.text.innerHTML=html;this.btn.hidden=!btn;this.btn.className=btn||'';this.btn.onclick=null;
     this.btn.innerHTML=btn==='mic'?IC.mic:btn==='next'?'<span>'+(label||'다음')+'</span>'+IC.next:'';this.btn.setAttribute('aria-label',btn==='mic'?'말하기':(label||'다음'));this.el.classList.remove('off')},
-  hint(html){this.show('만들기',html,null)},hide(){this.el.classList.add('off')},
+  hint(html){this.text.classList.remove('long');this.show('만들기',html,null)},hide(){this.el.classList.add('off')},
   click(){return new Promise(res=>{this.btn.onclick=()=>{this.btn.onclick=null;SFX.pick();res()}})}};
 const Bubble={el:$('#bubble'),show(name,html){$('#bname').textContent=name;$('#btext').innerHTML=html;this.el.classList.remove('off')},hide(){this.el.classList.add('off')}};
 async function toast(msg,stars,ms=1250){const t=$('#toast');t.innerHTML=(stars!=null?'<div class="stars">'+[0,1,2].map(i=>i<stars?IC.star:IC.starOff).join('')+'</div>':'')+'<div>'+msg+'</div>';
@@ -88,21 +88,26 @@ function whyText(){const w=Speech.why||(SR?'':'nosr');
   if(w==='nosr')return '이 브라우저는 음성인식이 안 돼요. Chrome으로 열어요.';
   return '지금은 마이크를 쓸 수 없어요.'}
 const canListen=()=>!!((Speech.dict&&!Speech.dictBad)||(SR&&!Speech.srBad));
-function listenSR(){return new Promise(res=>{let done=false,to=0;const fin=v=>{if(!done){done=true;clearTimeout(to);res(v)}};let r;
+/* 긴 문장: 말이 잠깐 끊겨도 이어서 듣고, 1.8초 동안 새 말이 없으면 끝낸다 */
+function listenSR(){return new Promise(res=>{let done=false,to=0,quiet=0,fin_='',alts=[],part='';let r;
+  const out=()=>{const a=[(fin_+' '+part).trim()];alts.forEach(x=>a.push((fin_.slice(0,fin_.length-x.base.length)+x.t+' '+part).trim()));return a.filter(Boolean)};
+  const fin=v=>{if(!done){done=true;clearTimeout(to);clearTimeout(quiet);try{r&&r.stop()}catch(e){}res(v)}};
   const bad=w=>{Speech.srBad=true;Speech.why=w;fin(null)};
   try{r=new SR()}catch(e){return bad('nosr')}
-  r.lang='ko-KR';r.maxAlternatives=5;r.interimResults=false;
-  r.onresult=e=>{const o=[];for(let i=0;i<e.results[0].length;i++)o.push(e.results[0][i].transcript);fin(o)};
-  r.onerror=e=>{Speech.lastErr=e.error;if(e.error==='not-allowed')bad('denied');else if(e.error==='service-not-allowed')bad('service');else if(e.error==='audio-capture')bad('nomic');else fin([])};
-  r.onend=()=>fin([]);to=setTimeout(()=>{try{r.stop()}catch(e){}fin([])},20000);
+  r.lang='ko-KR';r.maxAlternatives=3;r.interimResults=true;r.continuous=true;
+  r.onresult=e=>{part='';for(let i=e.resultIndex;i<e.results.length;i++){const R=e.results[i];
+      if(R.isFinal){const base=R[0].transcript;fin_+=' '+base;alts=[];for(let k=1;k<R.length;k++)alts.push({base,t:R[k].transcript})}else part+=R[0].transcript}
+    clearTimeout(quiet);quiet=setTimeout(()=>fin(out()),1800)};
+  r.onerror=e=>{Speech.lastErr=e.error;if(e.error==='not-allowed')bad('denied');else if(e.error==='service-not-allowed')bad('service');else if(e.error==='audio-capture')bad('nomic');else fin(out())};
+  r.onend=()=>fin(out());to=setTimeout(()=>fin(out()),25000);
   try{r.start()}catch(e){Speech.srBad=true;fin(null)}})}
 function listenDict(){const d=Speech.dict;return new Promise(res=>{let fin_='',part='',done=false,to=0,endT=0;const offs=[];
-  const out=()=>[fin_.trim(),part.trim()].filter(Boolean);
+  const out=()=>[(fin_+' '+part).trim(),fin_.trim()].filter(Boolean);
   const fin=v=>{if(done)return;done=true;clearTimeout(to);clearTimeout(endT);offs.forEach(f=>{try{f()}catch(e){}});res(v)};
   const wrap=()=>{let p;try{p=d.stop()}catch(e){p=null}Promise.resolve(p).catch(()=>{}).then(()=>fin(out()))};
-  try{offs.push(d.onFinal(e=>{fin_+=e.text;clearTimeout(endT);endT=setTimeout(wrap,450)}));
+  try{offs.push(d.onFinal(e=>{fin_+=' '+e.text;part='';clearTimeout(endT);endT=setTimeout(wrap,1800)}));
     offs.push(d.onPartial(e=>{if(e.text)part=e.text}));
-    d.start({language:'ko'}).then(()=>{to=setTimeout(wrap,9000);offs.push(d.onState(e=>{if(e.state==='idle')fin(out())}))},
+    d.start({language:'ko'}).then(()=>{to=setTimeout(wrap,25000);offs.push(d.onState(e=>{if(e.state==='idle')fin(out())}))},
       err=>{const c=err&&err.code;if(c==='dismissed'||c==='stopped'||c==='rate_limited'||c==='upstream_error')fin([]);else{Speech.dictBad=true;fin(null)}})}
   catch(e){Speech.dictBad=true;fin(null)}})}
 /* 버튼을 누른 그 순간에 바로 불러야 한다 */
@@ -111,7 +116,7 @@ function tts(text,pitch=1){return new Promise(res=>{let done=false;const fin=()=
   try{const ss=window.speechSynthesis;if(!ss||SFX.muted)return setTimeout(fin,wait);ss.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=.9;u.pitch=pitch;u.onend=fin;u.onerror=fin;ss.speak(u);setTimeout(fin,wait+1800)}
   catch(e){setTimeout(fin,wait)}})}
 async function sayLine(target,tag='따라 말해요'){
-  let tries=0;Panel.show(tag,esc(target),'mic');
+  let tries=0;Panel.text.classList.toggle('long',target.length>34);Panel.show(tag,esc(target),'mic');
   for(;;){
     if(!canListen()){Panel.show('소리 내어 말해요',esc(target)+'<small>'+whyText()+'</small>','next','말했어요');await Panel.click();return 1}
     const heard=await new Promise(res=>{Panel.btn.onclick=()=>{Panel.btn.onclick=null;Panel.btn.classList.add('listening');Panel.tag.textContent='듣고 있어요';SFX.pick();res(listenNow())}});

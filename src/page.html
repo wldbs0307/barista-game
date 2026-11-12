@@ -98,6 +98,7 @@ svg text{font-family:var(--font)}
 #panel.off{transform:translateY(140%);opacity:0;pointer-events:none}
 #ptag{position:absolute;left:calc(var(--u)*2.2);top:calc(var(--u)*-1.9);background:var(--coral);color:#fff;
   border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*1.6);padding:calc(var(--u)*.1) calc(var(--u)*1.5);font-size:calc(var(--u)*2.2)}
+#ptext.long{font-size:calc(var(--u)*2.8)}
 #ptext{flex:1;min-width:0;font-size:calc(var(--u)*3.3);line-height:1.3;text-wrap:balance;word-break:keep-all}
 #ptext small{display:block;font-size:.6em;color:var(--muted);margin-top:calc(var(--u)*.3)}
 #ptext em{font-style:normal;color:var(--coral-d)}
@@ -148,20 +149,21 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
 #title.off{opacity:0;pointer-events:none}
 #tleft{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.2);width:38%}
 #tleft svg{width:calc(var(--u)*15);height:calc(var(--u)*13)}
-#title h1{margin:0;font-size:calc(var(--u)*6);font-weight:400;line-height:1.1;text-align:center}
+#title h1{margin:0;font-size:calc(var(--u)*4.6);font-weight:400;line-height:1.1;text-align:center;white-space:nowrap}
 #title p{margin:0;font-size:calc(var(--u)*2.6);color:var(--muted);text-align:center}
 .who{display:flex;gap:calc(var(--u)*1);width:100%}
-.who label{display:flex;flex-direction:column;gap:calc(var(--u)*.3);font-size:calc(var(--u)*2.2);color:var(--muted)}
+.who label{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.3);font-size:calc(var(--u)*2.2);color:var(--muted);text-align:center}
 .who label:first-child{width:34%}.who label:last-child{flex:1}
 .who input{font:inherit;font-size:calc(var(--u)*3);color:var(--ink);background:#fff;border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*1.6);
-  padding:calc(var(--u)*.6) calc(var(--u)*1.2);width:100%;box-sizing:border-box;min-width:0}
+  padding:calc(var(--u)*.6) calc(var(--u)*1.2);width:100%;box-sizing:border-box;min-width:0;text-align:center}
 #chap{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*1.2);width:44%}
 .ch{font:inherit;text-align:left;display:flex;flex-direction:column;gap:calc(var(--u)*.2);background:#fff;color:var(--ink);border:calc(var(--u)*.45) solid var(--ink);
   border-radius:calc(var(--u)*2);padding:calc(var(--u)*1.2) calc(var(--u)*1.6);box-shadow:0 calc(var(--u)*.6) 0 var(--ink);cursor:pointer;font-size:calc(var(--u)*3)}
 .ch small{font-size:.66em;color:var(--muted)}
 .ch.on{background:var(--coral);color:#fff}.ch.on small{color:#fff}
 .ch:disabled{opacity:.5;cursor:default;box-shadow:none}
-.ch.wide{grid-column:span 2}
+.ch.big{grid-column:span 2;align-items:center;text-align:center;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*1.8) calc(var(--u)*1.6);background:var(--butter)}
+.ch.big small{font-size:.5em}
 @media (prefers-reduced-motion:reduce){.bob,.pickme,.blink{animation:none}.layer{transition:none}}
 </style>
 
@@ -355,8 +357,8 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
   <circle cx="345" cy="320" r="252" fill="#4a2c22" opacity=".14"/>
   <circle cx="340" cy="312" r="252" fill="#6b4434" class="o"/>
   <circle cx="340" cy="312" r="222" fill="#7d5040"/>
-  <g id="prepGhost"></g>
   <g id="prepItems"></g>
+  <g id="prepGhost" class="np"></g>
   <g id="fxP" class="np"></g>
   <g id="handP" class="np" style="display:none"><g transform="rotate(-20) translate(0 4)"><path d="M0 0C9 0 13 7 13 14V44C30 40 46 50 46 66V84C46 104 30 116 8 116C-12 116 -26 106 -30 88L-37 62C-39 52 -28 46 -20 55L-13 64V14C-13 7 -9 0 0 0Z" fill="#fffaf2" class="o4"/></g></g>
 </svg></div></div>
@@ -381,11 +383,11 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
     </div>
   </div>
   <div id="chap">
-    <button class="ch on wide" id="goEsp" type="button">에스프레소<small>시연 1~6 · 인사부터 서빙까지</small></button>
-    <button class="ch" type="button" disabled>카푸치노<small>만드는 중</small></button>
     <button class="ch" type="button" disabled>준비 과정<small>만드는 중</small></button>
+    <button class="ch on" id="goEsp" type="button">에스프레소<small>인사부터 서빙까지</small></button>
+    <button class="ch" type="button" disabled>카푸치노<small>만드는 중</small></button>
     <button class="ch" type="button" disabled>정리<small>만드는 중</small></button>
-    <button class="ch" type="button" disabled>실전 15분<small>만드는 중</small></button>
+    <button class="ch big" type="button" disabled>실전 15분<small>준비 5분 + 시연 10분 · 만드는 중</small></button>
   </div>
 </div>
 </div>

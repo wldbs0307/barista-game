@@ -98,6 +98,7 @@ svg text{font-family:var(--font)}
 #panel.off{transform:translateY(140%);opacity:0;pointer-events:none}
 #ptag{position:absolute;left:calc(var(--u)*2.2);top:calc(var(--u)*-1.9);background:var(--coral);color:#fff;
   border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*1.6);padding:calc(var(--u)*.1) calc(var(--u)*1.5);font-size:calc(var(--u)*2.2)}
+#ptext.long{font-size:calc(var(--u)*2.8)}
 #ptext{flex:1;min-width:0;font-size:calc(var(--u)*3.3);line-height:1.3;text-wrap:balance;word-break:keep-all}
 #ptext small{display:block;font-size:.6em;color:var(--muted);margin-top:calc(var(--u)*.3)}
 #ptext em{font-style:normal;color:var(--coral-d)}
@@ -148,20 +149,21 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
 #title.off{opacity:0;pointer-events:none}
 #tleft{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.2);width:38%}
 #tleft svg{width:calc(var(--u)*15);height:calc(var(--u)*13)}
-#title h1{margin:0;font-size:calc(var(--u)*6);font-weight:400;line-height:1.1;text-align:center}
+#title h1{margin:0;font-size:calc(var(--u)*4.6);font-weight:400;line-height:1.1;text-align:center;white-space:nowrap}
 #title p{margin:0;font-size:calc(var(--u)*2.6);color:var(--muted);text-align:center}
 .who{display:flex;gap:calc(var(--u)*1);width:100%}
-.who label{display:flex;flex-direction:column;gap:calc(var(--u)*.3);font-size:calc(var(--u)*2.2);color:var(--muted)}
+.who label{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.3);font-size:calc(var(--u)*2.2);color:var(--muted);text-align:center}
 .who label:first-child{width:34%}.who label:last-child{flex:1}
 .who input{font:inherit;font-size:calc(var(--u)*3);color:var(--ink);background:#fff;border:calc(var(--u)*.4) solid var(--ink);border-radius:calc(var(--u)*1.6);
-  padding:calc(var(--u)*.6) calc(var(--u)*1.2);width:100%;box-sizing:border-box;min-width:0}
+  padding:calc(var(--u)*.6) calc(var(--u)*1.2);width:100%;box-sizing:border-box;min-width:0;text-align:center}
 #chap{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*1.2);width:44%}
 .ch{font:inherit;text-align:left;display:flex;flex-direction:column;gap:calc(var(--u)*.2);background:#fff;color:var(--ink);border:calc(var(--u)*.45) solid var(--ink);
   border-radius:calc(var(--u)*2);padding:calc(var(--u)*1.2) calc(var(--u)*1.6);box-shadow:0 calc(var(--u)*.6) 0 var(--ink);cursor:pointer;font-size:calc(var(--u)*3)}
 .ch small{font-size:.66em;color:var(--muted)}
 .ch.on{background:var(--coral);color:#fff}.ch.on small{color:#fff}
 .ch:disabled{opacity:.5;cursor:default;box-shadow:none}
-.ch.wide{grid-column:span 2}
+.ch.big{grid-column:span 2;align-items:center;text-align:center;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*1.8) calc(var(--u)*1.6);background:var(--butter)}
+.ch.big small{font-size:.5em}
 @media (prefers-reduced-motion:reduce){.bob,.pickme,.blink{animation:none}.layer{transition:none}}
 </style>
 
@@ -355,8 +357,8 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
   <circle cx="345" cy="320" r="252" fill="#4a2c22" opacity=".14"/>
   <circle cx="340" cy="312" r="252" fill="#6b4434" class="o"/>
   <circle cx="340" cy="312" r="222" fill="#7d5040"/>
-  <g id="prepGhost"></g>
   <g id="prepItems"></g>
+  <g id="prepGhost" class="np"></g>
   <g id="fxP" class="np"></g>
   <g id="handP" class="np" style="display:none"><g transform="rotate(-20) translate(0 4)"><path d="M0 0C9 0 13 7 13 14V44C30 40 46 50 46 66V84C46 104 30 116 8 116C-12 116 -26 106 -30 88L-37 62C-39 52 -28 46 -20 55L-13 64V14C-13 7 -9 0 0 0Z" fill="#fffaf2" class="o4"/></g></g>
 </svg></div></div>
@@ -381,11 +383,11 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
     </div>
   </div>
   <div id="chap">
-    <button class="ch on wide" id="goEsp" type="button">에스프레소<small>시연 1~6 · 인사부터 서빙까지</small></button>
-    <button class="ch" type="button" disabled>카푸치노<small>만드는 중</small></button>
     <button class="ch" type="button" disabled>준비 과정<small>만드는 중</small></button>
+    <button class="ch on" id="goEsp" type="button">에스프레소<small>인사부터 서빙까지</small></button>
+    <button class="ch" type="button" disabled>카푸치노<small>만드는 중</small></button>
     <button class="ch" type="button" disabled>정리<small>만드는 중</small></button>
-    <button class="ch" type="button" disabled>실전 15분<small>만드는 중</small></button>
+    <button class="ch big" type="button" disabled>실전 15분<small>준비 5분 + 시연 10분 · 만드는 중</small></button>
   </div>
 </div>
 </div>
@@ -453,7 +455,7 @@ const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const Panel={el:$('#panel'),tag:$('#ptag'),text:$('#ptext'),btn:$('#pbtn'),
   show(tag,html,btn,label){this.tag.textContent=tag||'';this.tag.hidden=!tag;this.text.innerHTML=html;this.btn.hidden=!btn;this.btn.className=btn||'';this.btn.onclick=null;
     this.btn.innerHTML=btn==='mic'?IC.mic:btn==='next'?'<span>'+(label||'다음')+'</span>'+IC.next:'';this.btn.setAttribute('aria-label',btn==='mic'?'말하기':(label||'다음'));this.el.classList.remove('off')},
-  hint(html){this.show('만들기',html,null)},hide(){this.el.classList.add('off')},
+  hint(html){this.text.classList.remove('long');this.show('만들기',html,null)},hide(){this.el.classList.add('off')},
   click(){return new Promise(res=>{this.btn.onclick=()=>{this.btn.onclick=null;SFX.pick();res()}})}};
 const Bubble={el:$('#bubble'),show(name,html){$('#bname').textContent=name;$('#btext').innerHTML=html;this.el.classList.remove('off')},hide(){this.el.classList.add('off')}};
 async function toast(msg,stars,ms=1250){const t=$('#toast');t.innerHTML=(stars!=null?'<div class="stars">'+[0,1,2].map(i=>i<stars?IC.star:IC.starOff).join('')+'</div>':'')+'<div>'+msg+'</div>';
@@ -481,21 +483,26 @@ function whyText(){const w=Speech.why||(SR?'':'nosr');
   if(w==='nosr')return '이 브라우저는 음성인식이 안 돼요. Chrome으로 열어요.';
   return '지금은 마이크를 쓸 수 없어요.'}
 const canListen=()=>!!((Speech.dict&&!Speech.dictBad)||(SR&&!Speech.srBad));
-function listenSR(){return new Promise(res=>{let done=false,to=0;const fin=v=>{if(!done){done=true;clearTimeout(to);res(v)}};let r;
+/* 긴 문장: 말이 잠깐 끊겨도 이어서 듣고, 1.8초 동안 새 말이 없으면 끝낸다 */
+function listenSR(){return new Promise(res=>{let done=false,to=0,quiet=0,fin_='',alts=[],part='';let r;
+  const out=()=>{const a=[(fin_+' '+part).trim()];alts.forEach(x=>a.push((fin_.slice(0,fin_.length-x.base.length)+x.t+' '+part).trim()));return a.filter(Boolean)};
+  const fin=v=>{if(!done){done=true;clearTimeout(to);clearTimeout(quiet);try{r&&r.stop()}catch(e){}res(v)}};
   const bad=w=>{Speech.srBad=true;Speech.why=w;fin(null)};
   try{r=new SR()}catch(e){return bad('nosr')}
-  r.lang='ko-KR';r.maxAlternatives=5;r.interimResults=false;
-  r.onresult=e=>{const o=[];for(let i=0;i<e.results[0].length;i++)o.push(e.results[0][i].transcript);fin(o)};
-  r.onerror=e=>{Speech.lastErr=e.error;if(e.error==='not-allowed')bad('denied');else if(e.error==='service-not-allowed')bad('service');else if(e.error==='audio-capture')bad('nomic');else fin([])};
-  r.onend=()=>fin([]);to=setTimeout(()=>{try{r.stop()}catch(e){}fin([])},20000);
+  r.lang='ko-KR';r.maxAlternatives=3;r.interimResults=true;r.continuous=true;
+  r.onresult=e=>{part='';for(let i=e.resultIndex;i<e.results.length;i++){const R=e.results[i];
+      if(R.isFinal){const base=R[0].transcript;fin_+=' '+base;alts=[];for(let k=1;k<R.length;k++)alts.push({base,t:R[k].transcript})}else part+=R[0].transcript}
+    clearTimeout(quiet);quiet=setTimeout(()=>fin(out()),1800)};
+  r.onerror=e=>{Speech.lastErr=e.error;if(e.error==='not-allowed')bad('denied');else if(e.error==='service-not-allowed')bad('service');else if(e.error==='audio-capture')bad('nomic');else fin(out())};
+  r.onend=()=>fin(out());to=setTimeout(()=>fin(out()),25000);
   try{r.start()}catch(e){Speech.srBad=true;fin(null)}})}
 function listenDict(){const d=Speech.dict;return new Promise(res=>{let fin_='',part='',done=false,to=0,endT=0;const offs=[];
-  const out=()=>[fin_.trim(),part.trim()].filter(Boolean);
+  const out=()=>[(fin_+' '+part).trim(),fin_.trim()].filter(Boolean);
   const fin=v=>{if(done)return;done=true;clearTimeout(to);clearTimeout(endT);offs.forEach(f=>{try{f()}catch(e){}});res(v)};
   const wrap=()=>{let p;try{p=d.stop()}catch(e){p=null}Promise.resolve(p).catch(()=>{}).then(()=>fin(out()))};
-  try{offs.push(d.onFinal(e=>{fin_+=e.text;clearTimeout(endT);endT=setTimeout(wrap,450)}));
+  try{offs.push(d.onFinal(e=>{fin_+=' '+e.text;part='';clearTimeout(endT);endT=setTimeout(wrap,1800)}));
     offs.push(d.onPartial(e=>{if(e.text)part=e.text}));
-    d.start({language:'ko'}).then(()=>{to=setTimeout(wrap,9000);offs.push(d.onState(e=>{if(e.state==='idle')fin(out())}))},
+    d.start({language:'ko'}).then(()=>{to=setTimeout(wrap,25000);offs.push(d.onState(e=>{if(e.state==='idle')fin(out())}))},
       err=>{const c=err&&err.code;if(c==='dismissed'||c==='stopped'||c==='rate_limited'||c==='upstream_error')fin([]);else{Speech.dictBad=true;fin(null)}})}
   catch(e){Speech.dictBad=true;fin(null)}})}
 /* 버튼을 누른 그 순간에 바로 불러야 한다 */
@@ -504,7 +511,7 @@ function tts(text,pitch=1){return new Promise(res=>{let done=false;const fin=()=
   try{const ss=window.speechSynthesis;if(!ss||SFX.muted)return setTimeout(fin,wait);ss.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=.9;u.pitch=pitch;u.onend=fin;u.onerror=fin;ss.speak(u);setTimeout(fin,wait+1800)}
   catch(e){setTimeout(fin,wait)}})}
 async function sayLine(target,tag='따라 말해요'){
-  let tries=0;Panel.show(tag,esc(target),'mic');
+  let tries=0;Panel.text.classList.toggle('long',target.length>34);Panel.show(tag,esc(target),'mic');
   for(;;){
     if(!canListen()){Panel.show('소리 내어 말해요',esc(target)+'<small>'+whyText()+'</small>','next','말했어요');await Panel.click();return 1}
     const heard=await new Promise(res=>{Panel.btn.onclick=()=>{Panel.btn.onclick=null;Panel.btn.classList.add('listening');Panel.tag.textContent='듣고 있어요';SFX.pick();res(listenNow())}});
@@ -576,9 +583,9 @@ function hold(el,ms,onP,onState){return new Promise(res=>{let p=0,down=false,las
   const f=now=>{if(last&&down)p=Math.min(1,p+(now-last)/ms);last=now;onP(p,down);if(p>=1){done=true;if(down){down=false;onState(false)}off();Guide.stop();res();return}requestAnimationFrame(f)};requestAnimationFrame(f)})}
 /* ================= 에스프레소 단계 (실기 시연 1~6) ================= */
 const SCALE=2;                 /* 화면의 1초가 실제로는 0.5초 */
-const FLOW=5;                  /* 버튼을 누르고 화면 5초부터 커피가 나온다 */
-const RATE=30/25;              /* 화면 30초에 30ml */
-const CAP=41;                  /* 잔이 넘치는 양: 40초를 넘기면 넘친다 */
+const FLOW=9;                  /* 버튼을 누르고 화면 9초(실제 4.5초)부터 커피가 나온다: 잔 내릴 시간 */
+const RATE=30/(30-FLOW);       /* 화면 30초에 30ml */
+const CAP=Math.round((41-FLOW)*RATE);  /* 잔이 넘치는 양: 40초를 넘기면 넘친다 */
 const svgJ=$('#judge'),svgP=$('#prepSvg');
 const scene=w=>stage.classList.toggle('st',w==='bar');
 const store={get(k,d){try{const v=localStorage.getItem('kb_'+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem('kb_'+k,v)}catch(e){}}};
@@ -707,14 +714,14 @@ function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none'
 const saucerTop=`<circle r="62" fill="#4a2c22" opacity=".14" cx="4" cy="6"/><circle r="62" fill="#fff" class="o4"/><circle r="38" fill="#f3ece3" class="o3"/><circle r="26" fill="#fff" opacity=".7"/>`;
 const spoonTop=`<path d="M-62 0H14" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M-62 0H14" stroke="#d6dee3" stroke-width="7" stroke-linecap="round"/><ellipse cx="34" cy="0" rx="24" ry="15" fill="#d6dee3" class="o4"/><ellipse cx="30" cy="-4" rx="9" ry="5" fill="#fff" opacity=".8"/>`;
 async function trayPrep(){
-  const G=[{x:240,y:350,k:'s'},{x:440,y:350,k:'s'},{x:240,y:238,k:'p'},{x:440,y:238,k:'p'}];
+  const G=[{x:240,y:330,k:'s'},{x:440,y:330,k:'s'},{x:240,y:310,k:'p'},{x:440,y:310,k:'p'}];
   $('#prepGhost').innerHTML=G.map((g,i)=>g.k==='s'?`<circle id="pg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="62"/>`
-    :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y})"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
-    +`<text x="340" y="150" text-anchor="middle" font-size="26" fill="#fbeedd">숟가락: 받침 위쪽, 손잡이는 왼쪽</text>`;
+    :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y}) scale(.72)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
+    +`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">스푼은 받침 위에, 손잡이는 왼쪽</text>`;
   const it=$('#prepItems');it.innerHTML='';
   const flipFirst=Math.random()<.5;
   const items=[{k:'s',x:845,y:175},{k:'s',x:845,y:160},{k:'p',x:845,y:330,left:!flipFirst},{k:'p',x:845,y:450,left:flipFirst}].map(o=>{
-    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTop:`<g class="sp">${spoonTop}</g>`;it.appendChild(g);
+    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTop:`<g class="sp"><g transform="scale(.72)">${spoonTop}</g></g>`;it.appendChild(g);
     o.g=g;o.sp=new Sp(g,o.x,o.y);if(o.k==='p')o.sp.set({r:o.left?0:180});return o});
   $('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
   Panel.hint('트레이에 <em>잔 받침 2개</em>와 <em>스푼 2개</em>를 놓아요<small>스푼을 톡 누르면 방향이 바뀌어요</small>');
@@ -728,7 +735,7 @@ async function trayPrep(){
       accept:()=>o.k==='s'||o.left,
       reject:()=>{mistakes++;SFX.no();Panel.hint('손잡이가 <em>왼쪽</em>으로 가게 해요<small>스푼을 톡 눌러서 돌려요</small>')}});
     G[i].used=true;o.done=true;$('#pg'+i).classList.add('done');SFX.clink();await o.sp.to({x:G[i].x,y:G[i].y,r:o.k==='p'?0:0,sx:1,sy:1},200,E.back);
-    left--;if(left)Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
+    left--;if(!left)Panel.hint('다 놓았어요!');else Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
   Guide.stop();SFX.great();await toast('서빙 준비 끝!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;
   $('#trayItems').innerHTML=P.tray.map(p=>`<g transform="translate(${p.x} ${p.y})">${saucerSide()}<g transform="translate(-6 -22) scale(.9)">${spoonSide}</g></g>`).join('');
   R.prep=mistakes}
@@ -860,16 +867,17 @@ async function serveJudges(){
 }
 
 /* ---------- 진행 ---------- */
-let lineNo=0;const LINES_TOTAL=12;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
+let lineNo=0;const LINES_TOTAL=7;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
 function who(){const no=($('#inNo').value||'1').replace(/\D/g,'')||'1',name=$('#inName').value.trim();return{no,name}}
 async function espresso(){
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>jface(i,'idle'));JUDGES.forEach((j,i)=>{const c=$('#J'+i+' .check');c.style.opacity=0});
   const {no,name}=who();
   step(1);await sleep(500);await judgeSay(0,'준비되면 시작해 주세요.');Bubble.hide();
-  const L=[[1,'시연 시작하겠습니다.'],[1,`안녕하세요. 수험번호 ${no}번 ${name?name+'입니다.':'입니다.'}`.replace(' 입니다','입니다')],[1,'바리스타 직업 수업을 통해 커피를 알게 되었고'],[1,'자격증 시험에 도전하게 되었습니다.'],
-    [2,'오늘 준비한 원두는'],[2,'아라비카 100%로 중강 배전된 원두입니다.'],
-    [3,'첫 번째로 추출해 드릴 커피는'],[3,'크레마가 풍부한 30ml 에스프레소 두 잔을 준비해 드리겠습니다.'],[3,'잠시만 기다려주십시오.']];
+  const me=`수험번호 ${no}번`+(name?` ${name}입니다.`:'입니다.');
+  const L=[[1,'시연 시작하겠습니다.'],[1,`안녕하세요. ${me} 바리스타 직업 수업을 통해 커피를 알게 되었고 자격증 시험에 도전하게 되었습니다.`],
+    [2,'오늘 준비한 원두는 아라비카 100%로 중강 배전된 원두입니다.'],
+    [3,'첫 번째로 추출해 드릴 커피는 크레마가 풍부한 30ml 에스프레소 두 잔을 준비해 드리겠습니다. 잠시만 기다려주십시오.']];
   for(const [s,l] of L){step(s);R.lines.push(await sayLine(l,lineTag()));nod(R.lines.length%2)}
   step(4);Panel.hide();await trayPrep();
   step(5);scene('bar');Guide.use('#hand');await sleep(900);

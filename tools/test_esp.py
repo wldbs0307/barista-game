@@ -8,7 +8,7 @@ VW=int(sys.argv[2]) if len(sys.argv)>2 else 1280
 VH=int(sys.argv[3]) if len(sys.argv)>3 else 720
 TAG=sys.argv[4] if len(sys.argv)>4 else 'e_'+MODE
 SH=R+'/tools/shots'; os.makedirs(SH,exist_ok=True)
-MOCK="""window.SpeechRecognition=class{start(){setTimeout(()=>{const t=document.querySelector('#ptext').cloneNode(true);t.querySelectorAll('small').forEach(s=>s.remove());this.onresult&&this.onresult({results:[[{transcript:t.textContent.replace('100%','백 퍼센트').replace('30ml','30 ml')}]]});this.onend&&this.onend()},200)}};"""
+MOCK="""window.SpeechRecognition=class{start(){setTimeout(()=>{const t=document.querySelector('#ptext').cloneNode(true);t.querySelectorAll('small').forEach(s=>s.remove());const R=[{transcript:t.textContent.replace('100%','백 퍼센트').replace('30ml','30 ml')}];R.isFinal=true;this.onresult&&this.onresult({resultIndex:0,results:[R]});this.onend&&this.onend()},200)}};"""
 async def main():
   async with async_playwright() as p:
     b=await p.chromium.launch(); pg=await (await b.new_context(viewport={'width':VW,'height':VH})).new_page()
@@ -53,10 +53,10 @@ async def main():
           rot=await pg.evaluate(f"()=>{{const g=[...document.querySelectorAll('#prepItems>g')].find(g=>/translate\\(845\\.0 {y}\\.0\\)/.test(g.getAttribute('transform')));return g?g.getAttribute('transform'):null}}")
           if rot and 'rotate(180' in rot:
             if 'wrongtry' not in done:
-              done.add('wrongtry'); await drag(845,y,gx,238,'prepSvg'); await pg.wait_for_timeout(700); await shot('prep_wrong')
+              done.add('wrongtry'); await drag(845,y,gx,310,'prepSvg'); await pg.wait_for_timeout(700); await shot('prep_wrong')
             await click(845,y,'prepSvg'); await pg.wait_for_timeout(450)
-          await drag(845,y,gx,238,'prepSvg'); await pg.wait_for_timeout(450)
-        await shot('prep_done'); log.append('prep'); await pg.wait_for_timeout(1800); continue
+          await drag(845,y,gx,310,'prepSvg'); await pg.wait_for_timeout(450)
+        await pg.wait_for_timeout(250); await shot('prep_done'); log.append('prep'); await pg.wait_for_timeout(1800); continue
       if '그라인더에 걸어요' in h and 'g1' not in done:
         done.add('g1'); await pg.wait_for_timeout(700); await shot('bar_start'); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,1330,520); log.append('pf>grinder'); await pg.wait_for_timeout(500); continue
       if '꾹 누르고' in h and 'grind' not in done:
