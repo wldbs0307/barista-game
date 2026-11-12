@@ -24,15 +24,15 @@ function glassCup(uid,scale=1){const g=document.createElementNS(NS,'g');g.setAtt
   <g clip-path="url(#gc${uid})"><rect class="liq" x="-40" y="0" width="80" height="0" fill="#3a1d10"/><rect class="crema" x="-40" y="0" width="80" height="0" fill="#c98a4b"/></g>
   <path d="${body}" fill="#dff1f5" fill-opacity=".32" class="o4"/>
   <path d="M-${GR-8} -${GH-10}Q-${GR-7} -26 -${GR-14} -12" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>
-  <path d="M-${GR-3} ${GLINE.toFixed(1)}H${GR-3}" stroke="#e2634d" stroke-width="2.5" stroke-dasharray="5 4"/>
+  <path class="mline" d="M-${GR-3} ${GLINE.toFixed(1)}H${GR-3}" stroke="#e2634d" stroke-width="2.5" stroke-dasharray="5 4"/>
   <text class="mlt" x="${GR+8}" y="${(GLINE+5).toFixed(1)}" font-size="13" fill="#e2634d" style="display:none">30ml</text>
   <ellipse cx="0" cy="-${GH}" rx="${GR}" ry="7" class="o3 nf"/>
   <g class="spill" style="display:none"><path class="drip" d="M-${GR-2} -${GH-4}V-4" stroke="#5a3220" stroke-width="5" fill="none" stroke-linecap="round"/><path class="drip" d="M${GR-4} -${GH-4}V-8" stroke="#5a3220" stroke-width="5" fill="none" stroke-linecap="round" style="animation-delay:-.3s"/></g>
   </g></g>`;
-  const c={g,sp:new Sp(g),ml:0,liq:$('.liq',g),crema:$('.crema',g),spill:$('.spill',g),mlt:$('.mlt',g),inner:$('.cin',g)};
+  const c={g,sp:new Sp(g),ml:0,mline:$('.mline',g),liq:$('.liq',g),crema:$('.crema',g),spill:$('.spill',g),mlt:$('.mlt',g),inner:$('.cin',g)};
   c.set=ml=>{c.ml=ml;const y=mlY(ml),cr=ml>2?clamp(2+ml*.18,2,7):0;c.liq.setAttribute('y',y.toFixed(1));c.liq.setAttribute('height',(-y).toFixed(1));
     c.crema.setAttribute('y',y.toFixed(1));c.crema.setAttribute('height',cr.toFixed(1));c.spill.style.display=ml>CAP?'':'none'};
-  c.set(0);return c}
+  c.line=on=>{c.mline.style.display=on?'':'none'};c.set(0);return c}
 const saucerSide=(rx=46)=>`<ellipse cx="0" cy="2" rx="${rx}" ry="${rx*.22}" fill="#fff" class="o3"/><ellipse cx="0" cy="0" rx="${rx*.55}" ry="${rx*.11}" fill="#eee6dc"/>`;
 const spoonSide=`<path d="M-40 -2H18" stroke="#4a2c22" stroke-width="7" stroke-linecap="round"/><path d="M-40 -2H18" stroke="#cdd6dc" stroke-width="3" stroke-linecap="round"/><ellipse cx="26" cy="-2" rx="10" ry="4.5" fill="#cdd6dc" class="o3"/>`;
 
@@ -131,7 +131,7 @@ function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none'
 const saucerTop=`<circle r="62" fill="#4a2c22" opacity=".14" cx="4" cy="6"/><circle r="62" fill="#fff" class="o4"/><circle r="38" fill="#f3ece3" class="o3"/><circle r="26" fill="#fff" opacity=".7"/>`;
 const spoonTop=`<path d="M-62 0H14" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M-62 0H14" stroke="#d6dee3" stroke-width="7" stroke-linecap="round"/><ellipse cx="34" cy="0" rx="24" ry="15" fill="#d6dee3" class="o4"/><ellipse cx="30" cy="-4" rx="9" ry="5" fill="#fff" opacity=".8"/>`;
 async function trayPrep(){
-  const G=[{x:240,y:330,k:'s'},{x:440,y:330,k:'s'},{x:240,y:310,k:'p'},{x:440,y:310,k:'p'}];
+  const G=[{x:240,y:330,k:'s'},{x:440,y:330,k:'s'},{x:240,y:282,k:'p'},{x:440,y:282,k:'p'}];
   $('#prepGhost').innerHTML=G.map((g,i)=>g.k==='s'?`<circle id="pg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="62"/>`
     :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y}) scale(.72)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
     +`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">스푼은 받침 위에, 손잡이는 왼쪽</text>`;
@@ -246,14 +246,25 @@ async function brew(){
     await sleep(700);floatText(PF.x,PF.y-40,'커피를 새로 담았어요');await sleep(600);
   }
 }
+const cupTop=`<circle r="44" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M36 -10H66Q76 -10 76 0Q76 10 66 10H36Z" fill="#fff" class="o4"/>
+  <circle r="42" fill="#fff" class="o4"/><circle r="33" fill="#7a4a28" class="o3"/><circle r="27" fill="#c98a4b"/><circle r="27" fill="none" stroke="#a96a35" stroke-width="3" stroke-dasharray="6 7" opacity=".7"/>
+  <path d="M-14 -18Q-4 -24 8 -20" stroke="#e7b77d" stroke-width="5" fill="none" stroke-linecap="round"/>`;
 async function toTray(){
-  Panel.hint('에스프레소를 <em>트레이의 잔 받침</em> 위에 올려요');
-  const zones=P.tray.map(t=>({x:t.x,y:t.y,r:72,used:false}));zone(P.tray[0].x,P.tray[0].y-14,44,22);zone2(P.tray[1].x,P.tray[1].y-14,44,22);
-  Guide.drag({x:Cup.at[0].sp.x,y:Cup.at[0].sp.y-30},{x:P.tray[0].x,y:P.tray[0].y-30});
-  await Promise.all(Cup.at.map(async c=>{const i=await drag(c.sp,c.g,{zones,anchor:()=>({x:c.sp.x,y:c.sp.y-6})});zones[i].used=true;(i?zone2:zone)();
-    await c.sp.to({x:P.tray[i].x,y:P.tray[i].y-4,r:0,sx:1,sy:1},180,E.out);SFX.clink();c.tray=i;
-    const n=zones.filter(z=>z.used).length;if(n<2){const o=Cup.at.find(x=>x.tray==null);Guide.drag({x:o.sp.x,y:o.sp.y-30},{x:P.tray[1-i].x,y:P.tray[1-i].y-30})}}));
-  Guide.stop();SFX.ok()}
+  /* 추출한 잔을 위에서 본 트레이로 가져가 받침 위에 올린다 */
+  $('#prepGhost').innerHTML=[240,440].map((x,i)=>`<circle id="cg${i}" class="ghost" cx="${x}" cy="330" r="46"/>`).join('')+`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">잔은 받침 한가운데에</text>`;
+  const it=$('#prepItems');
+  it.innerHTML=[240,440].map(x=>`<g transform="translate(${x} 330)">${saucerTop}</g><g transform="translate(${x} 282) scale(.72)">${spoonTop}</g>`).join('');
+  const cups=[230,420].map(y=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=cupTop;it.appendChild(g);return{g,sp:new Sp(g,845,y)}});
+  $('#prep .ttl').textContent='잔 올리기';$('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
+  Panel.hint('에스프레소 잔을 <em>잔 받침 위</em>에 올려요');
+  const zones=[240,440].map(x=>({x,y:330,r:70,used:false}));
+  Guide.drag({x:845,y:230},{x:240,y:330});
+  await Promise.all(cups.map(async (c,k)=>{const i=await drag(c.sp,c.g,{svg:svgP,zones,bounds:[60,60,960,560]});zones[i].used=true;$('#cg'+i).classList.add('done');
+    await c.sp.to({x:zones[i].x,y:330,r:0,sx:1,sy:1},180,E.out);SFX.clink();Cup.at[k].tray=i;
+    const o=cups.find(x=>x!==c);if(zones.some(z=>!z.used))Guide.drag({x:o.sp.x,y:o.sp.y},{x:zones[1-i].x,y:330})}));
+  Guide.stop();SFX.ok();await toast('잔을 올렸어요!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;$('#prep .ttl').textContent='서빙 준비';
+  /* 바 장면의 트레이에도 잔을 올려 둔다 */
+  Cup.at.forEach(c=>{c.line(false);c.sp.set({x:P.tray[c.tray].x,y:P.tray[c.tray].y-4,r:0,sx:1,sy:1})});SFX.clink();await sleep(500)}
 
 /* ---------- 6) 서빙: 심사위원 앞으로 ---------- */
 async function serveJudges(){
@@ -264,7 +275,7 @@ async function serveJudges(){
   $('#jSpots').innerHTML=spots.map((s,i)=>`<ellipse id="js${i}" class="ghost" cx="${s.x}" cy="${s.y}" rx="80" ry="20" style="display:none"/>`).join('');
   const sets=Cup.at.slice().sort((a,b)=>a.tray-b.tray).map((c,i)=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
     g.innerHTML=`<g transform="scale(1.45)">${saucerSide()}<g transform="translate(-4 -20) scale(.9)">${spoonSide}</g></g>`;
-    const cc=glassCup('j'+i,1.45);cc.set(c.ml);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
+    const cc=glassCup('j'+i,1.45);cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
   await anim(1100,t=>{tray.set({x:lerp(-320,800,t)});sets.forEach(s=>s.sp.set({x:lerp(-320,800,t)+s.off}))},E.out);SFX.clink();
   R.lines.push(await sayLine('실례하겠습니다.',lineTag()));
   Panel.hint('잔을 <em>심사위원 앞</em>에 하나씩 놓아요');spots.forEach((s,i)=>$('#js'+i).style.display='');
@@ -276,8 +287,7 @@ async function serveJudges(){
   R.lines.push(await sayLine('주문하신 에스프레소 두 잔 나왔습니다.',lineTag()));
   Panel.hint('<em>트레이</em>를 눌러 옆에 끼고 한 발 물러나요');$('.tin',T).classList.add('pickme');Guide.tap({x:800,y:600});
   await tap(T);Guide.stop();$('.tin',T).classList.remove('pickme');SFX.pick();await tray.to({x:-340},700,E.io);
-  R.lines.push(await sayLine('맛있게 드십시오.',lineTag()));
-  Panel.show('','마지막으로 <em>가볍게 목례</em>해요','next','목례하기');await Panel.click();
+  R.lines.push(await sayLine('맛있게 드십시오.',lineTag().replace('따라 말해요','말하면서 목례해요')));
   svgJ.classList.add('bow');SFX.bell();setTimeout(()=>svgJ.classList.remove('bow'),1150);await sleep(500);
   JUDGES.forEach((j,i)=>{nod(i);jface(i,'happy');check(i);heart(j.x,300)});SFX.great();await sleep(1300);
   sets.forEach(s=>s.g.remove());$('#jSpots').innerHTML='';Panel.hide();

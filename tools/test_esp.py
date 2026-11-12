@@ -40,8 +40,7 @@ async def main():
       if not st['bh'] and 'mic' in st['btn'] and 'listening' not in st['btn']:
         if h[:6] not in done: done.add(h[:6]); await pg.wait_for_timeout(250); await shot('say')
         await pg.click('#pbtn'); await pg.wait_for_timeout(1600); log.append('say:'+h.split('\n')[0][:12]); continue
-      if not st['bh'] and 'next' in st['btn']:
-        await shot('bow_btn'); await pg.click('#pbtn'); log.append('bow'); await pg.wait_for_timeout(900); await shot('bowing'); continue
+
       if '트레이에' in h and 'prep' not in done:
         done.add('prep'); await pg.wait_for_timeout(900); await shot('prep')
         sp=await pg.evaluate("()=>[...document.querySelectorAll('#prepItems>g')].map(g=>g.getAttribute('transform'))")
@@ -53,9 +52,9 @@ async def main():
           rot=await pg.evaluate(f"()=>{{const g=[...document.querySelectorAll('#prepItems>g')].find(g=>/translate\\(845\\.0 {y}\\.0\\)/.test(g.getAttribute('transform')));return g?g.getAttribute('transform'):null}}")
           if rot and 'rotate(180' in rot:
             if 'wrongtry' not in done:
-              done.add('wrongtry'); await drag(845,y,gx,310,'prepSvg'); await pg.wait_for_timeout(700); await shot('prep_wrong')
+              done.add('wrongtry'); await drag(845,y,gx,282,'prepSvg'); await pg.wait_for_timeout(700); await shot('prep_wrong')
             await click(845,y,'prepSvg'); await pg.wait_for_timeout(450)
-          await drag(845,y,gx,310,'prepSvg'); await pg.wait_for_timeout(450)
+          await drag(845,y,gx,282,'prepSvg'); await pg.wait_for_timeout(450)
         await pg.wait_for_timeout(250); await shot('prep_done'); log.append('prep'); await pg.wait_for_timeout(1800); continue
       if '그라인더에 걸어요' in h and 'g1' not in done:
         done.add('g1'); await pg.wait_for_timeout(700); await shot('bar_start'); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,1330,520); log.append('pf>grinder'); await pg.wait_for_timeout(500); continue
@@ -89,11 +88,11 @@ async def main():
           if mode=='over' and t>=45 and 'ov' not in done: done.add('ov'); await shot('overflow')
           if t>=target: break
         await shot('brew_stop_'+mode); await click(980,252); log.append(f'brew {mode} {t}s'); await pg.wait_for_timeout(500); await shot('brew_result'); await pg.wait_for_timeout(2600); continue
-      if '트레이의 잔 받침' in h and 'tray' not in done:
-        done.add('tray'); await pg.wait_for_timeout(300)
-        for sx,tx in ((864,160),(956,300)):
-          await drag(sx,520,tx,600); await pg.wait_for_timeout(400)
-        await shot('on_tray'); log.append('tray'); await pg.wait_for_timeout(600); continue
+      if '잔 받침 위</em>에 올려요' in await pg.inner_html('#ptext') and 'tray' not in done:
+        done.add('tray'); await pg.wait_for_timeout(900); await shot('cup_saucer')
+        await drag(845,230,240,330,'prepSvg'); await pg.wait_for_timeout(400)
+        await drag(845,420,440,330,'prepSvg'); await pg.wait_for_timeout(300)
+        await shot('on_saucer'); log.append('tray'); await pg.wait_for_timeout(1900); await shot('bar_tray'); continue
       if '심사위원 앞' in h and 'serve' not in done:
         done.add('serve'); await pg.wait_for_timeout(500); await shot('judge_tray')
         for sx,jx in ((700,470),(900,1130)):
