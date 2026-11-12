@@ -55,9 +55,11 @@ async function milkPour(){
 
 /* ---------- 5) 스티밍: 위에서 본 우유 + 옆에서 본 피쳐 ---------- */
 async function steamMilk(){
-  openPop('우유 스티밍',`<rect width="1000" height="600" fill="#fbeedd"/>
+  Panel.hint('<em>왼쪽 스팀노즐</em>을 눌러 스티밍을 시작해요');zone(458,420,46,110);Guide.tap({x:462,y:440});
+  await tap($('#wandL'));zone();Guide.stop();SFX.pick();
+  openPop('우유 스티밍 · 왼쪽 노즐',`<rect width="1000" height="600" fill="#fbeedd"/>
     <rect x="20" y="70" width="440" height="510" rx="18" fill="#f3e2cb"/><text x="240" y="560" text-anchor="middle" font-size="26" fill="#8a5a44">위에서 본 우유</text>
-    <rect x="480" y="70" width="500" height="510" rx="18" fill="#e4efe6"/><text x="600" y="112" text-anchor="middle" font-size="26" fill="#5a7a62">옆에서 본 피쳐</text>
+    <rect x="480" y="70" width="500" height="510" rx="18" fill="#e4efe6"/><text x="735" y="112" text-anchor="middle" font-size="26" fill="#5a7a62">옆에서 본 피쳐</text>
     <rect x="480" y="520" width="500" height="60" fill="#f6f3ee"/>`);
   const it=$('#prepItems');
   /* 왼쪽: 위에서 */

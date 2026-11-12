@@ -89,7 +89,9 @@ async def main():
           if t>=27: break
         await shot('brew_stop'); await click(980,252); log.append(f'brew {t}s'); await pg.wait_for_timeout(2600); continue
       # 스티밍
-      if st['ttl']=='우유 스티밍' and st['pop']:
+      if '왼쪽 스팀노즐' in H and once('wandL'):
+        await pg.wait_for_timeout(500); await shot('wand_left'); await click(462,420); log.append('left wand'); await pg.wait_for_timeout(800); continue
+      if st['ttl'].startswith('우유 스티밍') and st['pop']:
         if '노즐 물기' in h and once('purge1'):
           await pg.wait_for_timeout(700); await shot('steam_start'); await click(880,160,PS); log.append('purge'); await pg.wait_for_timeout(900); continue
         if '노즐을 닦아요' in h and once('wipe1'):
