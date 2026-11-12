@@ -11,10 +11,10 @@ function judgeOf(s){if(s<20)return{k:'fail',t:'실격',c:'var(--red)',why:'20초
 const COL={g2:'var(--g2)',g1:'var(--g1)',yel:'var(--yel)',red:'var(--red)'};
 /* 메뉴마다 쓰는 그룹·버튼·잔 */
 const MODES={
-  esp:{key:'esp',name:'에스프레소',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'demi',cupName:'데미타세 잔',
-    slots:[{x:864,y:548},{x:956,y:548}],other:{x:590,y:366}},
-  cap:{key:'cap',name:'카푸치노',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'capp',cupName:'카푸치노 잔',
-    slots:[{x:528,y:548},{x:654,y:548}],other:{x:910,y:366}}};
+  esp:{key:'esp',name:'에스프레소',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'demi',cupName:'데미타세 잔',
+    slots:[{x:544,y:548},{x:636,y:548}],other:{x:910,y:366}},
+  cap:{key:'cap',name:'카푸치노',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'capp',cupName:'카푸치노 잔',
+    slots:[{x:846,y:548},{x:974,y:548}],other:{x:590,y:366}}};
 let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */

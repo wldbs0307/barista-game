@@ -68,13 +68,13 @@ async def main():
         await hold(1330,398,2700); log.append('grind'); await pg.wait_for_timeout(600); continue
       if '탬퍼' in h and once('tamp'):
         await pg.wait_for_timeout(1200); x,y=await G('[g.TAMP.x,g.TAMP.y]'); a=await cl(x,y-40); await pg.mouse.move(*a); await pg.mouse.down(); c=await cl(x,y+100); await pg.mouse.move(*c,steps=10); await pg.mouse.up(); log.append('tamp'); await pg.wait_for_timeout(1500); continue
-      if '왼쪽 그룹 아래로' in h and once('lock'):
-        x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,590,400); log.append('lock'); await pg.wait_for_timeout(800); continue
+      if '오른쪽 그룹 아래로' in h and once('lock'):
+        x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,910,400); log.append('lock'); await pg.wait_for_timeout(800); continue
       if '오른쪽으로 돌려서' in h and once('tw2'):
         await pg.wait_for_timeout(400); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x-120,y+28,x+180,y+28); log.append('twist in'); await pg.wait_for_timeout(800); continue
       if '추출 버튼</em>을 눌러요' in H and once('brew'):
-        await pg.wait_for_timeout(400); await click(520,252); await pg.wait_for_timeout(500)
-        for wx,sx in ((722,528),(838,654)):
+        await pg.wait_for_timeout(400); await click(980,252); await pg.wait_for_timeout(500)
+        for wx,sx in ((722,846),(838,974)):
           await drag(wx,140,sx,500); await pg.wait_for_timeout(300)
         await shot('cups_down')
         a=await cl(1206,652); await pg.mouse.move(*a); await pg.mouse.down()
@@ -87,7 +87,7 @@ async def main():
         while True:
           await pg.wait_for_timeout(100); t=await pg.evaluate("()=>parseInt(document.querySelector('#gsec').textContent)")
           if t>=27: break
-        await shot('brew_stop'); await click(520,252); log.append(f'brew {t}s'); await pg.wait_for_timeout(2600); continue
+        await shot('brew_stop'); await click(980,252); log.append(f'brew {t}s'); await pg.wait_for_timeout(2600); continue
       # 스티밍
       if st['ttl']=='우유 스티밍' and st['pop']:
         if '노즐 물기' in h and once('purge1'):

@@ -68,14 +68,14 @@ async def main():
         done.add('grind'); a=await cl(1330,398); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(1300); await shot('grinding'); await pg.wait_for_timeout(1300); await pg.mouse.up(); log.append('grind'); await pg.wait_for_timeout(600); continue
       if '탬퍼' in h and 'tamp' not in done:
         done.add('tamp'); await pg.wait_for_timeout(1200); await shot('tamp'); x,y=await G('[g.TAMP.x,g.TAMP.y]'); a=await cl(x,y-40); await pg.mouse.move(*a); await pg.mouse.down(); c=await cl(x,y+100); await pg.mouse.move(*c,steps=10); await pg.mouse.up(); log.append('tamp'); await pg.wait_for_timeout(1500); continue
-      if '오른쪽 그룹 아래로' in h and 'lock' not in done:
-        done.add('lock'); await pg.wait_for_timeout(400); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,910,400); log.append('lock'); await pg.wait_for_timeout(800); continue
+      if '왼쪽 그룹 아래로' in h and 'lock' not in done:
+        done.add('lock'); await pg.wait_for_timeout(400); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,590,400); log.append('lock'); await pg.wait_for_timeout(800); continue
       if '추출 버튼</em>을 눌러요' in await pg.inner_html('#ptext'):
-        brewN+=1; await pg.wait_for_timeout(400); await click(980,252); mode=MODE if brewN==1 else 'good'
+        brewN+=1; await pg.wait_for_timeout(400); await click(520,252); mode=MODE if brewN==1 else 'good'
         target={'good':27,'over':46,'early':12}[mode]; t0=asyncio.get_event_loop().time()
         await pg.wait_for_timeout(500)
         # 잔 2개 내리기
-        for i,(wx,sx) in enumerate(((520,864),(600,956))):
+        for i,(wx,sx) in enumerate(((520,544),(600,636))):
           await drag(wx,160,sx,520); await pg.wait_for_timeout(300)
         await shot('cups_down')
         # 붓 청소
@@ -93,7 +93,7 @@ async def main():
           if mode=='good' and t>=20 and ('g20',brewN) not in done: done.add(('g20',brewN)); await shot('brew20')
           if mode=='over' and t>=45 and 'ov' not in done: done.add('ov'); await shot('overflow')
           if t>=target: break
-        await shot('brew_stop_'+mode); await click(980,252); log.append(f'brew {mode} {t}s'); await pg.wait_for_timeout(500); await shot('brew_result'); await pg.wait_for_timeout(2600); continue
+        await shot('brew_stop_'+mode); await click(520,252); log.append(f'brew {mode} {t}s'); await pg.wait_for_timeout(500); await shot('brew_result'); await pg.wait_for_timeout(2600); continue
       if '잔 받침 위</em>에 올려요' in await pg.inner_html('#ptext') and 'tray' not in done:
         done.add('tray'); await pg.wait_for_timeout(900); await shot('cup_saucer')
         await drag(845,230,240,330,'prepSvg'); await pg.wait_for_timeout(400)
