@@ -119,11 +119,11 @@ async function steamCheck(){
   await W1.sp.to({x:W1.plateAt.x,y:W1.plateAt.y-4,r:0,sx:1,sy:1},180,E.out);W1.attach();SFX.pick()}
 async function groupFlush(mode){
   setPFs(mode,false,false);
-  await twistPF('out');await PF.to({y:M.grp.y+86},300,E.out);floatText(PF.x+120,PF.y,'공중에 들고 있어요');
+  await twistPF('out');await PF.to({x:M.grp.x-150,y:M.grp.y+40},350,E.out);floatText(PF.x,PF.y-50,'옆으로 비켜요');
   Panel.hint(`${M.side} <em>추출 버튼</em>을 눌러 그룹 헤드에서 <em>물만</em> 나오는지 봐요<small>추출 압력 확인</small>`);Guide.tap(M.btn);T.set('tap',M.btn);
   await tap($('#bBtn'+M.bs));Guide.stop();T.clear();setBrewBtn(true);needle(.7);
   await water([[M.grp.x-16,364,M.grp.x-16,548],[M.grp.x,364,M.grp.x,548],[M.grp.x+16,364,M.grp.x+16,548]],1400,$('#Lstream'));setBrewBtn(false);needle(0);floatText(M.grp.x,330,'물줄기 OK');
-  await PF.to({y:M.grp.y+30},250,E.out);await twistPF('in');SFX.ok()}
+  await PF.to({x:M.grp.x,y:M.grp.y+30},300,E.out);await twistPF('in');SFX.ok()}
 async function machineCheck(){
   await steamCheck();
   Panel.hint('<em>온수 버튼</em>을 눌러 뜨거운 물이 나오는지 봐요');Guide.tap({x:750,y:322});T.set('tap',{x:750,y:322});
@@ -243,7 +243,7 @@ async function wares(){
   for(let j=0;j<4;j++){const o=SP[j];
     Panel.hint(`유리컵에서 <em>스푼</em>을 하나 꺼내요 <em>(${j}/4)</em>`);Guide.tap({x:660,y:150});T.set('tap',{x:660,y:150},null,{svg:'prepSvg'});
     o.g.setAttribute('class','hit');await new Promise(r=>{const h=()=>{glass.removeEventListener('click',h);o.g.removeEventListener('click',h);r()};glass.addEventListener('click',h);o.g.addEventListener('click',h)});
-    Guide.stop();T.clear();SFX.pick();o.left=Math.random()<.5;await o.sp.to({x:800,y:250,r:o.left?0:180},300,E.out);
+    Guide.stop();T.clear();SFX.pick();it.appendChild(o.g);o.left=Math.random()<.5;await o.sp.to({x:800,y:250,r:o.left?0:180},300,E.out);
     C.g.parentNode.appendChild(C.g);
     await rub(C,{svg:svgP,x:800,y:264,rx:90,ry:50,need:200,hint:`<em>마른행주3</em>으로 스푼을 닦아요 <em>(${j}/4)</em>`,done:'반짝!',end:home});
     Panel.hint('닦은 스푼을 받침 위쪽에 놓아요<small>손잡이는 왼쪽. 스푼을 톡 누르면 방향이 바뀌어요</small>');
