@@ -49,25 +49,41 @@ function placeCloth(k,to,hint,cands){return new Promise(async res=>{let live=tru
 
 /* 행주로 문지르기: 영역 안에서 움직인 거리(need)만큼, 또는 점(dots)을 다 지우면 끝.
    o.svg가 팝업이면 팝업 안에서. 접시에 있던 행주는 접시를 두고 행주만 움직이고, 접시 자리로 돌아오면 다시 얹는다. */
-function rub(c,o){return new Promise(res=>{const el=c.g,sp=c.sp,SV=o.svg||svgS,pop=SV!==svgS;let g=null,done=false,got=0;
+function rub(c,o){return new Promise(res=>{const el=c.g,sp=c.sp,SV=o.svg||svgS,pop=SV!==svgS;let g=null,done=false,phase='rub';
+  /* 여러 곳을 이어서 닦기(o.targets) 또는 한 곳(o.x,o.y) */
+  const TG=(o.targets||[{x:o.x,y:o.y,rx:o.rx,ry:o.ry,need:o.need}]).map(z=>({...z,got:0,done:false}));
+  const cur=()=>TG.find(z=>!z.done);
   if(c.detach)c.detach();
   if(pop)$('#prepItems').appendChild(el);else toTop(el);
-  const inside=()=>((sp.x-o.x)/o.rx)**2+((sp.y-o.y)/o.ry)**2<=1;
+  const inside=z=>((sp.x-z.x)/z.rx)**2+((sp.y-z.y)/z.ry)**2<=1;
   const dots=()=>o.dots?[...o.dots.querySelectorAll('.dt')]:[];
-  let gz=null;if(pop){gz=document.createElementNS(NS,'ellipse');gz.setAttribute('class','ghost');for(const [k,v] of [['cx',o.x],['cy',o.y],['rx',o.rx],['ry',o.ry]])gz.setAttribute(k,v);$('#prepGhost').appendChild(gz)}else zone(o.x,o.y,o.rx,o.ry);
-  Panel.hint(o.hint);
-  const guide=()=>{Guide.drag({x:sp.x,y:sp.y-14},{x:o.x-o.rx*.5,y:o.y-14});T.set('rub',{x:sp.x,y:sp.y-14},{x:o.x,y:o.y-14},{rx:o.rx,ry:o.ry,svg:pop?'prepSvg':'station'})};guide();
+  let gz=null;if(pop){gz=document.createElementNS(NS,'ellipse');gz.setAttribute('class','ghost');$('#prepGhost').appendChild(gz)}
+  const showZone=z=>{if(!z){if(pop)gz.style.display='none';else zone();return}if(pop){gz.style.display='';for(const [k,v] of [['cx',z.x],['cy',z.y],['rx',z.rx],['ry',z.ry]])gz.setAttribute(k,v)}else zone(z.x,z.y,z.rx,z.ry)};
+  showZone(cur());Panel.hint(typeof o.hint==='function'?o.hint(0):o.hint);
+  const guide=()=>{if(phase==='carry'){const to=o.carry.to;Guide.drag({x:sp.x,y:sp.y-14},{x:to.x,y:to.y-14});T.set('drag',{x:sp.x,y:sp.y-14},{x:to.x,y:to.y-14});return}
+    const z=cur();if(!z)return;Guide.drag({x:sp.x,y:sp.y-14},{x:z.x-z.rx*.5,y:z.y-14});T.set('rub',{x:sp.x,y:sp.y-14},{x:z.x,y:z.y-14},{rx:z.rx,ry:z.ry,svg:pop?'prepSvg':'station'})};guide();
   const B=pop?[30,30,970,580]:[40,110,1560,700],fxp=pop?$('#fxP'):undefined;
   const dn=e=>{if(done)return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e,SV);g={dx:p.x-sp.x,dy:p.y-sp.y,lx:p.x,ly:p.y};Guide.pause();SFX.pick()};
+  const nearTo=()=>phase==='carry'&&Math.hypot(sp.x-o.carry.to.x,sp.y-o.carry.to.y)<(o.carry.r||90);
   const mv=e=>{if(!g||done)return;const p=spt(e,SV),d=Math.hypot(p.x-g.lx,p.y-g.ly),vx=p.x-g.lx;g.lx=p.x;g.ly=p.y;
     sp.set({x:clamp(p.x-g.dx,B[0],B[2]),y:clamp(p.y-g.dy,B[1],B[3]),r:lerp(sp.r,clamp(vx*.8,-10,10),.3)});
-    const isIn=inside();if(pop)gz.classList.toggle('done',false);else zoneEl.classList.toggle('near',isIn);
-    if(isIn){got+=d;if(Math.random()<.1)sparkle(sp.x+rnd(-30,30),sp.y-16,1,fxp);if(o.onRub)o.onRub(Math.min(1,got/(o.need||1)))}
+    if(phase==='carry'){zoneEl.classList.toggle('near',nearTo());return}
+    const z=cur();const isIn=z&&inside(z);if(!pop)zoneEl.classList.toggle('near',!!isIn);
+    if(isIn){z.got+=d;if(Math.random()<.1)sparkle(sp.x+rnd(-30,30),sp.y-16,1,fxp)}
     for(const t of dots())if(Math.hypot(+t.getAttribute('cx')-sp.x,+t.getAttribute('cy')-(sp.y-10))<60){t.remove();if(Math.random()<.4)puff(sp.x,sp.y-10,{r:4,dy:-24,ms:400})}
-    if(o.dots?!dots().length:got>=o.need){done=true;fin()}};
-  const up=()=>{if(!g||done)return;g=null;sp.to({r:0},150);guide()};
+    if(o.dots){if(!dots().length)cleaned();return}
+    if(z&&z.got>=z.need){z.done=true;const k=TG.indexOf(z)+1;
+      if(cur()){sparkle(z.x,z.y-20,5,fxp);SFX.ok();floatText(z.x,z.y-50,o.done||'깨끗!',fxp);if(typeof o.hint==='function')Panel.hint(o.hint(k));showZone(cur());guide();Guide.pause()}
+      else cleaned()}};
+  /* 다 닦았을 때: o.carry가 있으면 손을 떼지 않고 그대로 옮기게 한다 */
+  function cleaned(){const z=TG[TG.length-1];showZone(null);sparkle(z.x,z.y-20,6,fxp);SFX.ok();floatText(z.x,z.y-50,o.done||'깨끗!',fxp);
+    if(o.carry){phase='carry';const to=o.carry.to;Panel.hint(o.carry.hint);zone(to.x,to.y-10,o.carry.zr||60,o.carry.zry||26);guide();Guide.pause();return}
+    finish()}
+  const up=async()=>{if(!g||done)return;g=null;sp.to({r:0},150);
+    if(phase==='carry'&&nearTo()){done=true;off();zone();Guide.stop();T.clear();await sp.to({...o.carry.to,r:0},200,E.out);SFX.pick();res();return}
+    guide()};
   const off=()=>{el.removeEventListener('pointerdown',dn);el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up)};
-  async function fin(){off();if(pop)gz.remove();else zone();Guide.stop();T.clear();sparkle(o.x,o.y-20,6,fxp);SFX.ok();floatText(o.x,o.y-50,o.done||'깨끗!',fxp);
+  async function finish(){done=true;off();if(pop)gz.remove();else zone();Guide.stop();T.clear();
     if(o.end){const toPlate=c.plateAt&&Math.hypot(o.end.x-c.plateAt.x,o.end.y-c.plateAt.y)<8;
       await sp.hop(o.end.x,o.end.y-(toPlate?4:0),480,50,.06);sp.set({r:0});if(toPlate)c.attach()}
     res()}
@@ -194,10 +210,10 @@ async function cupsBack(){
     c.set(0);c.setWater(false);await c.sp.hop(home.x,home.y,420,40,.06);SFX.clink();n++;c.busy=false;if(n<4){hint();point()}}));zone();T.clear();
   /* 마른행주2로 한 잔씩 */
   const D2=CL.D2,cs=Cup.every.slice().sort((a,b)=>a.sp.x-b.sp.x);
-  for(let i=0;i<cs.length;i++){const c=cs[i],{GH}=KIND[c.kind];
-    await rub(D2,{x:c.sp.x,y:c.sp.y-GH*.3,rx:c.kind==='demi'?60:76,ry:46,need:240,hint:`<em>마른행주2</em>로 잔의 물기를 닦아요 <em>(${i}/4)</em><small>잔 위를 왔다 갔다 문질러요</small>`,done:'뽀득!'})}
-  await dragTo(D2.sp,D2.g,{x:D2.sp.x,y:D2.sp.y-14},{x:TRAYSPOT.D2.x,y:TRAYSPOT.D2.y-14},110,'<em>마른행주2</em>를 다시 <em>트레이</em>에 놓아요',{zr:70,zry:26});
-  await D2.sp.to({...TRAYSPOT.D2,r:0,sx:1,sy:1},200,E.out);SFX.pick();
+  await rub(D2,{targets:cs.map(c=>({x:c.sp.x,y:c.sp.y-KIND[c.kind].GH*.3,rx:c.kind==='demi'?60:76,ry:46,need:240})),
+    hint:k=>`<em>마른행주2</em>로 잔을 하나씩 닦아요 <em>(${k}/4)</em><small>다 닦으면 손을 떼지 말고 다음 잔으로 옮겨요</small>`,done:'뽀득!',
+    carry:{to:TRAYSPOT.D2,r:100,zr:70,hint:'손을 떼지 말고 그대로 <em>트레이</em>에 놓아요'}});
+
   /* 컵 워머로 */
   const W=[...KIND.demi.warm.map(w=>({...w,kind:'demi'})),...KIND.capp.warm.map(w=>({...w,kind:'capp'}))];
   $('#Lprep').insertAdjacentHTML('afterbegin',W.map((w,i)=>`<ellipse id="ws${i}" class="ghost" cx="${w.x}" cy="${w.y-4}" rx="${w.kind==='demi'?34:50}" ry="10"/>`).join(''));
@@ -300,7 +316,8 @@ async function prep(){
   await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>의 가루를 닦아요',end:SPOT.W3});
   step(6);await cupsBack();
   step(7);await rub(CL.W2,{x:750,y:556,rx:300,ry:34,dots:drops,hint:'<em>젖은행주2</em>로 <em>그릴</em>의 물기를 닦아요',end:SPOT.W2});
-  await rub(CL.D2,{x:750,y:556,rx:300,ry:34,need:700,hint:'<em>마른행주2</em>로 그릴을 한 번 더 닦아요<small>다 닦으면 컵 워머 오른쪽 앞에 놓아요</small>',end:SPOT.D2,done:'반짝!'});drops.remove();
+  await rub(CL.D2,{x:750,y:556,rx:300,ry:34,need:700,hint:'<em>마른행주2</em>로 그릴을 한 번 더 닦아요',done:'반짝!',
+    carry:{to:SPOT.D2,r:90,hint:'손을 떼지 말고 그대로 <em>컵 워머 오른쪽 앞</em>으로 옮겨요'}});drops.remove();
   step(8);Panel.hide();await wares();await milkCheck();
   step(9);const md=machineDrops();
   await rub(CL.W3,{x:750,y:634,rx:300,ry:42,dots:md,hint:'<em>젖은행주3</em>으로 <em>머신 아래</em>를 다 닦아요',end:SPOT.W3});

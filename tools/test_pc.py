@@ -64,13 +64,22 @@ async def main():
       elif k=='choose':
         await pg.wait_for_timeout(600); await shot('milk'); c=t[t['answer']]; await click(c['x'],c['y'],sv); log.append('choose '+t['answer']); await pg.wait_for_timeout(800)
       elif k=='rub':
-        rx,ry=t['rx'],t['ry']; s=await cl(a['x'],a['y'],sv); await pg.mouse.move(*s); await pg.mouse.down(); await pg.wait_for_timeout(60)
-        c=await cl(bb['x'],bb['y'],sv); await pg.mouse.move(*c,steps=8)
-        for i in range(6):
-          for f in (-.85,.85):
-            c=await cl(bb['x']+rx*f,bb['y']+ry*(.35 if i%2 else -.35),sv); await pg.mouse.move(*c,steps=10)
-          if i==1 and nrub[0]%3==0: await shot('rub')
-          if not await pg.evaluate('()=>!!window.__pc.task'): break
+        # 손을 떼지 않고: 다음 곳을 닦으라고 하면 그대로 옮겨 닦고, 옮기라고 하면 그대로 끌어다 놓는다
+        s=await cl(a['x'],a['y'],sv); await pg.mouse.move(*s); await pg.mouse.down(); await pg.wait_for_timeout(60)
+        cur=t; hops=0
+        while cur and cur['kind']=='rub' and hops<8:
+          hops+=1; rx,ry,b2=cur['rx'],cur['ry'],cur['b']; key0=str(cur['b'])
+          c=await cl(b2['x'],b2['y'],sv); await pg.mouse.move(*c,steps=8)
+          for i in range(6):
+            for f in (-.85,.85):
+              c=await cl(b2['x']+rx*f,b2['y']+ry*(.35 if i%2 else -.35),sv); await pg.mouse.move(*c,steps=10)
+            if i==1 and nrub[0]%3==0: await shot('rub')
+            cur=await pg.evaluate('()=>window.__pc.task')
+            if not cur or cur['kind']!='rub' or str(cur['b'])!=key0: break
+          if cur and cur['kind']=='rub' and str(cur['b'])!=key0: log.append('rub-next(손 안 뗌)')
+        if cur and cur['kind']=='drag':
+          await pg.wait_for_timeout(200); await shot('carry')
+          c=await cl(cur['b']['x'],cur['b']['y'],cur.get('svg','station')); await pg.mouse.move(*c,steps=14); log.append('carry(손 안 뗌)')
         await pg.mouse.up(); nrub[0]+=1; log.append('rub'); await pg.wait_for_timeout(700)
       elif k=='brush':
         a2=await cl(1206,652); await pg.mouse.move(*a2); await pg.mouse.down()
