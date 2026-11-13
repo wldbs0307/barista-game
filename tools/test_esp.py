@@ -75,7 +75,7 @@ async def main():
         target={'good':27,'over':46,'early':12}[mode]; t0=asyncio.get_event_loop().time()
         await pg.wait_for_timeout(500)
         # 잔 2개 내리기
-        for i,(wx,sx) in enumerate(((520,544),(600,636))):
+        for i,(wx,sx) in enumerate(((556,544),(630,636))):
           await drag(wx,160,sx,520); await pg.wait_for_timeout(300)
         await shot('cups_down')
         # 붓 청소

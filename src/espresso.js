@@ -20,7 +20,7 @@ let M=MODES.esp;
 /* ---------- 그림: 투명 데미타세 ---------- */
 const CS=1;                    /* 데미타세 크기 (카푸치노 잔보다 작게) */
 const SHOW_LINE=true;          /* 30ml 표시선: 연습 때만. 실전 15분에서는 false */
-const KIND={demi:{GH:58,GR:30,cap:CAP,warm:[{x:520,y:186},{x:600,y:186}]},capp:{GH:72,GR:47,cap:150,warm:[{x:722,y:186},{x:838,y:186}]}};
+const KIND={demi:{GH:58,GR:30,cap:CAP,warm:[{x:556,y:186},{x:630,y:186}]},capp:{GH:72,GR:47,cap:150,warm:[{x:722,y:186},{x:838,y:186}]}};
 function glassCup(uid,scale=1,kind='demi'){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
   const {GH,GR,cap}=KIND[kind],mlY=ml=>-clamp(ml,0,cap)/cap*GH*.92,GLINE=mlY(30);
   const body=`M-${GR} -${GH}C-${GR} -16 -18 0 -8 0L8 0C18 0 ${GR} -16 ${GR} -${GH}Z`;

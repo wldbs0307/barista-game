@@ -29,7 +29,7 @@ async def main():
     async def hold(x,y,ms,svg='station'):
       a=await cl(x,y,svg); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(ms); await pg.mouse.up()
     await shot('title'); await pg.click('#goPrep' if MODE=='prep' else '#goClean')
-    log=[]; t_end=asyncio.get_event_loop().time()+300; last_step=''; same=0; last_task=None
+    nrub=[0]; log=[]; t_end=asyncio.get_event_loop().time()+300; last_step=''; same=0; last_task=None
     while asyncio.get_event_loop().time()<t_end:
       await pg.wait_for_timeout(250)
       if await pg.evaluate("()=>!document.querySelector('#result').classList.contains('off')"):
@@ -52,6 +52,7 @@ async def main():
       else: same=0; last_task=key
       if same>12: log.append('STUCK '+key+' | '+h); await shot('stuck'); break
       k=t['kind']; sv=t.get('svg','station'); a=t.get('a'); bb=t.get('b')
+      if os.environ.get('ALL') and same==0: await pg.wait_for_timeout(300); await shot(k)
       if k=='drag':
         await pg.wait_for_timeout(250); await drag(a['x'],a['y'],bb['x'],bb['y'],sv); log.append(f"drag {int(a['x'])},{int(a['y'])}>{int(bb['x'])},{int(bb['y'])}"); await pg.wait_for_timeout(450)
       elif k=='tap':
@@ -63,14 +64,14 @@ async def main():
       elif k=='choose':
         await pg.wait_for_timeout(600); await shot('milk'); c=t[t['answer']]; await click(c['x'],c['y'],sv); log.append('choose '+t['answer']); await pg.wait_for_timeout(800)
       elif k=='rub':
-        rx,ry=t['rx'],t['ry']; s=await cl(a['x'],a['y']); await pg.mouse.move(*s); await pg.mouse.down(); await pg.wait_for_timeout(60)
-        c=await cl(bb['x'],bb['y']); await pg.mouse.move(*c,steps=8)
+        rx,ry=t['rx'],t['ry']; s=await cl(a['x'],a['y'],sv); await pg.mouse.move(*s); await pg.mouse.down(); await pg.wait_for_timeout(60)
+        c=await cl(bb['x'],bb['y'],sv); await pg.mouse.move(*c,steps=8)
         for i in range(6):
           for f in (-.85,.85):
-            c=await cl(bb['x']+rx*f,bb['y']+ry*(.35 if i%2 else -.35)); await pg.mouse.move(*c,steps=10)
-          if i==1: await shot('rub')
+            c=await cl(bb['x']+rx*f,bb['y']+ry*(.35 if i%2 else -.35),sv); await pg.mouse.move(*c,steps=10)
+          if i==1 and nrub[0]%3==0: await shot('rub')
           if not await pg.evaluate('()=>!!window.__pc.task'): break
-        await pg.mouse.up(); log.append('rub'); await pg.wait_for_timeout(700)
+        await pg.mouse.up(); nrub[0]+=1; log.append('rub'); await pg.wait_for_timeout(700)
       elif k=='brush':
         a2=await cl(1206,652); await pg.mouse.move(*a2); await pg.mouse.down()
         for kk in range(3):

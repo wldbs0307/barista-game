@@ -616,7 +616,7 @@ let M=MODES.esp;
 /* ---------- 그림: 투명 데미타세 ---------- */
 const CS=1;                    /* 데미타세 크기 (카푸치노 잔보다 작게) */
 const SHOW_LINE=true;          /* 30ml 표시선: 연습 때만. 실전 15분에서는 false */
-const KIND={demi:{GH:58,GR:30,cap:CAP,warm:[{x:520,y:186},{x:600,y:186}]},capp:{GH:72,GR:47,cap:150,warm:[{x:722,y:186},{x:838,y:186}]}};
+const KIND={demi:{GH:58,GR:30,cap:CAP,warm:[{x:556,y:186},{x:630,y:186}]},capp:{GH:72,GR:47,cap:150,warm:[{x:722,y:186},{x:838,y:186}]}};
 function glassCup(uid,scale=1,kind='demi'){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
   const {GH,GR,cap}=KIND[kind],mlY=ml=>-clamp(ml,0,cap)/cap*GH*.92,GLINE=mlY(30);
   const body=`M-${GR} -${GH}C-${GR} -16 -18 0 -8 0L8 0C18 0 ${GR} -16 ${GR} -${GH}Z`;
@@ -1260,18 +1260,25 @@ const SPOT={W1:{x:478,y:656},W2:{x:990,y:546},W3:{x:996,y:660},D1:{x:1452,y:652}
 const TRAYSPOT={W1:{x:112,y:624},W2:{x:240,y:624},W3:{x:366,y:624},D1:{x:112,y:666},D2:{x:240,y:666},D3:{x:366,y:666}};
 const CL={};
 const clothName=k=>(CLOTH[k].wet?'젖은행주':'마른행주')+CLOTH[k].n;
-function clothSVG(k,long){const I=CLOTH[k],w=long?120:60,h=long?22:36,f=I.wet?'#97cff0':'#fffdf8',s=I.wet?'#5fa6d6':'#e0d0b8',lift=I.plate?-4:0;
+function clothSVG(k,long,plate){const I=CLOTH[k],w=long?120:60,h=long?22:36,f=I.wet?'#97cff0':'#fffdf8',s=I.wet?'#5fa6d6':'#e0d0b8',lift=plate?-4:0;
   return `<rect x="${-w-8}" y="${-h-12+lift}" width="${2*w+16}" height="${h+22}" fill="#fff" fill-opacity="0"/>
-  ${I.plate?'<ellipse cx="0" cy="2" rx="70" ry="13" fill="#fff" class="o3"/><ellipse cx="0" cy="0" rx="46" ry="7" fill="#efe7dc"/>':''}
+  ${plate?PLATE:''}
   <g transform="translate(0 ${lift})"><ellipse cx="0" cy="2" rx="${w}" ry="5" fill="#4a2c22" opacity=".12"/>
   <path d="M${-w} 0L${-w+8} ${-h}H${w-8}L${w} 0Z" fill="${f}" stroke="#4a2c22" stroke-width="4" stroke-linejoin="round"/>
   <path d="M${-w+10} ${(-h*.62).toFixed(1)}H${w-10}" stroke="${s}" stroke-width="3" opacity=".8"/>
   ${I.wet?`<circle cx="${-w+18}" cy="5" r="3" fill="#5fa6d6"/><circle cx="${w-22}" cy="6" r="2.5" fill="#5fa6d6"/>`:''}
   <text x="0" y="${(-h/2+8).toFixed(1)}" text-anchor="middle" font-size="${long?22:21}" fill="${I.wet?'#1f5f8a':'#8a5a44'}">${(I.wet?'젖은':'마른')+I.n}</text></g>`}
+const PLATE='<ellipse cx="0" cy="2" rx="70" ry="13" fill="#fff" class="o3"/><ellipse cx="0" cy="0" rx="46" ry="7" fill="#efe7dc"/>';
 function makeCloth(k,pos,long){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
-  g.innerHTML=`<g class="cin">${clothSVG(k,long)}</g>`;$('#Lprep').appendChild(g);
-  const c={k,g,sp:new Sp(g,pos.x,pos.y),long:!!long,inner:null};c.inner=$('.cin',g);
-  c.setLong=v=>{c.long=v;c.inner.innerHTML=clothSVG(k,v)};CL[k]=c;return c}
+  const c={k,g,sp:new Sp(g,pos.x,pos.y),long:!!long,onPlate:!!CLOTH[k].plate,plateEl:null,inner:null};
+  g.innerHTML=`<g class="cin">${clothSVG(k,long,c.onPlate)}</g>`;$('#Lprep').appendChild(g);c.inner=$('.cin',g);
+  const draw=()=>{c.inner.innerHTML=clothSVG(k,c.long,c.onPlate)};
+  c.setLong=v=>{c.long=v;draw()};
+  /* 접시는 그 자리에 두고 행주만 들기 */
+  c.detach=()=>{if(!c.onPlate)return;c.onPlate=false;c.plateAt={x:c.sp.x,y:c.sp.y};
+    const pe=document.createElementNS(NS,'g');pe.setAttribute('class','np');pe.setAttribute('transform',`translate(${c.sp.x} ${c.sp.y})`);pe.innerHTML=PLATE;$('#Lprep').prepend(pe);c.plateEl=pe;c.sp.set({y:c.sp.y-4});draw()};
+  c.attach=()=>{if(!c.plateEl)return;c.plateEl.remove();c.plateEl=null;c.onPlate=true;c.sp.set({...c.plateAt,r:0});draw()};
+  CL[k]=c;return c}
 const toTop=el=>$('#fx').before(el);   /* 끌 때 다른 물건 위로 */
 
 /* 행주를 정해진 자리로 끌기. 다른 행주를 끌면 되돌아간다. */
@@ -1283,27 +1290,34 @@ function placeCloth(k,to,hint,cands){return new Promise(async res=>{let live=tru
     accept:()=>o===c,reject:()=>{wrongCloth++;SFX.no();Panel.hint(`그건 <em>${clothName(o.k)}</em>예요. <em>${clothName(k)}</em>을 찾아요`)}}).then(async()=>{
       live=false;zone();T.clear();await c.sp.to({x:to.x,y:to.y,r:0,sx:1,sy:1},200,E.out);SFX.pick();res()}))})}
 
-/* 행주로 문지르기: 영역 안에서 움직인 거리(need)만큼, 또는 점(dots)을 다 지우면 끝 */
-function rub(c,o){return new Promise(res=>{const el=c.g,sp=c.sp;let g=null,done=false,got=0;toTop(el);
+/* 행주로 문지르기: 영역 안에서 움직인 거리(need)만큼, 또는 점(dots)을 다 지우면 끝.
+   o.svg가 팝업이면 팝업 안에서. 접시에 있던 행주는 접시를 두고 행주만 움직이고, 접시 자리로 돌아오면 다시 얹는다. */
+function rub(c,o){return new Promise(res=>{const el=c.g,sp=c.sp,SV=o.svg||svgS,pop=SV!==svgS;let g=null,done=false,got=0;
+  if(c.detach)c.detach();
+  if(pop)$('#prepItems').appendChild(el);else toTop(el);
   const inside=()=>((sp.x-o.x)/o.rx)**2+((sp.y-o.y)/o.ry)**2<=1;
   const dots=()=>o.dots?[...o.dots.querySelectorAll('.dt')]:[];
-  zone(o.x,o.y,o.rx,o.ry);Panel.hint(o.hint);
-  const guide=()=>{Guide.drag({x:sp.x,y:sp.y-14},{x:o.x-o.rx*.5,y:o.y-14});T.set('rub',{x:sp.x,y:sp.y-14},{x:o.x,y:o.y-14},{rx:o.rx,ry:o.ry})};guide();
-  const dn=e=>{if(done)return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e);g={dx:p.x-sp.x,dy:p.y-sp.y,lx:p.x,ly:p.y};Guide.pause();SFX.pick()};
-  const mv=e=>{if(!g||done)return;const p=spt(e),d=Math.hypot(p.x-g.lx,p.y-g.ly),vx=p.x-g.lx;g.lx=p.x;g.ly=p.y;
-    sp.set({x:clamp(p.x-g.dx,40,1560),y:clamp(p.y-g.dy,110,700),r:lerp(sp.r,clamp(vx*.8,-10,10),.3)});
-    const isIn=inside();zoneEl.classList.toggle('near',isIn);
-    if(isIn){got+=d;if(Math.random()<.1)sparkle(sp.x+rnd(-30,30),sp.y-16,1)}
+  let gz=null;if(pop){gz=document.createElementNS(NS,'ellipse');gz.setAttribute('class','ghost');for(const [k,v] of [['cx',o.x],['cy',o.y],['rx',o.rx],['ry',o.ry]])gz.setAttribute(k,v);$('#prepGhost').appendChild(gz)}else zone(o.x,o.y,o.rx,o.ry);
+  Panel.hint(o.hint);
+  const guide=()=>{Guide.drag({x:sp.x,y:sp.y-14},{x:o.x-o.rx*.5,y:o.y-14});T.set('rub',{x:sp.x,y:sp.y-14},{x:o.x,y:o.y-14},{rx:o.rx,ry:o.ry,svg:pop?'prepSvg':'station'})};guide();
+  const B=pop?[30,30,970,580]:[40,110,1560,700],fxp=pop?$('#fxP'):undefined;
+  const dn=e=>{if(done)return;e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e,SV);g={dx:p.x-sp.x,dy:p.y-sp.y,lx:p.x,ly:p.y};Guide.pause();SFX.pick()};
+  const mv=e=>{if(!g||done)return;const p=spt(e,SV),d=Math.hypot(p.x-g.lx,p.y-g.ly),vx=p.x-g.lx;g.lx=p.x;g.ly=p.y;
+    sp.set({x:clamp(p.x-g.dx,B[0],B[2]),y:clamp(p.y-g.dy,B[1],B[3]),r:lerp(sp.r,clamp(vx*.8,-10,10),.3)});
+    const isIn=inside();if(pop)gz.classList.toggle('done',false);else zoneEl.classList.toggle('near',isIn);
+    if(isIn){got+=d;if(Math.random()<.1)sparkle(sp.x+rnd(-30,30),sp.y-16,1,fxp);if(o.onRub)o.onRub(Math.min(1,got/(o.need||1)))}
     for(const t of dots())if(Math.hypot(+t.getAttribute('cx')-sp.x,+t.getAttribute('cy')-(sp.y-10))<60){t.remove();if(Math.random()<.4)puff(sp.x,sp.y-10,{r:4,dy:-24,ms:400})}
     if(o.dots?!dots().length:got>=o.need){done=true;fin()}};
   const up=()=>{if(!g||done)return;g=null;sp.to({r:0},150);guide()};
   const off=()=>{el.removeEventListener('pointerdown',dn);el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up)};
-  async function fin(){off();zone();Guide.stop();T.clear();sparkle(o.x,o.y-20,6);SFX.ok();floatText(o.x,o.y-50,o.done||'깨끗!');
-    if(o.end){await sp.hop(o.end.x,o.end.y,480,50,.06);sp.set({r:0})}res()}
+  async function fin(){off();if(pop)gz.remove();else zone();Guide.stop();T.clear();sparkle(o.x,o.y-20,6,fxp);SFX.ok();floatText(o.x,o.y-50,o.done||'깨끗!',fxp);
+    if(o.end){const toPlate=c.plateAt&&Math.hypot(o.end.x-c.plateAt.x,o.end.y-c.plateAt.y)<8;
+      await sp.hop(o.end.x,o.end.y-(toPlate?4:0),480,50,.06);sp.set({r:0});if(toPlate)c.attach()}
+    res()}
   el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}
 
 /* 물줄기 (온수, 그룹 헤드) */
-async function water(lines,ms){const ps=lines.map(([x0,y0,x1,y1])=>mk('path',{d:`M${x0} ${y0}C${x0} ${lerp(y0,y1,.5)} ${x1} ${lerp(y0,y1,.6)} ${x1} ${y1}`,stroke:'#8fd0f2','stroke-width':6,'stroke-linecap':'round',fill:'none',opacity:.9}));
+async function water(lines,ms,parent){const ps=lines.map(([x0,y0,x1,y1])=>mk('path',{d:`M${x0} ${y0}C${x0} ${lerp(y0,y1,.5)} ${x1} ${lerp(y0,y1,.6)} ${x1} ${y1}`,stroke:'#8fd0f2','stroke-width':6,'stroke-linecap':'round',fill:'none',opacity:.9},parent));
   const s=SFX.pour();await sleep(ms);s.stop();ps.forEach(p=>p.remove())}
 function grillDrops(){const g=document.createElementNS(NS,'g');g.id='gdrops';
   g.innerHTML=[470,530,600,660,720,800,870,930,1000,1030].map((x,i)=>`<circle class="dt" cx="${x}" cy="${550+(i%3)*4}" r="${5+(i%2)*2}" fill="#8fd0f2" stroke="#4a2c22" stroke-width="2"/>`).join('');$('#Lprep').prepend(g);return g}
@@ -1313,6 +1327,11 @@ function grinderDirt(){const D=[[1262,604],[1290,618],[1318,600],[1352,624],[138
 /* 결과표 */
 function showRows(title,rows){$('#rtitle').textContent=title;$('#rlist').classList.toggle('two',rows.length>6);
   $('#rlist').innerHTML=rows.map(([n,v,c])=>`<div><span>${n}</span><b style="background:${COL[c]}">${v}</b></div>`).join('');$('#result').classList.remove('off');SFX.great()}
+function machineDrops(){const g=document.createElementNS(NS,'g');g.id='mdrops';
+  g.innerHTML=[[560,612],[620,640],[690,606],[760,632],[830,610],[900,642],[650,662],[860,664],[720,654],[940,616]].map(([x,y],i)=>`<ellipse class="dt" cx="${x}" cy="${y}" rx="${9+(i%3)*3}" ry="4" fill="#8fd0f2" opacity=".8"/>`).join('');$('#Lprep').prepend(g);return g}
+/* 끌어서 놓기 한 번 (안내 손가락·테스트 표시 포함) */
+async function dragTo(sp,el,from,to,r,hint,o={}){if(hint)Panel.hint(hint);if(!o.noZone)zone(to.x,to.y,o.zr||Math.min(r,70),o.zry||Math.min(r,70)*.45);
+  Guide.drag(from,to);T.set('drag',from,to);const i=await drag(sp,el,{zone:{x:to.x,y:to.y,r},anchor:o.anchor});T.clear();zone();return i}
 function hidePitchers(){const d=$('#decoP');if(d)d.style.display='none'}
 
 /* ---------- 준비 1) 행주 4장 ---------- */
@@ -1324,20 +1343,47 @@ async function prepCloths(){
   for(const [k,h] of ORDER)await placeCloth(k,SPOT[k],h,Object.keys(CL).filter(x=>!R.placed.includes(x))).then(()=>R.placed.push(k));
   SFX.ok();await toast('행주 4장 놓기 끝!')}
 /* ---------- 준비 2) 기기 점검 ---------- */
-async function machineCheck(){
+/* 지금 다룰 포터필터(PF)를 mode 쪽 그룹에, 다른 하나(pf2)를 반대쪽에. cur/other: 커피 찌꺼기가 있는지 */
+function setPFs(mode,cur,other){M={...mode,name:M.name,key:M.key};
+  PF.set({...M.grp,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';$('#collar').setAttribute('transform',`translate(${M.grp.x-910} 0)`);
+  $('#pf2').setAttribute('transform',`translate(${M.other.x} ${M.other.y})`);$('#collar2').setAttribute('transform',`translate(${M.other.x-910} 0)`);
+  setGrounds(0,other);$('#pf2').innerHTML=$('#pf').innerHTML.replace(/ id="[^"]+"/g,'');setGrounds(0,cur)}
+async function steamCheck(){
+  const W1=CL.W1;W1.detach();
   for(const [id,x,tx,side] of [['#knobL',469,450,'왼쪽'],['#knobR',1031,1050,'오른쪽']]){
-    Panel.hint(`<em>${side} 스팀 손잡이</em>를 눌러 스팀을 <em>칙</em> 뿜어요<small>스팀 압력 확인</small>`);Guide.tap({x,y:282});T.set('tap',{x,y:282});
-    await tap($(id));Guide.stop();T.clear();SFX.steam(.8);for(let i=0;i<10;i++)setTimeout(()=>puff(tx+rnd(-8,8),480,{r:9,dy:-rnd(50,110)}),i*70);floatText(x,240,'칙!');await sleep(900)}
+    await dragTo(W1.sp,W1.g,{x:W1.sp.x,y:W1.sp.y-14},{x:tx,y:500},90,`<em>젖은행주1</em>로 <em>${side} 스팀노즐</em> 끝을 감싸요<small>스팀이 튀지 않게 행주로 막고 뿜어요</small>`,{zr:50,zry:30});
+    await W1.sp.to({x:tx,y:512,r:0,sx:.8,sy:1},180,E.out);SFX.pick();
+    Panel.hint(`<em>${side} 스팀 손잡이</em>를 눌러 <em>칙</em> 뿜어요<small>스팀 압력 확인</small>`);Guide.tap({x,y:282});T.set('tap',{x,y:282});
+    await tap($(id));Guide.stop();T.clear();SFX.steam(.8);floatText(x,240,'칙!');
+    for(let i=0;i<8;i++)setTimeout(()=>puff(tx+rnd(-30,30),500,{r:6,dy:-rnd(30,60),ms:700}),i*80);
+    await anim(800,p=>W1.sp.set({sx:.8+Math.sin(p*30)*.04,sy:1+Math.sin(p*30+1)*.05}));W1.sp.set({sx:.8,sy:1})}
+  W1.sp.set({sx:1,sy:1});
+  await dragTo(W1.sp,W1.g,{x:W1.sp.x,y:W1.sp.y-14},{x:W1.plateAt.x,y:W1.plateAt.y-14},90,'<em>젖은행주1</em>을 다시 <em>접시</em> 위에 놓아요');
+  await W1.sp.to({x:W1.plateAt.x,y:W1.plateAt.y-4,r:0,sx:1,sy:1},180,E.out);W1.attach();SFX.pick()}
+async function groupFlush(mode){
+  setPFs(mode,false,false);
+  await twistPF('out');await PF.to({y:M.grp.y+86},300,E.out);floatText(PF.x+120,PF.y,'공중에 들고 있어요');
+  Panel.hint(`${M.side} <em>추출 버튼</em>을 눌러 그룹 헤드에서 <em>물만</em> 나오는지 봐요<small>추출 압력 확인</small>`);Guide.tap(M.btn);T.set('tap',M.btn);
+  await tap($('#bBtn'+M.bs));Guide.stop();T.clear();setBrewBtn(true);needle(.7);
+  await water([[M.grp.x-16,364,M.grp.x-16,548],[M.grp.x,364,M.grp.x,548],[M.grp.x+16,364,M.grp.x+16,548]],1400,$('#Lstream'));setBrewBtn(false);needle(0);floatText(M.grp.x,330,'물줄기 OK');
+  await PF.to({y:M.grp.y+30},250,E.out);await twistPF('in');SFX.ok()}
+async function machineCheck(){
+  await steamCheck();
   Panel.hint('<em>온수 버튼</em>을 눌러 뜨거운 물이 나오는지 봐요');Guide.tap({x:750,y:322});T.set('tap',{x:750,y:322});
   await tap($('#hwBtn'));Guide.stop();T.clear();await water([[812,472,812,548]],1100);floatText(812,470,'물 OK');
-  for(const [btn,x,bs,side] of [['#bBtnL',520,'L','왼쪽'],['#bBtn',980,'','오른쪽']]){
-    Panel.hint(`<em>${side} 추출 버튼</em>을 눌러 물줄기를 봐요<small>추출 압력 확인</small>`);Guide.tap({x,y:252});T.set('tap',{x,y:252});
-    await tap($(btn));Guide.stop();T.clear();const gx=bs?590:910;const B=M.bs;M.bs=bs;setBrewBtn(true);needle(.7);
-    await water([[gx-17,456,gx-17,548],[gx+17,456,gx+17,548]],1300);setBrewBtn(false);M.bs=B;needle(0);floatText(gx,420,'물줄기 OK')}
+  await groupFlush(MODES.esp);await groupFlush(MODES.cap);
+  setPFs(MODES.esp,false,false);
   SFX.ok();await toast('기기 점검 끝!')}
 /* ---------- 준비 3) 잔 예열 ---------- */
 const CUPSPOT=[{x:584,y:648},{x:672,y:648},{x:782,y:648},{x:902,y:648}];
 let PP=null;  /* 바 장면의 작은 스팀피쳐 */
+const WARM_P={x:466,y:186};
+const GRILLZ=()=>[500,560,620,680,740,800,860,920,980].map(x=>({x,y:528,r:46}));
+/* 그릴에 물 버리기: 물건을 기울여 물을 쏟는다 */
+async function dumpTo(sp,at,r,empty,spout){await sp.to({x:at.x,y:at.y,r},260,E.out);const s=SFX.pour();
+  const p=mk('path',{stroke:'#8fd0f2','stroke-width':6,'stroke-linecap':'round',fill:'none'});
+  await anim(700,()=>{const o=spout?spout():{x:sp.x-40,y:sp.y-30};p.setAttribute('d',`M${o.x.toFixed(1)} ${o.y.toFixed(1)}Q${(o.x-6).toFixed(1)} ${(o.y+10).toFixed(1)} ${(o.x-4).toFixed(1)} 552`)});
+  empty();p.remove();s.stop();for(let i=0;i<4;i++)drop(sp.x-30+rnd(-10,10),548,556,'#8fd0f2',4);await sp.to({r:0},220,E.back)}
 const PS_=.3;
 function pitcherSpout(){const a=PP.sp.r*Math.PI/180,lx=-104*PS_,ly=-246*PS_;return{x:PP.sp.x+lx*Math.cos(a)-ly*Math.sin(a),y:PP.sp.y+lx*Math.sin(a)+ly*Math.cos(a)}}
 async function preheat(){
@@ -1369,56 +1415,86 @@ async function preheat(){
     async()=>{c.snd&&c.snd.stop();pst.setAttribute('d','');PP.sp.to({r:0,y:c.sp.y-80},200);const f=c.ml/c.cap;
       if(f<.55){Panel.hint('조금 더 부어요<small>빨간 선(70%)까지</small>');return false}
       if(f>.85){R.water++;SFX.no();Panel.hint('너무 많아요! 물을 버리고 <em>다시</em> 부어요');await anim(400,t=>c.set(c.ml*(1-t)));return false}
-      c.full=true;SFX.ok();floatText(c.sp.x,c.sp.y-90,'70%!');left--;
+      c.full=true;PP.set(Math.max(.25,PP.L-.12));SFX.ok();floatText(c.sp.x,c.sp.y-90,'70%!');left--;
       if(left)Panel.hint('잘했어요! 나머지 잔도 채워요 <em>('+(4-left)+'/4)</em>');point();return true})));
   pst.remove();Guide.stop();T.clear();Cup.every.forEach(c=>c.line(false));
-  Panel.hint('스팀피쳐를 <em>컵 워머 왼쪽</em>에 올려요<small>보조 피쳐로 써요</small>');zone(476,176,40,22);Guide.drag({x:PP.sp.x,y:PP.sp.y-20},{x:476,y:170});T.set('drag',{x:PP.sp.x,y:PP.sp.y-20},{x:476,y:166});
-  PP.sp.set({r:0});await drag(PP.sp,PP.g,{zone:{x:476,y:186,r:70}});T.clear();PP.set(0,0);await PP.sp.to({x:476,y:186,r:0,sx:PS_,sy:PS_},200,E.out);SFX.clink();
+  PP.sp.set({r:0});
+  Panel.hint('피쳐에 <em>남은 물</em>을 <em>그릴(물 버리는 곳)</em>에 버려요');zone(750,540,300,26);Guide.drag({x:PP.sp.x,y:PP.sp.y-20},{x:700,y:520});T.set('drag',{x:PP.sp.x,y:PP.sp.y-20},{x:700,y:528});
+  await drag(PP.sp,PP.g,{zones:GRILLZ(),anchor:()=>({x:PP.sp.x,y:PP.sp.y-20})});zone();T.clear();
+  await dumpTo(PP.sp,{x:clamp(PP.sp.x,520,980),y:530},-65,()=>PP.set(0,0),pitcherSpout);
+  await dragTo(PP.sp,PP.g,{x:PP.sp.x,y:PP.sp.y-20},{x:WARM_P.x,y:WARM_P.y-20},70,'스팀피쳐를 <em>컵 워머 왼쪽</em>에 올려요<small>보조 피쳐로 써요</small>',{zr:36,zry:20});
+  await PP.sp.to({...WARM_P,r:0,sx:PS_,sy:PS_},200,E.out);SFX.clink();
   SFX.ok();await toast('잔 예열 끝!')}
-/* ---------- 준비 6) 잔 물 버리고 닦아 컵 워머로 ---------- */
+/* ---------- 준비 6) 잔 물은 그릴에 버리고, 하나씩 닦아 컵 워머로 ---------- */
 async function cupsBack(){
-  Panel.hint('잔을 <em>톡</em> 눌러 물을 버려요 <em>(0/4)</em>');let n=0;
-  const point=()=>{const c=Cup.every.find(c=>c.ml>0);if(c){Guide.tap({x:c.sp.x,y:c.sp.y-30});T.set('tap',{x:c.sp.x,y:c.sp.y-30})}};point();
-  await Promise.all(Cup.every.map(async c=>{await tap(c.g);SFX.pick();await c.sp.to({r:-70},200,E.out);for(let i=0;i<6;i++)setTimeout(()=>drop(c.sp.x-30,c.sp.y-30,c.sp.y+10,'#8fd0f2',4),i*50);
-    await anim(300,t=>c.set(c.ml*(1-t)));c.set(0);c.setWater(false);await c.sp.to({r:0},220,E.back);n++;if(n<4){Panel.hint('잔을 <em>톡</em> 눌러 물을 버려요 <em>('+n+'/4)</em>');point()}}));T.clear();
-  await rub(CL.D2,{x:742,y:630,rx:230,ry:48,need:700,hint:'<em>마른행주2</em>로 잔의 물기를 닦아요<small>잔 위를 왔다 갔다 문질러요</small>',done:'뽀득!'});
+  let n=0;const hint=()=>Panel.hint('잔을 <em>그릴(물 버리는 곳)</em>으로 가져가 물을 버려요 <em>('+n+'/4)</em>');hint();zone(750,540,300,26);
+  const point=()=>{const c=Cup.every.find(c=>c.ml>0&&!c.busy);if(c){Guide.drag({x:c.sp.x,y:c.sp.y-30},{x:c.sp.x,y:520});T.set('drag',{x:c.sp.x,y:c.sp.y-24},{x:c.sp.x,y:540})}};point();
+  const gz=GRILLZ();
+  await Promise.all(Cup.every.map(async c=>{const home={x:c.sp.x,y:c.sp.y};
+    await drag(c.sp,c.g,{zones:gz,anchor:()=>({x:c.sp.x,y:c.sp.y-20})});c.busy=true;T.clear();
+    const {GH,GR}=KIND[c.kind];
+    await dumpTo(c.sp,{x:clamp(c.sp.x,500,1000),y:540},-75,()=>{c.set(0);c.setWater(false)},()=>{const a=c.sp.r*Math.PI/180,lx=-GR,ly=-GH;return{x:c.sp.x+lx*Math.cos(a)-ly*Math.sin(a),y:c.sp.y+lx*Math.sin(a)+ly*Math.cos(a)}});
+    c.set(0);c.setWater(false);await c.sp.hop(home.x,home.y,420,40,.06);SFX.clink();n++;c.busy=false;if(n<4){hint();point()}}));zone();T.clear();
+  /* 마른행주2로 한 잔씩 */
+  const D2=CL.D2,cs=Cup.every.slice().sort((a,b)=>a.sp.x-b.sp.x);
+  for(let i=0;i<cs.length;i++){const c=cs[i],{GH}=KIND[c.kind];
+    await rub(D2,{x:c.sp.x,y:c.sp.y-GH*.3,rx:c.kind==='demi'?60:76,ry:46,need:240,hint:`<em>마른행주2</em>로 잔의 물기를 닦아요 <em>(${i}/4)</em><small>잔 위를 왔다 갔다 문질러요</small>`,done:'뽀득!'})}
+  await dragTo(D2.sp,D2.g,{x:D2.sp.x,y:D2.sp.y-14},{x:TRAYSPOT.D2.x,y:TRAYSPOT.D2.y-14},110,'<em>마른행주2</em>를 다시 <em>트레이</em>에 놓아요',{zr:70,zry:26});
+  await D2.sp.to({...TRAYSPOT.D2,r:0,sx:1,sy:1},200,E.out);SFX.pick();
   /* 컵 워머로 */
   const W=[...KIND.demi.warm.map(w=>({...w,kind:'demi'})),...KIND.capp.warm.map(w=>({...w,kind:'capp'}))];
   $('#Lprep').insertAdjacentHTML('afterbegin',W.map((w,i)=>`<ellipse id="ws${i}" class="ghost" cx="${w.x}" cy="${w.y-4}" rx="${w.kind==='demi'?34:50}" ry="10"/>`).join(''));
   Panel.hint('잔을 다시 <em>컵 워머</em>에 올려요<small>작은 잔은 왼쪽, 큰 잔은 오른쪽</small>');
-  const zones=W.map(w=>({x:w.x,y:w.y-24,r:56,used:false}));
+  const zones=W.map(w=>({x:w.x,y:w.y-24,r:46,used:false}));
   const next=()=>{const c=Cup.every.find(c=>!c.back);if(!c)return;const i=zones.findIndex((z,i)=>!z.used&&W[i].kind===c.kind);Guide.drag({x:c.sp.x,y:c.sp.y-30},{x:W[i].x,y:W[i].y-30});T.set('drag',{x:c.sp.x,y:c.sp.y-24},{x:W[i].x,y:W[i].y-24})};next();
   await Promise.all(Cup.every.map(async c=>{const i=await drag(c.sp,c.g,{zones,anchor:()=>({x:c.sp.x,y:c.sp.y-20}),accept:i=>W[i].kind===c.kind,
       reject:()=>{R.cupWrong++;SFX.no();Panel.hint(c.kind==='demi'?'에스프레소 잔(작은 잔)은 <em>왼쪽</em>이에요':'카푸치노 잔(큰 잔)은 <em>오른쪽</em>이에요')}});
-    zones[i].used=true;c.back=true;$('#ws'+i).remove();await c.sp.to({x:W[i].x,y:W[i].y,r:0,sx:1,sy:1},160,E.out);SFX.clink();next()}));T.clear();
-  await placeCloth('D2',SPOT.D2,'<em>마른행주2</em>를 <em>컵 워머 오른쪽 앞</em>에 놓아요');SFX.ok()}
-/* ---------- 준비 8) 기물: 위에서 본 트레이 ---------- */
+    zones[i].used=true;c.back=true;$('#ws'+i).remove();await c.sp.to({x:W[i].x,y:W[i].y,r:0,sx:1,sy:1},160,E.out);SFX.clink();next()}));T.clear();SFX.ok()}
+/* ---------- 준비 8) 기물: 위에서 본 조리대. 겹친 받침·스푼을 마른행주3으로 닦아 앞쪽에 놓기 ---------- */
+const clothTop=`<rect x="-80" y="-56" width="160" height="112" rx="16" fill="#4a2c22" opacity=".14" transform="translate(5 7)"/><rect x="-80" y="-56" width="160" height="112" rx="16" fill="#fffdf8" class="o4"/>
+  <path d="M-62 -24H62M-62 24H62" stroke="#e0d0b8" stroke-width="5"/><text y="10" text-anchor="middle" font-size="30" fill="#8a5a44">마른3</text>`;
 async function wares(){
-  openPop('기물 준비',TRAY_BG);
-  const G=[{x:240,y:215,r:50,k:'e'},{x:440,y:215,r:50,k:'e'},{x:240,y:405,r:66,k:'c'},{x:440,y:405,r:66,k:'c'}];
-  $('#prepGhost').innerHTML=G.map((g,i)=>`<circle id="wg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="${g.r}"/>`).join('')
-    +`<text x="340" y="148" text-anchor="middle" font-size="24" fill="#fbeedd">에스프레소용</text><text x="340" y="512" text-anchor="middle" font-size="24" fill="#fbeedd">카푸치노용</text>`;
+  openPop('기물 준비',`<rect width="1000" height="600" fill="#f4f1ec"/><g fill="#e3ddd4"><circle cx="90" cy="300" r="4"/><circle cx="380" cy="560" r="3"/><circle cx="720" cy="90" r="4"/><circle cx="930" cy="330" r="3"/></g>
+    <path d="M40 300H960" stroke="#d8cfc2" stroke-width="3" stroke-dasharray="14 12"/><text x="40" y="290" font-size="22" fill="#a08870">닦기 전 ↑</text><text x="40" y="326" font-size="22" fill="#a08870">닦은 뒤 ↓</text>`);
   const it=$('#prepItems');
   const mkItem=(html,x,y)=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=html;it.appendChild(g);return{g,sp:new Sp(g,x,y)}};
-  const S=[{k:'e',x:790,y:190},{k:'e',x:900,y:190},{k:'c',x:780,y:410},{k:'c',x:910,y:410}].map(o=>Object.assign(o,mkItem(saucerTopR(o.k==='e'?50:66),o.x,o.y)));
-  Panel.hint('<em>작은 받침</em>은 에스프레소용, <em>큰 받침</em>은 카푸치노용 자리에 놓아요');
+  const G=[{x:130,y:430,r:50,k:'e'},{x:270,y:430,r:50,k:'e'},{x:440,y:430,r:66,k:'c'},{x:610,y:430,r:66,k:'c'}];
+  $('#prepGhost').innerHTML=G.map((g,i)=>`<circle id="wg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="${g.r}"/>`).join('')
+    +`<text x="200" y="530" text-anchor="middle" font-size="24" fill="#8a5a44">에스프레소용</text><text x="525" y="530" text-anchor="middle" font-size="24" fill="#8a5a44">카푸치노용</text>`;
+  /* 겹친 받침: 아래 것부터 만들어 위 것이 위에 그려지게 */
+  const ST={e:{x:180,y:160},c:{x:420,y:160}};
+  const S=[];for(const k of ['e','c'])for(let j=0;j<2;j++){const o=mkItem(saucerTopR(k==='e'?50:66),ST[k].x,ST[k].y-j*8);o.k=k;o.g.setAttribute('class','np');S.push(o)}
+  const order=[S[1],S[0],S[3],S[2]];  /* 맨 위 받침부터 */
+  /* 스푼이 꽂힌 유리컵 */
+  const glass=pmk('g',{class:'hit',transform:'translate(660 150)'});glass.innerHTML=`<circle r="48" fill="#4a2c22" opacity=".12" cx="5" cy="7"/><circle r="48" fill="#e8f3f6" fill-opacity=".7" class="o4"/><circle r="36" fill="none" stroke="#fff" stroke-width="5" opacity=".8"/>`;
+  const SP=[[-40,-26],[40,-30],[-36,30],[44,24]].map(([dx,dy],i)=>{const o=mkItem(`<g transform="scale(.62)">${spoonTop}</g>`,660+dx*.5,150+dy*.5);o.g.setAttribute('class','np');o.sp.set({r:Math.atan2(dy,dx)*180/Math.PI+180});return o});
+  const cloth=mkItem(clothTop,860,470);const home={x:860,y:470};
+  const C={g:cloth.g,sp:cloth.sp};
   const zones=G.map(g=>({x:g.x,y:g.y,r:80,used:false}));
-  const nextS=()=>{const o=S.find(o=>!o.done);if(!o)return;const i=zones.findIndex((z,i)=>!z.used&&G[i].k===o.k);Guide.drag({x:o.sp.x,y:o.sp.y},{x:G[i].x,y:G[i].y});T.set('drag',{x:o.sp.x,y:o.sp.y},{x:G[i].x,y:G[i].y},{svg:'prepSvg'})};nextS();
-  await Promise.all(S.map(async o=>{const i=await drag(o.sp,o.g,{svg:svgP,zones,bounds:[60,60,960,560],accept:i=>G[i].k===o.k,
+  for(let j=0;j<4;j++){const o=order[j],name=o.k==='e'?'에스프레소':'카푸치노';
+    o.g.parentNode.appendChild(o.g);C.g.parentNode.appendChild(C.g);
+    await rub(C,{svg:svgP,x:o.sp.x,y:o.sp.y+14,rx:o.k==='e'?70:86,ry:60,need:260,hint:`<em>마른행주3</em>으로 ${name} 받침을 닦아요 <em>(${j}/4)</em>`,done:'뽀득!',end:home});
+    o.g.setAttribute('class','hit');
+    const i0=zones.findIndex((z,i)=>!z.used&&G[i].k===o.k);Panel.hint(`닦은 받침을 <em>아래쪽 ${name}용</em> 자리에 놓아요`);Guide.drag({x:o.sp.x,y:o.sp.y},{x:G[i0].x,y:G[i0].y});T.set('drag',{x:o.sp.x,y:o.sp.y},{x:G[i0].x,y:G[i0].y},{svg:'prepSvg'});
+    const i=await drag(o.sp,o.g,{svg:svgP,zones,bounds:[60,60,960,560],accept:i=>G[i].k===o.k,
       reject:()=>{R.ware++;SFX.no();Panel.hint(o.k==='e'?'이건 <em>작은 받침</em>이에요. <em>에스프레소용</em> 자리에 놓아요':'이건 <em>큰 받침</em>이에요. <em>카푸치노용</em> 자리에 놓아요')}});
-    zones[i].used=true;o.done=true;$('#wg'+i).classList.add('done');await o.sp.to({x:G[i].x,y:G[i].y,r:0,sx:1,sy:1},180,E.back);SFX.clink();nextS()}));
-  /* 스푼 4개 */
+    T.clear();zones[i].used=true;$('#wg'+i).classList.add('done');await o.sp.to({x:G[i].x,y:G[i].y,r:0,sx:1,sy:1},180,E.back);SFX.clink()}
+  /* 스푼 4개: 하나씩 꺼내 닦고 받침 위쪽에 (손잡이 왼쪽) */
   const SG=G.map(g=>({x:g.x,y:g.y-g.r+16}));
   $('#prepGhost').insertAdjacentHTML('beforeend',SG.map((g,i)=>`<g id="sg${i}" class="ghost" transform="translate(${g.x} ${g.y}) scale(.62)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0"/></g>`).join(''));
-  const SP=[150,260,370,480].map((y,i)=>{const o=mkItem(`<g transform="scale(.62)">${spoonTop}</g>`,845,y);o.left=Math.random()<.5;o.sp.set({r:o.left?0:180});return o});
-  Panel.hint('<em>스푼 4개</em>를 받침 위쪽에 놓아요<small>손잡이는 왼쪽. 스푼을 톡 누르면 방향이 바뀌어요</small>');
   const sz=SG.map(g=>({x:g.x,y:g.y,r:70,used:false}));
-  const nextP=()=>{const o=SP.find(o=>!o.done);if(!o)return;const i=sz.findIndex(z=>!z.used);
-    if(!o.left){Guide.tap({x:o.sp.x,y:o.sp.y});T.set('tap',{x:o.sp.x,y:o.sp.y},null,{svg:'prepSvg'})}else{Guide.drag({x:o.sp.x,y:o.sp.y},{x:SG[i].x,y:SG[i].y});T.set('drag',{x:o.sp.x,y:o.sp.y},{x:SG[i].x,y:SG[i].y},{svg:'prepSvg'})}};nextP();
-  await Promise.all(SP.map(async o=>{const i=await drag(o.sp,o.g,{svg:svgP,zones:sz,bounds:[60,60,960,560],
-      tap:()=>{o.left=!o.left;SFX.pick();o.sp.to({r:o.left?0:180},280,E.back).then(nextP)},accept:()=>o.left,
+  for(let j=0;j<4;j++){const o=SP[j];
+    Panel.hint(`유리컵에서 <em>스푼</em>을 하나 꺼내요 <em>(${j}/4)</em>`);Guide.tap({x:660,y:150});T.set('tap',{x:660,y:150},null,{svg:'prepSvg'});
+    o.g.setAttribute('class','hit');await new Promise(r=>{const h=()=>{glass.removeEventListener('click',h);o.g.removeEventListener('click',h);r()};glass.addEventListener('click',h);o.g.addEventListener('click',h)});
+    Guide.stop();T.clear();SFX.pick();o.left=Math.random()<.5;await o.sp.to({x:800,y:250,r:o.left?0:180},300,E.out);
+    C.g.parentNode.appendChild(C.g);
+    await rub(C,{svg:svgP,x:800,y:264,rx:90,ry:50,need:200,hint:`<em>마른행주3</em>으로 스푼을 닦아요 <em>(${j}/4)</em>`,done:'반짝!',end:home});
+    Panel.hint('닦은 스푼을 받침 위쪽에 놓아요<small>손잡이는 왼쪽. 스푼을 톡 누르면 방향이 바뀌어요</small>');
+    const point=()=>{const i=sz.findIndex(z=>!z.used);if(!o.left){Guide.tap({x:o.sp.x,y:o.sp.y});T.set('tap',{x:o.sp.x,y:o.sp.y},null,{svg:'prepSvg'})}else{Guide.drag({x:o.sp.x,y:o.sp.y},{x:SG[i].x,y:SG[i].y});T.set('drag',{x:o.sp.x,y:o.sp.y},{x:SG[i].x,y:SG[i].y},{svg:'prepSvg'})}};point();
+    const i=await drag(o.sp,o.g,{svg:svgP,zones:sz,bounds:[60,60,960,560],
+      tap:()=>{o.left=!o.left;SFX.pick();o.sp.to({r:o.left?0:180},280,E.back).then(point)},accept:()=>o.left,
       reject:()=>{R.ware++;SFX.no();Panel.hint('손잡이가 <em>왼쪽</em>으로 가게 해요<small>스푼을 톡 눌러서 돌려요</small>')}});
-    sz[i].used=true;o.done=true;$('#sg'+i).classList.add('done');await o.sp.to({x:SG[i].x,y:SG[i].y,r:0,sx:1,sy:1},180,E.back);SFX.clink();nextP()}));
+    T.clear();sz[i].used=true;$('#sg'+i).classList.add('done');await o.sp.to({x:SG[i].x,y:SG[i].y,r:0,sx:1,sy:1},180,E.back);SFX.clink()}
   T.clear();SFX.ok();await toast('기물 준비 끝!');closePop()}
 /* ---------- 준비 8~9) 스팀피쳐를 우유 앞에, 우유 양 확인 ---------- */
 async function milkCheck(){
@@ -1451,7 +1527,7 @@ async function milkCheck(){
 
 /* ---------- 준비 과정 진행 ---------- */
 async function prep(){
-  M={...MODES.esp,name:'준비',key:'prep'};STEPS=['행주 놓기','기기 점검','잔 예열','그라인더','탬퍼·바닥','잔 정리','머신 청소','기물·우유','마무리'];LINES_TOTAL=2;
+  M={...MODES.esp,name:'준비',key:'prep'};STEPS=['행주 놓기','기기 점검','잔 예열','그라인더','탬퍼·바닥','잔 정리','머신 청소','기물·우유','머신 아래·마무리'];LINES_TOTAL=2;
   R={lines:[],t:0,placed:[],water:0,cupWrong:0,ware:0,milk:0,milkLow:false};lineNo=0;wrongCloth=0;
   resetBar();hidePitchers();Cup.every.forEach(c=>c.line(false));scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>{jface(i,'idle');$('#J'+i+' .check').style.opacity=0});
   for(const k in CL)delete CL[k];
@@ -1467,9 +1543,12 @@ async function prep(){
   await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>의 가루를 닦아요',end:SPOT.W3});
   step(6);await cupsBack();
   step(7);await rub(CL.W2,{x:750,y:556,rx:300,ry:34,dots:drops,hint:'<em>젖은행주2</em>로 <em>그릴</em>의 물기를 닦아요',end:SPOT.W2});
-  await rub(CL.D2,{x:750,y:556,rx:300,ry:34,need:700,hint:'<em>마른행주2</em>로 그릴을 한 번 더 닦아요',end:SPOT.D2,done:'반짝!'});drops.remove();
+  await rub(CL.D2,{x:750,y:556,rx:300,ry:34,need:700,hint:'<em>마른행주2</em>로 그릴을 한 번 더 닦아요<small>다 닦으면 컵 워머 오른쪽 앞에 놓아요</small>',end:SPOT.D2,done:'반짝!'});drops.remove();
   step(8);Panel.hide();await wares();await milkCheck();
-  step(9);await placeCloth('D3',SPOT.D3,'<em>마른행주3</em>을 <em>머신 앞</em>에 길게 펴 놓아요');CL.D3.setLong(true);SFX.ok();
+  step(9);const md=machineDrops();
+  await rub(CL.W3,{x:750,y:634,rx:300,ry:42,dots:md,hint:'<em>젖은행주3</em>으로 <em>머신 아래</em>를 다 닦아요',end:SPOT.W3});
+  await rub(CL.D3,{x:750,y:634,rx:300,ry:42,need:800,hint:'<em>마른행주3</em>으로 머신 아래를 한 번 더 닦아요',done:'반짝!'});md.remove();
+  await placeCloth('D3',SPOT.D3,'<em>마른행주3</em>을 <em>머신 앞</em>에 길게 펴 놓아요');CL.D3.setLong(true);sparkle(SPOT.D3.x,SPOT.D3.y-20,6);SFX.ok();
   const sec=Clock.stop();
   R.lines.push(await sayLine('준비 마치겠습니다.',lineTag()));Panel.hide();
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;
@@ -1483,13 +1562,8 @@ async function prep(){
     ['우유 확인',(R.milkLow?'부족 → 말했어요':'충분')+(R.milk?` (${R.milk}번 다시 봄)`:''),R.milk?'yel':'g2']])}
 
 /* ---------- 정리 ---------- */
-function setPFs(groupMode,otherClean){/* 지금 다룰 포터필터(PF)는 groupMode 쪽, 다른 하나는 pf2 */
-  M={...groupMode,name:'정리',key:'clean'};
-  PF.set({...M.grp,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';$('#collar').setAttribute('transform',`translate(${M.grp.x-910} 0)`);
-  $('#pf2').setAttribute('transform',`translate(${M.other.x} ${M.other.y})`);$('#collar2').setAttribute('transform',`translate(${M.other.x-910} 0)`);
-  setGrounds(0,!otherClean);$('#pf2').innerHTML=$('#pf').innerHTML.replace(/ id="[^"]+"/g,'');setGrounds(0,true)}
 async function cleanGroup(mode,first){
-  setPFs(mode,!first);
+  setPFs(mode,true,first);
   await twistPF('out');
   Panel.hint('<em>포터필터</em>를 <em>넉박스</em>로 가져가요');zone(1150,540,62,30);Guide.drag({x:PF.x,y:PF.y+20},{x:1150,y:500});T.set('drag',{x:PF.x,y:PF.y+20},{x:1150,y:500});
   await drag(PF,$('#pf'),{zone:{x:1150,y:500,r:110}});T.clear();
