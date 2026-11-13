@@ -138,8 +138,6 @@ function jface(i,m){const g=$('#J'+i),q=(s,v)=>{const e=$(s,g);if(e)e.style.disp
 function nod(i){const h=$('#J'+i+' .jhead');h.classList.remove('nod');void h.getBoundingClientRect();h.classList.add('nod')}
 function check(i){const c=$('#J'+i+' .check');anim(300,t=>c.style.opacity=t)}
 /* 심사위원 목소리: 미리 만든 AI 음성(ElevenLabs, Gia). 못 틀면 휴대폰 기계 목소리로 */
-const VOICE={'준비되면 시작해 주세요.':'https://d8j0ntlcm91z4.cloudfront.net/user_3LECVhK6PTJ2EmuTHhwv4grRNrY/hf_20261113_033238_3910af13-9e06-41b2-aef3-712e2ec8cf4a.mp3',
-  '준비 시작해 주세요.':'https://d8j0ntlcm91z4.cloudfront.net/user_3LECVhK6PTJ2EmuTHhwv4grRNrY/hf_20261113_033315_add75581-3b7e-454e-89cd-3f3109b0e522.mp3'};
 const VOICE_EL={};try{for(const [k,u] of Object.entries(VOICE)){const a=new Audio();a.preload='auto';a.src=u;VOICE_EL[k]=a}}catch(e){}
 function voice(text,pitch){const a=VOICE_EL[text];if(!a||SFX.muted)return tts(text,pitch);
   return new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;clearTimeout(to);res()}};const fall=()=>{if(!done){done=true;clearTimeout(to);tts(text,pitch).then(res)}};
