@@ -1610,7 +1610,7 @@ async function cleanGroup(mode,first){
   await Promise.all([PF.to({x:M.grp.x,y:M.grp.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
   await twistPF('in');SFX.ok()}
 async function cleanup(){
-  M={...MODES.esp,name:'정리',key:'clean'};STEPS=['피쳐 정리','왼쪽 포터필터','오른쪽 포터필터','그라인더','바닥·탬퍼','행주 정리','마무리'];LINES_TOTAL=1;
+  M={...MODES.esp,name:'정리',key:'clean'};STEPS=['피쳐 정리','왼쪽 포터필터','오른쪽 포터필터','그라인더','바닥·탬퍼','머신·바닥 닦고 행주 정리','마무리'];LINES_TOTAL=1;
   R={lines:[],t:0};lineNo=0;
   resetBar();hidePitchers();Cup.every.forEach(c=>c.line(false));scene('bar');Guide.use('#hand');for(const k in CL)delete CL[k];
   Object.keys(CLOTH).forEach(k=>makeCloth(k,SPOT[k],k==='D3'));grinderDirt();counterDirt();
@@ -1631,16 +1631,24 @@ async function cleanup(){
   await rub(CL.D1,{x:1556,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',carry:back('D1')});
   /* 5) 행주 6장 트레이로 */
   step(6);
-  Panel.hint('<em>행주 6장</em>을 접시째 모두 <em>트레이</em>에 올려요 <em>(0/6)</em>');zone(230,630,170,52);
-  const tray=[{x:230,y:640,r:200,used:false}];let n=0;
-  const next=()=>{const k=Object.keys(CL).find(k=>!CL[k].home);if(k){const c=CL[k];Guide.drag({x:c.sp.x,y:c.sp.y-14},{x:TRAYSPOT[k].x,y:TRAYSPOT[k].y-14});T.set('drag',{x:c.sp.x,y:c.sp.y-14},{x:230,y:626})}};next();
-  await Promise.all(Object.values(CL).map(async c=>{await drag(c.sp,c.g,{zones:tray,bounds:[30,110,1570,700]});c.home=true;if(c.long)c.setLong(false);await c.sp.to({...TRAYSPOT[c.k],r:0,sx:1,sy:1},200,E.out);SFX.pick();n++;
-    if(n<6){Panel.hint('<em>행주 6장</em>을 접시째 모두 <em>트레이</em>에 올려요 <em>('+n+'/6)</em>');next()}}));zone();T.clear();
+  /* 머신을 젖은2 → 마른2로, 바닥을 젖은3 → 마른3으로 한 번 더 닦고, 닦은 행주는 누른 채로 트레이에 */
+  const toTray=k=>({to:TRAYSPOT[k],r:110,zr:70,hint:`손을 떼지 말고 그대로 <em>${clothName(k)}</em>을 <em>트레이</em>에 놓아요`});
+  const gd=grillDrops();
+  await rub(CL.W2,{x:750,y:556,rx:300,ry:34,dots:gd,hint:'<em>젖은행주2</em>로 <em>머신(그릴)</em>을 한 번 더 닦아요',carry:toTray('W2')});
+  await rub(CL.D2,{x:750,y:556,rx:300,ry:34,need:700,hint:'<em>마른행주2</em>로 머신을 한 번 더 닦아요',done:'반짝!',carry:toTray('D2')});gd.remove();
+  const md=machineDrops();
+  await rub(CL.W3,{x:750,y:634,rx:300,ry:42,dots:md,hint:'<em>젖은행주3</em>으로 <em>바닥</em>을 한 번 더 닦아요',carry:toTray('W3')});
+  CL.D3.setLong(false);
+  await rub(CL.D3,{x:750,y:634,rx:300,ry:42,need:800,hint:'<em>마른행주3</em>으로 바닥을 한 번 더 닦아요',done:'반짝!',carry:toTray('D3')});md.remove();
+  /* 남은 행주: 접시째 트레이로 */
+  for(const k of ['W1','D1']){const c=CL[k];
+    await dragTo(c.sp,c.g,{x:c.sp.x,y:c.sp.y-14},{x:TRAYSPOT[k].x,y:TRAYSPOT[k].y-14},110,`<em>${clothName(k)}</em>을 <em>접시째</em> 트레이에 올려요`,{zr:70,zry:26});
+    await c.sp.to({...TRAYSPOT[k],r:0,sx:1,sy:1},200,E.out);SFX.pick()}
   step(7);const sec=Clock.stop();
   R.lines.push(await sayLine('시연 및 정리 마치겠습니다!',lineTag()));Panel.hide();
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;
   showRows('정리 결과',[['걸린 시간',mmss(sec),'g2'],['대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel'],
-    ['피쳐 정리','트레이에 올렸어요','g2'],['포터필터 2개','버리고·헹구고·닦았어요','g2'],['그라인더·바닥·탬퍼','깨끗해요','g2'],['행주 6장','트레이에 올렸어요','g2']])}
+    ['피쳐 정리','트레이에 올렸어요','g2'],['포터필터 2개','버리고·헹구고·닦았어요','g2'],['그라인더·바닥·탬퍼','깨끗해요','g2'],['머신·바닥','한 번 더 닦았어요','g2'],['행주 6장','트레이에 올렸어요','g2']])}
 
 $('#goPrep').onclick=startWith(()=>prep());$('#goClean').onclick=startWith(()=>cleanup());
 })();
