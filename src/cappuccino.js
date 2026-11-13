@@ -233,7 +233,7 @@ async function cappuccino(){
   M=MODES.cap;STEPS=['메뉴 설명','서빙 준비','우유 따르기','추출','스티밍','나누기·붓기','서빙'];LINES_TOTAL=4;$('#rtitle').textContent='카푸치노 결과';
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0,art:[]};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>{jface(i,'idle');$('#J'+i+' .check').style.opacity=0});
-  step(1);await sleep(500);await judgeSay(1,'두 번째 메뉴를 시작해 주세요.');Bubble.hide();
+  step(1);await sleep(500);
   R.lines.push(await sayLine('두 번째로 추출해 드릴 커피는 우유 거품이 많은 카푸치노 두 잔을 준비해 드리겠습니다. 잠시만 기다려주십시오.',lineTag()));nod(0);
   step(2);Panel.hide();await trayPrep();
   step(3);scene('bar');Guide.use('#hand');await sleep(900);await milkPour();
