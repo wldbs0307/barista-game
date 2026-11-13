@@ -36,6 +36,9 @@ function makeCloth(k,pos,long){const g=document.createElementNS(NS,'g');g.setAtt
     const pe=document.createElementNS(NS,'g');pe.setAttribute('class','np');pe.setAttribute('transform',`translate(${c.sp.x} ${c.sp.y})`);pe.innerHTML=PLATE;$('#Lprep').prepend(pe);c.plateEl=pe;c.sp.set({y:c.sp.y-4});draw()};
   c.attach=()=>{if(!c.plateEl)return;c.plateEl.remove();c.plateEl=null;c.onPlate=true;c.sp.set({...c.plateAt,r:0});draw()};
   CL[k]=c;return c}
+const BACKNAME={D1:'접시 위',W2:'그릴 위 오른쪽',W3:'머신 앞 제자리',D2:'컵 워머 오른쪽 앞'};
+/* 다 닦은 행주를 손을 떼지 않고 제자리로 옮기게 하는 설정 */
+const back=k=>({to:SPOT[k],r:90,hint:`손을 떼지 말고 그대로 <em>${clothName(k)}</em>을 <em>${BACKNAME[k]}</em>에 놓아요`});
 const toTop=el=>$('#fx').before(el);   /* 끌 때 다른 물건 위로 */
 
 /* 행주를 정해진 자리로 끌기. 다른 행주를 끌면 되돌아간다. */
@@ -80,7 +83,8 @@ function rub(c,o){return new Promise(res=>{const el=c.g,sp=c.sp,SV=o.svg||svgS,p
     if(o.carry){phase='carry';const to=o.carry.to;Panel.hint(o.carry.hint);zone(to.x,to.y-10,o.carry.zr||60,o.carry.zry||26);guide();Guide.pause();return}
     finish()}
   const up=async()=>{if(!g||done)return;g=null;sp.to({r:0},150);
-    if(phase==='carry'&&nearTo()){done=true;off();zone();Guide.stop();T.clear();await sp.to({...o.carry.to,r:0},200,E.out);SFX.pick();res();return}
+    if(phase==='carry'&&nearTo()){done=true;off();zone();Guide.stop();T.clear();const to=o.carry.to,toPlate=c.plateAt&&Math.hypot(to.x-c.plateAt.x,to.y-c.plateAt.y)<8;
+      await sp.to({x:to.x,y:to.y-(toPlate?4:0),r:0},200,E.out);if(toPlate)c.attach();SFX.pick();res();return}
     guide()};
   const off=()=>{el.removeEventListener('pointerdown',dn);el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up)};
   async function finish(){done=true;off();if(pop)gz.remove();else zone();Guide.stop();T.clear();
@@ -320,15 +324,15 @@ async function prep(){
   step(2);await machineCheck();const drops=grillDrops();
   step(3);await preheat();
   step(4);T.set('brush');await brushDirt(()=>true,'<em>붓</em>으로 그라인더와 <em>넉박스 주변</em>을 쓸어요<small>도저 안과 주변 가루를 확인해요</small>');T.clear();
-  step(5);await rub(CL.D1,{x:1556,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',end:SPOT.D1});
-  await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>의 가루를 닦아요',end:SPOT.W3});
+  step(5);await rub(CL.D1,{x:1556,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',carry:back('D1')});
+  await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>의 가루를 닦아요',carry:back('W3')});
   step(6);await cupsBack();
-  step(7);await rub(CL.W2,{x:750,y:556,rx:300,ry:34,dots:drops,hint:'<em>젖은행주2</em>로 <em>그릴</em>의 물기를 닦아요',end:SPOT.W2});
+  step(7);await rub(CL.W2,{x:750,y:556,rx:300,ry:34,dots:drops,hint:'<em>젖은행주2</em>로 <em>그릴</em>의 물기를 닦아요',carry:back('W2')});
   await rub(CL.D2,{x:750,y:556,rx:300,ry:34,need:700,hint:'<em>마른행주2</em>로 그릴을 한 번 더 닦아요',done:'반짝!',
     carry:{to:SPOT.D2,r:90,hint:'손을 떼지 말고 그대로 <em>컵 워머 오른쪽 앞</em>으로 옮겨요'}});drops.remove();
   step(8);Panel.hide();await wares();await milkCheck();
   step(9);const md=machineDrops();
-  await rub(CL.W3,{x:750,y:634,rx:300,ry:42,dots:md,hint:'<em>젖은행주3</em>으로 <em>머신 아래</em>를 다 닦아요',end:SPOT.W3});
+  await rub(CL.W3,{x:750,y:634,rx:300,ry:42,dots:md,hint:'<em>젖은행주3</em>으로 <em>머신 아래</em>를 다 닦아요',carry:back('W3')});
   await rub(CL.D3,{x:750,y:634,rx:300,ry:42,need:800,hint:'<em>마른행주3</em>으로 머신 아래를 한 번 더 닦아요',done:'반짝!'});md.remove();
   await placeCloth('D3',SPOT.D3,'<em>마른행주3</em>을 <em>머신 앞</em>에 길게 펴 놓아요');CL.D3.setLong(true);sparkle(SPOT.D3.x,SPOT.D3.y-20,6);SFX.ok();
   const sec=Clock.stop();
@@ -357,7 +361,7 @@ async function cleanGroup(mode,first){
   await anim(300,t=>pk.setAttribute('cy',lerp(478,556,t)),t=>t*t);pk.setAttribute('rx',30);floatText(1150,430,'쿵!');
   Panel.hint(`${M.side} <em>추출 버튼</em>을 눌러 그룹 헤드에 물을 흘려요`);Guide.tap(M.btn);T.set('tap',M.btn);
   await tap($('#bBtn'+M.bs));Guide.stop();T.clear();setBrewBtn(true);await water([[M.grp.x-14,366,M.grp.x-14,548],[M.grp.x+14,366,M.grp.x+14,548]],1300);setBrewBtn(false);floatText(M.grp.x,330,'물로 헹궜어요');
-  await rub(CL.D1,{x:1150,y:496,rx:80,ry:56,need:380,hint:'<em>마른행주1</em>로 <em>포터필터</em>를 닦아요',end:SPOT.D1,done:'반짝!'});
+  await rub(CL.D1,{x:1150,y:496,rx:80,ry:56,need:380,hint:'<em>마른행주1</em>로 <em>포터필터</em>를 닦아요',carry:back('D1'),done:'반짝!'});
   Panel.hint('<em>포터필터</em>를 '+M.side+' 그룹 아래로 가져가요');zone(M.grp.x,M.grp.y+40,80,64);Guide.drag({x:PF.x,y:PF.y+20},{x:M.grp.x,y:M.grp.y+40});T.set('drag',{x:PF.x,y:PF.y+20},{x:M.grp.x,y:M.grp.y+40});
   await drag(PF,$('#pf'),{zone:{x:M.grp.x,y:M.grp.y+20,r:110}});T.clear();
   await Promise.all([PF.to({x:M.grp.x,y:M.grp.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
@@ -380,8 +384,8 @@ async function cleanup(){
   /* 3) 그라인더 */
   step(4);T.set('brush');await brushDirt(()=>true,'<em>붓</em>으로 그라인더 주변을 쓸어요');T.clear();
   /* 4) 바닥, 탬퍼 */
-  step(5);await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>을 닦아요',end:SPOT.W3});
-  await rub(CL.D1,{x:1556,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',end:SPOT.D1});
+  step(5);await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>을 닦아요',carry:back('W3')});
+  await rub(CL.D1,{x:1556,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',carry:back('D1')});
   /* 5) 행주 6장 트레이로 */
   step(6);
   Panel.hint('<em>행주 6장</em>을 접시째 모두 <em>트레이</em>에 올려요 <em>(0/6)</em>');zone(230,630,170,52);
