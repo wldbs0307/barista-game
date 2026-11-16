@@ -354,11 +354,14 @@ async function cleanGroup(mode,first){
   Panel.hint('<em>포터필터</em>를 <em>넉박스</em>로 가져가요');zone(1150,540,62,30);Guide.drag({x:PF.x,y:PF.y+20},{x:1150,y:500});T.set('drag',{x:PF.x,y:PF.y+20},{x:1150,y:500});
   await drag(PF,$('#pf'),{zone:{x:1150,y:500,r:110}});T.clear();
   await Promise.all([PF.to({x:1150,y:470,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(-.7,.45,t)))]);
-  Panel.hint('포터필터를 <em>톡톡</em> 눌러 커피 찌꺼기를 버려요 <em>(0/2)</em>');
-  for(let i=0;i<2;i++){Guide.tap({x:1150,y:500});T.set('tap',{x:1150,y:500});await tap($('#pf'));Guide.stop();T.clear();
-    SFX.thud();shake();await PF.to({y:492},70,E.out);await PF.to({y:470},160,E.out);if(i===0)Panel.hint('한 번 더 <em>톡</em>! <em>(1/2)</em>')}
-  setGrounds(0,false);const pk=mk('ellipse',{cx:1150,cy:478,rx:36,ry:8,fill:'#3f2314',stroke:'#4a2c22','stroke-width':3});
-  await anim(300,t=>pk.setAttribute('cy',lerp(478,556,t)),t=>t*t);pk.setAttribute('rx',30);floatText(1150,430,'쿵!');
+  Panel.hint('포터필터를 <em>톡</em> 눌러 <em>아래로 뒤집어요</em><small>커피 찌꺼기가 넉박스로 빠지게</small>');Guide.tap({x:1150,y:500});T.set('tap',{x:1150,y:500});await tap($('#pf'));Guide.stop();T.clear();
+  SFX.pick();await PF.to({y:500,r:175},420,E.io);
+  Panel.hint('뒤집은 채로 <em>톡톡</em> 눌러 커피 찌꺼기를 털어요 <em>(0/2)</em>');
+  for(let i=0;i<2;i++){Guide.tap({x:1150,y:470});T.set('tap',{x:1150,y:470});await tap($('#pf'));Guide.stop();T.clear();
+    SFX.thud();shake();await PF.to({y:516},70,E.out);await PF.to({y:500},160,E.out);if(i===0)Panel.hint('한 번 더 <em>톡</em>! <em>(1/2)</em>')}
+  setGrounds(0,false);const pk=mk('ellipse',{cx:1150,cy:504,rx:36,ry:8,fill:'#3f2314',stroke:'#4a2c22','stroke-width':3});
+  await anim(260,t=>pk.setAttribute('cy',lerp(504,556,t)),t=>t*t);pk.setAttribute('rx',30);floatText(1150,430,'쿵!');
+  await PF.to({y:470,r:0},420,E.io);
   Panel.hint(`${M.side} <em>추출 버튼</em>을 눌러 그룹 헤드에 물을 흘려요`);Guide.tap(M.btn);T.set('tap',M.btn);
   await tap($('#bBtn'+M.bs));Guide.stop();T.clear();setBrewBtn(true);await water([[M.grp.x-14,366,M.grp.x-14,548],[M.grp.x+14,366,M.grp.x+14,548]],1300);setBrewBtn(false);floatText(M.grp.x,330,'물로 헹궜어요');
   await rub(CL.D1,{x:1150,y:496,rx:80,ry:56,need:380,hint:'<em>마른행주1</em>로 <em>포터필터</em>를 닦아요',carry:back('D1'),done:'반짝!'});
