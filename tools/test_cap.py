@@ -15,6 +15,9 @@ async def main():
     await pg.route('**/fonts.googleapis.com/**',lambda r:r.abort())
     await pg.add_init_script(MOCK)
     await pg.goto('file://'+R+'/index.html'); await pg.wait_for_timeout(400)
+    return await play(pg,errs,b)
+async def play(pg,errs,b=None,start=True,until=None):
+  if True:
     n=[0]
     async def shot(name):
       n[0]+=1; await pg.screenshot(path=f'{SH}/{TAG}_{n[0]:02d}_{name}.png')
@@ -30,13 +33,14 @@ async def main():
     async def hold(x,y,ms,svg='station'):
       a=await cl(x,y,svg); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(ms); await pg.mouse.up()
     PS='prepSvg'
-    await shot('title'); await pg.click('#goCap')
+    if start: await shot('title'); await pg.click('#goCap')
     log=[]; done={}; t_end=asyncio.get_event_loop().time()+330
     def once(k):
       if done.get(k): return False
       done[k]=1; return True
     while asyncio.get_event_loop().time()<t_end:
       await pg.wait_for_timeout(200)
+      if until and (await pg.inner_text('#step')).startswith(until): break
       if await pg.evaluate("()=>!document.querySelector('#result').classList.contains('off')"):
         await pg.wait_for_timeout(700); await shot('result'); log.append('RESULT: '+(await pg.inner_text('#rlist')).replace('\n',' | ')); break
       st=await pg.evaluate("()=>({h:document.querySelector('#ptext').innerText,html:document.querySelector('#ptext').innerHTML,off:document.querySelector('#panel').classList.contains('off'),btn:document.querySelector('#pbtn').className,bh:document.querySelector('#pbtn').hidden,ttl:document.querySelector('#prep .ttl').textContent,pop:!document.querySelector('#prep').classList.contains('off')})")
@@ -191,5 +195,6 @@ async def main():
         await pg.wait_for_timeout(400); await click(800,600,'judge'); log.append('tray off'); await pg.wait_for_timeout(900); continue
     print(TAG,'|',' > '.join(log)); print('errors:',errs[:5])
     print('last hint:',await pg.inner_text('#ptext'),'| pop:',await pg.evaluate("()=>document.querySelector('#prep .ttl').textContent"))
-    await b.close()
-asyncio.run(main())
+    if b: await b.close()
+    return log
+if __name__=='__main__': asyncio.run(main())

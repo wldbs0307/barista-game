@@ -19,7 +19,8 @@ let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */
 const CS=1;                    /* 데미타세 크기 (카푸치노 잔보다 작게) */
-const SHOW_LINE=true;          /* 30ml 표시선: 연습 때만. 실전 15분에서는 false */
+let SHOW_LINE=true,EXAM=null,CH='esp';   /* EXAM: 실전 15분 진행 중이면 기록 객체, CH: 지금 하는 단계 */
+          /* 30ml 표시선: 연습 때만. 실전 15분에서는 false */
 const KIND={demi:{GH:58,GR:30,cap:CAP,warm:[{x:556,y:186},{x:630,y:186}]},capp:{GH:72,GR:47,cap:150,warm:[{x:722,y:186},{x:838,y:186}]}};
 function glassCup(uid,scale=1,kind='demi'){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
   const {GH,GR,cap}=KIND[kind],mlY=ml=>-clamp(ml,0,cap)/cap*GH*.92,GLINE=mlY(30);
@@ -156,7 +157,10 @@ function nod(i){const h=$('#J'+i+' .jhead');h.classList.remove('nod');void h.get
 function check(i){const c=$('#J'+i+' .check');anim(300,t=>c.style.opacity=t)}
 /* 심사위원 목소리: 미리 만든 AI 음성(ElevenLabs, Gia). 못 틀면 휴대폰 기계 목소리로 */
 const VOICE_EL={};try{for(const [k,u] of Object.entries(VOICE)){const a=new Audio();a.preload='auto';a.src=u;VOICE_EL[k]=a}}catch(e){}
-function voice(text,pitch){const a=VOICE_EL[text];if(!a||SFX.muted)return tts(text,pitch);
+function voice(text,pitch){const a=VOICE_EL[text];
+  /* 다시 시작으로 새로 열린 직후에는 아직 화면을 누르지 않아 소리를 낼 수 없다: 말풍선만 잠깐 보여 준다 */
+  if(navigator.userActivation&&!navigator.userActivation.hasBeenActive)return sleep(1800);
+  if(!a||SFX.muted)return tts(text,pitch);
   return new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;clearTimeout(to);res()}};const fall=()=>{if(!done){done=true;clearTimeout(to);tts(text,pitch).then(res)}};
     const to=setTimeout(fin,9000);try{a.currentTime=0;a.onended=fin;a.onerror=fall;const p=a.play();if(p&&p.catch)p.catch(fall)}catch(e){fall()}})}
 async function judgeSay(i,text){Bubble.show(JUDGES[i].name,esc(text));SFX.pop();let on=true,f=0;const iv=setInterval(()=>{if(on)jface(i,(f++)%2?'idle':'talk')},150);
@@ -177,7 +181,8 @@ function resetBar(){
   PF.set({...M.grp,r:0,sx:1,sy:1});setHandle(1);$('#collar').style.display='';$('#collar').setAttribute('transform',`translate(${M.grp.x-910} 0)`);
   $('#pf2').setAttribute('transform',`translate(${M.other.x} ${M.other.y})`);$('#collar2').setAttribute('transform',`translate(${M.other.x-910} 0)`);setBrewBtn(false);setGrounds(0,false);$('#pf2').innerHTML=$('#pf').innerHTML.replace(/ id="[^"]+"/g,'');TAMP.set({...P.tampRest,r:0,sx:1,sy:1});BR.set({...P.brush,r:0,sx:1,sy:1});
   $('#tDig').textContent='0초';needle(0);puddle(0);stream(false);zone();$('#zone2').style.display='none';Guide.stop();
-  $('#rimFront').style.display='none';$('#gRing').setAttribute('stroke-dashoffset',251.3);$('#dirt').innerHTML='';$('#dirt2').innerHTML='';$('#Lprep').innerHTML='';$('#trayItems').innerHTML='';fx.innerHTML='';$('#clock').hidden=true;
+  $('#rimFront').style.display='none';$('#gRing').setAttribute('stroke-dashoffset',251.3);$('#dirt').innerHTML='';$('#dirt2').innerHTML='';$('#Lprep').innerHTML='';document.querySelectorAll('[data-cloth]').forEach(e=>e.remove());   /* 위 층으로 옮겨진 행주·접시도 지운다 */
+  if(EXAM&&M.key!=='prep'&&M.key!=='clean')examDecor();$('#trayItems').innerHTML='';fx.innerHTML='';if(!EXAM)$('#clock').hidden=true;
   $('#gauge').classList.add('off')}
 function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none';return}e.setAttribute('cx',x);e.setAttribute('cy',y);e.setAttribute('rx',rx);e.setAttribute('ry',ry||rx);e.style.display=''}
 
@@ -362,7 +367,7 @@ async function espresso(){
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>jface(i,'idle'));JUDGES.forEach((j,i)=>{const c=$('#J'+i+' .check');c.style.opacity=0});
   const {no,name}=who();
-  step(1);await sleep(500);await judgeSay(0,'준비되면 시작해 주세요.');Bubble.hide();
+  step(1);await sleep(500);await judgeSay(0,'준비되면 시작해 주세요.');Bubble.hide();if(EXAM)Clock.start(600,'시연 ');
   const me=`수험번호 ${no}번`+(name?` ${name}입니다.`:'입니다.');
   const L=[[1,'시연 시작하겠습니다.'],[1,`안녕하세요. ${me} 바리스타 직업 수업을 통해 커피를 알게 되었고 자격증 시험에 도전하게 되었습니다.`],
     [2,'오늘 준비한 원두는 아라비카 100%로 중강 배전된 원두입니다.'],
@@ -372,7 +377,7 @@ async function espresso(){
   step(5);scene('bar');Guide.use('#hand');await sleep(900);
   await grindTamp();await brew();await toTray();
   step(6);Panel.hide();await serveJudges();
-  showResult();
+  showResult();if(EXAM)EXAM.grab('에스프레소');
 }
 function showResult(){if(M.key==='cap')return showCapResult();$('#rlist').classList.remove('two');
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;
@@ -393,9 +398,12 @@ const snd=$('#snd');snd.innerHTML=IC.sndOn;snd.onclick=()=>{SFX.mute(!SFX.muted)
 $('#home').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#4a2c22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h12v-9" fill="#ff8a73"/><path d="M10 19v-5h4v5"/></svg>';
 const goHome=()=>{try{speechSynthesis.cancel()}catch(e){}location.reload()};
 $('#home').onclick=goHome;$('#tohome').onclick=goHome;
-$('#again').onclick=()=>{$('#result').classList.add('off');Bubble.hide();({cap:cappuccino,prep,clean:cleanup}[M.key]||espresso)()};
+/* 단계 시작 함수 모음 */
+const RUN={esp(){EXAM=null;SHOW_LINE=true;CH='esp';return espresso()},cap(){EXAM=null;SHOW_LINE=true;CH='cap';return cappuccino()},
+  prep(){EXAM=null;SHOW_LINE=true;CH='prep';return prep()},clean(){EXAM=null;SHOW_LINE=true;CH='clean';return cleanup()},exam(){CH='exam';return exam()}};
+$('#again').onclick=()=>{$('#result').classList.add('off');Bubble.hide();RUN[CH]()};
 $('#inNo').value=store.get('no','1');$('#inName').value=store.get('name','');
 const startWith=fn=>()=>{SFX.unlock();SFX.ok();store.set('no',$('#inNo').value);store.set('name',$('#inName').value.trim());$('#title').classList.add('off');fn()};
-$('#goEsp').onclick=startWith(()=>espresso());$('#goCap').onclick=startWith(()=>cappuccino());
+$('#goEsp').onclick=startWith(()=>RUN.esp());$('#goCap').onclick=startWith(()=>RUN.cap());
 step(1);resetBar();
 window.__game={P,PF,TAMP,BR,Cup,get R(){return R},JUDGES,get M(){return M}};

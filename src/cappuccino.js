@@ -341,7 +341,7 @@ async function cappuccino(){
   step(5);await steamMilk();
   step(6);await divideMilk();await latteArt(0);await latteArt(1);await tidyPitchers();
   step(7);await toTray();Panel.hide();await serveJudges();
-  showResult();
+  showResult();if(EXAM)EXAM.grab('카푸치노');
 }
 function showCapResult(){
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;

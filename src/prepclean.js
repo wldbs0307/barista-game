@@ -3,9 +3,9 @@
 const T=window.__pc={task:null,set(kind,a,b,o){this.task=Object.assign({kind,a,b,svg:'station'},o||{})},clear(){this.task=null}};
 const mmss=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const Clock={iv:0,t0:0,limit:0,
-  start(limit){this.t0=performance.now();this.limit=limit;const el=$('#clock');el.hidden=false;clearInterval(this.iv);
+  start(limit,label=''){this.t0=performance.now();this.limit=limit;const el=$('#clock');el.hidden=false;clearInterval(this.iv);
     const f=()=>{if(el.hidden){clearInterval(this.iv);return}const s=this.sec();
-      el.innerHTML=this.limit?(s<=this.limit?'남은 시간 <b>'+mmss(this.limit-s)+'</b>':'<span class="over">시간 넘음 +'+mmss(s-this.limit)+'</span>'):'걸린 시간 <b>'+mmss(s)+'</b>'};
+      el.innerHTML=this.limit?(s<=this.limit?label+'남은 시간 <b>'+mmss(this.limit-s)+'</b>':'<span class="over">'+label+'시간 넘음 +'+mmss(s-this.limit)+'</span>'):'걸린 시간 <b>'+mmss(s)+'</b>'};
     f();this.iv=setInterval(f,250)},
   sec(){return (performance.now()-this.t0)/1000},stop(){clearInterval(this.iv);return this.sec()}};
 
@@ -26,14 +26,14 @@ function clothSVG(k,long,plate){const I=CLOTH[k],w=long?120:60,h=long?22:36,f=I.
   ${I.wet?`<circle cx="${-w+18}" cy="5" r="3" fill="#5fa6d6"/><circle cx="${w-22}" cy="6" r="2.5" fill="#5fa6d6"/>`:''}
   <text x="0" y="${(-h/2+8).toFixed(1)}" text-anchor="middle" font-size="${long?22:21}" fill="${I.wet?'#1f5f8a':'#8a5a44'}">${(I.wet?'젖은':'마른')+I.n}</text></g>`}
 const PLATE='<ellipse cx="0" cy="2" rx="70" ry="13" fill="#fff" class="o3"/><ellipse cx="0" cy="0" rx="46" ry="7" fill="#efe7dc"/>';
-function makeCloth(k,pos,long){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');
+function makeCloth(k,pos,long){const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.dataset.cloth=k;
   const c={k,g,sp:new Sp(g,pos.x,pos.y),long:!!long,onPlate:!!CLOTH[k].plate,plateEl:null,inner:null};
   g.innerHTML=`<g class="cin">${clothSVG(k,long,c.onPlate)}</g>`;$('#Lprep').appendChild(g);c.inner=$('.cin',g);
   const draw=()=>{c.inner.innerHTML=clothSVG(k,c.long,c.onPlate)};
   c.setLong=v=>{c.long=v;draw()};
   /* 접시는 그 자리에 두고 행주만 들기 */
   c.detach=()=>{if(!c.onPlate)return;c.onPlate=false;c.plateAt={x:c.sp.x,y:c.sp.y};
-    const pe=document.createElementNS(NS,'g');pe.setAttribute('class','np');pe.setAttribute('transform',`translate(${c.sp.x} ${c.sp.y})`);pe.innerHTML=PLATE;$('#Lprep').prepend(pe);c.plateEl=pe;c.sp.set({y:c.sp.y-4});draw()};
+    const pe=document.createElementNS(NS,'g');pe.setAttribute('class','np');pe.dataset.cloth='plate';pe.setAttribute('transform',`translate(${c.sp.x} ${c.sp.y})`);pe.innerHTML=PLATE;$('#Lprep').prepend(pe);c.plateEl=pe;c.sp.set({y:c.sp.y-4});draw()};
   c.attach=()=>{if(!c.plateEl)return;c.plateEl.remove();c.plateEl=null;c.onPlate=true;c.sp.set({...c.plateAt,r:0});draw()};
   CL[k]=c;return c}
 const BACKNAME={D1:'접시 위',W2:'그릴 위 오른쪽',W3:'머신 앞 제자리',D2:'컵 워머 오른쪽 앞'};
@@ -103,7 +103,7 @@ function grinderDirt(){const D=[[1262,604],[1290,618],[1318,600],[1352,624],[138
   $('#dirt').innerHTML=D.map(([x,y],i)=>`<circle class="dt" cx="${x}" cy="${y}" r="${4+i%3}" fill="#6b3f26"/>`).join('')}
 /* 결과표 */
 function showRows(title,rows){$('#rtitle').textContent=title;$('#rlist').classList.toggle('two',rows.length>6);
-  $('#rlist').innerHTML=rows.map(([n,v,c])=>`<div><span>${n}</span><b style="background:${COL[c]}">${v}</b></div>`).join('');$('#result').classList.remove('off');SFX.great()}
+  $('#rlist').innerHTML=rows.map(([n,v,c,w])=>`<div${w?' class="wide"':''}><span>${n}</span><b style="background:${COL[c]}">${v}</b></div>`).join('');$('#result').classList.remove('off');SFX.great()}
 function machineDrops(){const g=document.createElementNS(NS,'g');g.id='mdrops';
   g.innerHTML=[[560,612],[620,640],[690,606],[760,632],[830,610],[900,642],[650,662],[860,664],[720,654],[940,616]].map(([x,y],i)=>`<ellipse class="dt" cx="${x}" cy="${y}" rx="${9+(i%3)*3}" ry="4" fill="#8fd0f2" opacity=".8"/>`).join('');$('#Lprep').prepend(g);return g}
 /* 끌어서 놓기 한 번 (안내 손가락·테스트 표시 포함) */
@@ -319,7 +319,7 @@ async function prep(){
   Object.keys(CLOTH).forEach(k=>makeCloth(k,TRAYSPOT[k]));grinderDirt();counterDirt();
   step(1);await sleep(500);await judgeSay(0,'준비 시작해 주세요.');Bubble.hide();
   R.lines.push(await sayLine('준비 시작하겠습니다.',lineTag()));nod(0);Panel.hide();
-  scene('bar');Guide.use('#hand');await sleep(900);Clock.start(300);
+  scene('bar');Guide.use('#hand');await sleep(900);Clock.start(300,EXAM?'준비 ':'');
   await prepCloths();
   step(2);await machineCheck();const drops=grillDrops();
   step(3);await preheat();
@@ -335,7 +335,7 @@ async function prep(){
   await rub(CL.W3,{x:750,y:634,rx:300,ry:42,dots:md,hint:'<em>젖은행주3</em>으로 <em>머신 아래</em>를 다 닦아요',carry:back('W3')});
   await rub(CL.D3,{x:750,y:634,rx:300,ry:42,need:800,hint:'<em>마른행주3</em>으로 머신 아래를 한 번 더 닦아요',done:'반짝!'});md.remove();
   await placeCloth('D3',SPOT.D3,'<em>마른행주3</em>을 <em>머신 앞</em>에 길게 펴 놓아요');CL.D3.setLong(true);sparkle(SPOT.D3.x,SPOT.D3.y-20,6);SFX.ok();
-  const sec=Clock.stop();
+  const sec=Clock.stop();if(EXAM)EXAM.prepSec=sec;
   R.lines.push(await sayLine('준비 마치겠습니다.',lineTag()));Panel.hide();
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;
   showRows('준비 과정 결과',[
@@ -345,7 +345,7 @@ async function prep(){
     ['잔 예열 물',R.water?`${R.water}번 너무 많이 부었어요`:'70%로 잘 채웠어요',R.water?'yel':'g2'],
     ['잔 자리',R.cupWrong?`${R.cupWrong}번 다른 자리`:'잘했어요',R.cupWrong?'yel':'g2'],
     ['기물 준비',R.ware?`${R.ware}번 다시`:'잘했어요',R.ware?'yel':'g2'],
-    ['우유 확인',(R.milkLow?'부족 → 말했어요':'충분')+(R.milk?` (${R.milk}번 다시 봄)`:''),R.milk?'yel':'g2']])}
+    ['우유 확인',(R.milkLow?'부족 → 말했어요':'충분')+(R.milk?` (${R.milk}번 다시 봄)`:''),R.milk?'yel':'g2']]);if(EXAM)EXAM.grab('준비 과정')}
 
 /* ---------- 정리 ---------- */
 async function cleanGroup(mode,first){
@@ -375,7 +375,7 @@ async function cleanup(){
   resetBar();hidePitchers();Cup.every.forEach(c=>c.line(false));scene('bar');Guide.use('#hand');for(const k in CL)delete CL[k];
   Object.keys(CLOTH).forEach(k=>makeCloth(k,SPOT[k],k==='D3'));grinderDirt();counterDirt();
   const pits=[575,614].map((x,i)=>{const p=makePitcher('cp'+i,x,652,$('#Lprep'));$('#Lprep').prepend(p.g);p.marks(false);p.set(.06,.1);p.sp.set({sx:PS_,sy:PS_});return p});
-  step(1);await sleep(600);await toast('시연 끝! 이제 정리해요');Clock.start(0);
+  step(1);await sleep(600);await toast('시연 끝! 이제 정리해요');if(!EXAM)Clock.start(0);
   /* 1) 피쳐 2개를 트레이로 */
   Panel.hint('다 쓴 <em>스팀피쳐 2개</em>를 <em>트레이</em>에 올려요');const TS=[{x:196,y:600},{x:284,y:600}];zone(240,600,100,24);
   const tz=TS.map(s=>({x:s.x,y:s.y,r:80,used:false}));
@@ -404,10 +404,52 @@ async function cleanup(){
   for(const k of ['W1','D1']){const c=CL[k];
     await dragTo(c.sp,c.g,{x:c.sp.x,y:c.sp.y-14},{x:TRAYSPOT[k].x,y:TRAYSPOT[k].y-14},110,`<em>${clothName(k)}</em>을 <em>접시째</em> 트레이에 올려요`,{zr:70,zry:26});
     await c.sp.to({...TRAYSPOT[k],r:0,sx:1,sy:1},200,E.out);SFX.pick()}
-  step(7);const sec=Clock.stop();
+  step(7);const sec=Clock.stop();if(EXAM)EXAM.demoSec=sec;
   R.lines.push(await sayLine('시연 및 정리 마치겠습니다!',lineTag()));Panel.hide();
   const avg=R.lines.reduce((a,b)=>a+b,0)/R.lines.length;
   showRows('정리 결과',[['걸린 시간',mmss(sec),'g2'],['대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel'],
-    ['피쳐 정리','트레이에 올렸어요','g2'],['포터필터 2개','버리고·헹구고·닦았어요','g2'],['그라인더·바닥·탬퍼','깨끗해요','g2'],['머신·바닥','한 번 더 닦았어요','g2'],['행주 6장','트레이에 올렸어요','g2']])}
+    ['피쳐 정리','트레이에 올렸어요','g2'],['포터필터 2개','버리고·헹구고·닦았어요','g2'],['그라인더·바닥·탬퍼','깨끗해요','g2'],['머신·바닥','한 번 더 닦았어요','g2'],['행주 6장','트레이에 올렸어요','g2']]);if(EXAM)EXAM.grab('정리')}
 
-$('#goPrep').onclick=startWith(()=>prep());$('#goClean').onclick=startWith(()=>cleanup());
+$('#goPrep').onclick=startWith(()=>RUN.prep());$('#goClean').onclick=startWith(()=>RUN.clean());
+
+/* ================= 실전 15분: 준비 → 에스프레소 → 카푸치노 → 정리를 이어서 ================= */
+/* 실전 중 에스프레소·카푸치노 때 조리대에 놓여 있는 행주 (보기만 하는 그림) */
+function examDecor(){for(const k in CL)delete CL[k];
+  ['W1','W3','D2','D3'].forEach(k=>{const c=makeCloth(k,SPOT[k],k==='D3');c.g.setAttribute('class','np')});const d=$('#decoP');if(d)d.remove()}
+async function exam(){
+  SHOW_LINE=false;   /* 실전에는 30ml 표시선이 없다 */
+  EXAM={parts:[],lines:[],prepSec:0,demoSec:0,
+    /* 방금 끝난 단계의 결과표를 읽어 두고 결과 창은 다시 닫는다 */
+    grab(name){const rows=[...$('#rlist').children].map(d=>{const st=d.lastChild.getAttribute('style')||'';return{n:d.firstChild.textContent,v:d.lastChild.textContent,c:Object.keys(COL).find(k=>st.includes(COL[k]))||'g2'}});
+      this.parts.push({name,rows});this.lines.push(...R.lines);$('#result').classList.add('off')}};
+  $('#clock').hidden=true;
+  await prep();
+  await toast('준비 끝! 이제 시연 10분이에요',null,1800);
+  await espresso();
+  await toast('에스프레소 끝! 다음은 카푸치노예요',null,1600);
+  await cappuccino();
+  await cleanup();
+  const E_=EXAM,avg=E_.lines.reduce((a,b)=>a+b,0)/Math.max(1,E_.lines.length),SKIP=['걸린 시간','대사 발음'];
+  const weak=[];
+  const partRows=E_.parts.map(p=>{const rs=p.rows.filter(r=>!SKIP.includes(r.n)),ok=rs.filter(r=>r.c==='g2'||r.c==='g1').length;
+    rs.filter(r=>r.c!=='g2'&&r.c!=='g1').forEach(r=>weak.push(p.name+' '+r.n));
+    return [p.name,`${ok}/${rs.length} 잘했어요`,ok===rs.length?'g2':ok/rs.length>=.7?'g1':'yel']});
+  showRows('실전 15분 결과',[
+    ['준비 시간',mmss(E_.prepSec)+(E_.prepSec<=300?' · 5분 안에':' · 5분 넘음'),E_.prepSec<=300?'g2':'yel'],
+    ['시연 시간',mmss(E_.demoSec)+(E_.demoSec<=600?' · 10분 안에':' · 10분 넘음'),E_.demoSec<=600?'g2':'yel'],
+    ['대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel'],
+    ...partRows,
+    ['더 연습할 것',weak.length?weak.slice(0,2).join(', ')+(weak.length>2?` 외 ${weak.length-2}개`:''):'없어요! 최고예요',weak.length?'yel':'g2','wide']]);
+  window.__exam=E_;EXAM=null}
+
+/* ================= 처음부터 다시 하기 (오른쪽 위 버튼) ================= */
+const CHNAME={prep:'준비 과정',esp:'에스프레소',cap:'카푸치노',clean:'정리',exam:'실전 15분'};
+$('#redo').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#4a2c22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12a7 7 0 1 1-2.3-5.2"/><path d="M19.5 4.5v4.3h-4.3" /></svg>';
+$('#redo').onclick=()=>{SFX.pick();$('#cq').innerHTML=`<b>${CHNAME[CH]}</b>을 처음부터<br>다시 할까요?`.replace('</b>을',CH==='esp'||CH==='cap'||CH==='clean'?'</b>를':'</b>을');$('#confirm').classList.remove('off')};
+$('#cno').onclick=()=>{SFX.pick();$('#confirm').classList.add('off')};
+/* 진행 중인 동작을 깨끗이 지우려고 화면을 새로 연 다음, 같은 단계를 바로 시작한다 */
+$('#cyes').onclick=()=>{try{sessionStorage.setItem('kb_redo',CH)}catch(e){}try{speechSynthesis.cancel()}catch(e){}location.reload()};
+$('#goExam').onclick=startWith(()=>RUN.exam());
+addEventListener('pointerdown',()=>{try{SFX.unlock()}catch(e){}},{once:true});
+(()=>{let k=null;try{k=sessionStorage.getItem('kb_redo');sessionStorage.removeItem('kb_redo')}catch(e){}
+  if(k&&RUN[k]){$('#title').classList.add('off');RUN[k]()}})();
