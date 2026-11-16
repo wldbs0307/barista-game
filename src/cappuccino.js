@@ -167,7 +167,18 @@ async function divideMilk(){
   const meter=pmk('g',{class:'np'});const cnt=pmk('text',{x:500,y:110,'text-anchor':'middle','font-size':30,fill:'#4a2c22'});
   const st=pmk('path',{fill:'none',stroke:'#fffdf6','stroke-width':11,'stroke-linecap':'round',class:'np'});
   let pours=0,resets=0,poured=0;const show=()=>{cnt.textContent='따른 횟수 '+pours+'번';};show();
-  Panel.hint('스팀 피쳐를 <em>꾹 누르고</em> 조금씩, <em>3~4번</em> 나눠서 반씩 맞춰요');Guide.hold({x:300,y:400});
+  /* 1·2) 모두 옮겨 섞기: 왼쪽 → 오른쪽 전부, 오른쪽 → 왼쪽 전부 */
+  const pourAll=(F,G,pose,home,hint,spoutX)=>{Panel.hint(hint);Guide.hold({x:F.sp.x,y:F.sp.y-120});T.set('hold',{x:F.sp.x,y:F.sp.y-120},null,{svg:'prepSvg',ms:4200});let s2=null;
+    return holdLoop(F.g,()=>{SFX.pick();F.sp.to(pose,260,E.out);s2=SFX.pour()},
+      dt=>{if(Math.abs(F.sp.r-pose.r)>3)return;const m=Math.min(.32*dt,F.L);F.set(F.L-m,F.foam);G.set(G.L+m,Math.min(.45,G.foam+m));
+        const a=F.sp.r*Math.PI/180,lx=spoutX,ly=-246,sx=F.sp.x+lx*Math.cos(a)-ly*Math.sin(a),sy=F.sp.y+lx*Math.sin(a)+ly*Math.cos(a),tx=G.sp.x;
+        st.setAttribute('d',`M${sx.toFixed(1)} ${sy.toFixed(1)}Q${((sx+tx)/2).toFixed(1)} ${(sy+10).toFixed(1)} ${tx.toFixed(1)} ${(520-G.L*PH).toFixed(1)}`);if(F.L<=.005)return 'stop'},
+      async()=>{s2&&s2.stop();st.setAttribute('d','');await F.sp.to({...home,r:0},260,E.io);
+        if(F.L>.01){Panel.hint(hint+'<small>아직 남았어요. 다 옮겨요</small>');return false}F.set(0,0);SFX.ok();floatText(520,240,'다 옮겼어요!',$('#fxP'));return 'ok'})};
+  await pourAll(A,B,{x:420,y:420,r:48},{x:300,y:520},'① 스팀 피쳐(왼쪽)의 우유를 <em>보조 피쳐(오른쪽)</em>로 <em>모두</em> 옮겨요<small>피쳐를 꾹 누르고 있어요</small>',104);T.clear();
+  await pourAll(B,A,{x:650,y:410,r:-48},{x:740,y:520},'② 보조 피쳐(오른쪽)의 우유를 <em>스팀 피쳐(왼쪽)</em>로 <em>모두</em> 다시 옮겨요<small>피쳐를 꾹 누르고 있어요</small>',-104);T.clear();
+  /* 3) 반반 맞추기 */
+  Panel.hint('③ 이제 스팀 피쳐를 <em>꾹 누르고</em> 조금씩 따라 <em>반반</em> 맞춰요<small>3~4번 나눠서</small>');Guide.hold({x:300,y:400});
   let snd=null;
   await holdLoop(A.g,()=>{SFX.pick();poured=0;A.sp.to({x:420,y:420,r:48},260,E.out);snd=SFX.pour()},
     dt=>{if(Math.abs(A.sp.r-48)<3){const m=Math.min(.12*dt,.16-poured,A.L-.02);if(m<=0){return 'stop'}poured+=m;A.set(A.L-m,A.foam);B.set(B.L+m,Math.min(.4,B.foam+m));
@@ -235,7 +246,7 @@ async function latteArt(k){
   const SPL={x:-104*.5,y:-246*.5};
   const putSpout=(p,r)=>{const a=r*Math.PI/180;PI.set({r,x:p.x-(SPL.x*Math.cos(a)-SPL.y*Math.sin(a)),y:p.y-(SPL.x*Math.sin(a)+SPL.y*Math.cos(a))})};
   const PL0=PL;const pourR=()=>-(28+52*clamp(1-PL/PL0,0,1));   /* 우유가 줄수록 더 기울인다 */
-  const stream=w=>{if(!w)return st.setAttribute('d','');const s=spout(),e=land();st.setAttribute('stroke-width',w);st.setAttribute('d',`M${s.x.toFixed(1)} ${s.y.toFixed(1)}Q${(s.x-4).toFixed(1)} ${((s.y+e.y)/2).toFixed(1)} ${e.x.toFixed(1)} ${e.y.toFixed(1)}`)};
+  const stream=(w,to)=>{if(!w)return st.setAttribute('d','');const s=spout(),e=to?to():land();st.setAttribute('stroke-width',w);st.setAttribute('d',`M${s.x.toFixed(1)} ${s.y.toFixed(1)}Q${(s.x-4).toFixed(1)} ${((s.y+e.y)/2).toFixed(1)} ${e.x.toFixed(1)} ${e.y.toFixed(1)}`)};
   /* 꾹 누르면 줄기 자리를 그대로 두고 피쳐를 기울이기 시작 */
   let pouring=false;
   const tiltIn=async at=>{pouring=false;const r0=PI.r,r1=pourR();await anim(220,t2=>putSpout(at(),lerp(r0,r1,t2)),E.out);pouring=true};
@@ -275,7 +286,10 @@ async function latteArt(k){
       return 'ok'});
   T.clear();mark.setAttribute('opacity',0);ruler.remove();
   /* 4) 잔 가까이 피쳐 코 내리기 */
-  const NEAR=()=>{const x=land().x;return{x,y:Math.min(surf.y-16,rimY(x)-6)}};   /* 피쳐 코를 잔 입구에 */const nearP={x:NEAR().x-SPL.x,y:NEAR().y-SPL.y};
+  /* 선생님 그림 3번: 피쳐 코를 초록 동그라미가 있던 잔 오른쪽 끝에 댄다 */
+  const LIP=()=>{const p=rotP([[124,-186]],ang,O.x,O.y)[0];return{x:p[0],y:p[1]}};
+  const NEAR=()=>{const l=LIP();return{x:l.x+6,y:l.y-8}};
+  const NEARIN=()=>{const l=LIP();return{x:Math.max(O.x,l.x-30),y:surf.y}};const nearP={x:NEAR().x-SPL.x,y:NEAR().y-SPL.y};
   Panel.hint('피쳐를 <em>아래로 내려</em> 피쳐 코를 <em>잔 가까이</em> 대요');const zg=pmk('ellipse',{class:'ghost',cx:NEAR().x+10,cy:NEAR().y,rx:60,ry:30},$('#prepGhost'));
   Guide.drag({x:PI.x,y:PI.y-60},{x:nearP.x,y:nearP.y-60});T.set('drag',{x:PI.x,y:PI.y-60},{x:nearP.x,y:nearP.y-60},{svg:'prepSvg'});
   await drag(PI,pit,{svg:svgP,zones:[{x:nearP.x,y:nearP.y,r:90}],bounds:[180,120,980,560]});zg.remove();T.clear();
@@ -286,7 +300,7 @@ async function latteArt(k){
   let res='good';
   await holdLoop(pit,()=>{snd=SFX.pour();tiltIn(NEAR)},
     dt=>{if(!pouring)return;V=Math.min(VOVER,V+.14*A*dt);const p=clamp((V-VT)/(VFULL-VT),0,1);ang=TILT*(1-p);foam=Math.min(14,4+12*p);setPL(PL-.06*dt);
-      draw();putSpout(NEAR(),pourR());stream(8);
+      draw();putSpout(NEAR(),pourR());stream(8,NEARIN);
       const r=56*p;tart.setAttribute('r',r.toFixed(1));tart2.setAttribute('r',(r*.55).toFixed(1));
       if(V>=VOVER){spill(6);return 'stop'}},
     async()=>{snd&&snd.stop();stream(0);await tiltOut(NEAR);
@@ -310,7 +324,7 @@ async function tidyPitchers(){
 
 /* ---------- 진행 ---------- */
 async function cappuccino(){
-  M=MODES.cap;STEPS=['메뉴 설명','서빙 준비','우유 따르기','추출','스티밍','나누기·붓기','서빙'];LINES_TOTAL=4;$('#rtitle').textContent='카푸치노 결과';
+  M=MODES.cap;STEPS=['메뉴 설명','서빙 준비','우유 따르기','추출','스티밍','나누기·붓기','서빙'];LINES_TOTAL=3;$('#rtitle').textContent='카푸치노 결과';
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0,art:[]};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>{jface(i,'idle');$('#J'+i+' .check').style.opacity=0});
   step(1);await sleep(500);

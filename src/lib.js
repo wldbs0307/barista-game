@@ -97,7 +97,7 @@ function listenSR(){return new Promise(res=>{let done=false,to=0,quiet=0,fin_=''
   r.lang='ko-KR';r.maxAlternatives=3;r.interimResults=true;r.continuous=true;
   r.onresult=e=>{part='';for(let i=e.resultIndex;i<e.results.length;i++){const R=e.results[i];
       if(R.isFinal){const base=R[0].transcript;fin_+=' '+base;alts=[];for(let k=1;k<R.length;k++)alts.push({base,t:R[k].transcript})}else part+=R[0].transcript}
-    clearTimeout(quiet);quiet=setTimeout(()=>fin(out()),1800)};
+    clearTimeout(quiet);const o=out();if(Speech.target&&Math.max(0,...o.map(t=>sim(t,Speech.target)))>=TH[0]){quiet=setTimeout(()=>fin(out()),250);return}quiet=setTimeout(()=>fin(out()),1000)};
   r.onerror=e=>{Speech.lastErr=e.error;if(e.error==='not-allowed')bad('denied');else if(e.error==='service-not-allowed')bad('service');else if(e.error==='audio-capture')bad('nomic');else fin(out())};
   r.onend=()=>fin(out());to=setTimeout(()=>fin(out()),25000);
   try{r.start()}catch(e){Speech.srBad=true;fin(null)}})}
@@ -105,8 +105,9 @@ function listenDict(){const d=Speech.dict;return new Promise(res=>{let fin_='',p
   const out=()=>[(fin_+' '+part).trim(),fin_.trim()].filter(Boolean);
   const fin=v=>{if(done)return;done=true;clearTimeout(to);clearTimeout(endT);offs.forEach(f=>{try{f()}catch(e){}});res(v)};
   const wrap=()=>{let p;try{p=d.stop()}catch(e){p=null}Promise.resolve(p).catch(()=>{}).then(()=>fin(out()))};
-  try{offs.push(d.onFinal(e=>{fin_+=' '+e.text;part='';clearTimeout(endT);endT=setTimeout(wrap,1800)}));
-    offs.push(d.onPartial(e=>{if(e.text)part=e.text}));
+  const good=()=>Speech.target&&Math.max(0,...out().map(t=>sim(t,Speech.target)))>=TH[0];
+  try{offs.push(d.onFinal(e=>{fin_+=' '+e.text;part='';clearTimeout(endT);endT=setTimeout(wrap,good()?150:1000)}));
+    offs.push(d.onPartial(e=>{if(e.text){part=e.text;if(good()){clearTimeout(endT);endT=setTimeout(wrap,400)}}}));
     d.start({language:'ko'}).then(()=>{to=setTimeout(wrap,25000);offs.push(d.onState(e=>{if(e.state==='idle')fin(out())}))},
       err=>{const c=err&&err.code;if(c==='dismissed'||c==='stopped'||c==='rate_limited'||c==='upstream_error')fin([]);else{Speech.dictBad=true;fin(null)}})}
   catch(e){Speech.dictBad=true;fin(null)}})}
@@ -119,12 +120,12 @@ async function sayLine(target,tag='따라 말해요'){
   let tries=0;Panel.text.classList.toggle('long',target.length>34);Panel.show(tag,esc(target),'mic');
   for(;;){
     if(!canListen()){Panel.show('소리 내어 말해요',esc(target)+'<small>'+whyText()+'</small>','next','말했어요');await Panel.click();return 1}
-    const heard=await new Promise(res=>{Panel.btn.onclick=()=>{Panel.btn.onclick=null;Panel.btn.classList.add('listening');Panel.tag.textContent='듣고 있어요';SFX.pick();res(listenNow())}});
+    Speech.target=target;const heard=await new Promise(res=>{Panel.btn.onclick=()=>{Panel.btn.onclick=null;Panel.btn.classList.add('listening');Panel.tag.textContent='듣고 있어요';SFX.pick();res(listenNow())}});
     Panel.btn.classList.remove('listening');
     if(heard===null){Panel.show(tag,esc(target),'mic');continue}
-    tries++;const s=Math.max(0,...heard.map(t=>sim(t,target)));Speech.log.push({target,heard,score:+s.toFixed(2)});
+    tries++;const s=Math.max(0,...heard.map(t=>sim(t,target)));Speech.target=null;Speech.log.push({target,heard,score:+s.toFixed(2)});
     const st=s>=TH[0]?3:s>=TH[1]?2:s>=TH[2]?1:0;
-    if(st){await toast(MSG[st],st);return st}
+    if(st){await toast(MSG[st],st,800);return st}
     if(tries>=3){Panel.show('먼저 들어 봐요',esc(target),null);await tts(target);await toast('잘했어요. 다음으로 가요',1);return 1}
     SFX.no();Panel.show('다시 한 번',esc(target)+'<small>조금 더 크게, 또박또박 말해요</small>','mic')}
 }

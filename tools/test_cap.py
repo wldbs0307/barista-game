@@ -136,6 +136,11 @@ async def main():
         continue
       if st['ttl']=='우유 나누기' and st['pop']:
         if once('div0'): await pg.wait_for_timeout(700); await shot('divide')
+        tk=await pg.evaluate('()=>window.__pc&&window.__pc.task')
+        if tk and tk['kind']=='hold':
+          c=await cl(tk['a']['x'],tk['a']['y'],PS); await pg.mouse.move(*c); await pg.mouse.down(); await pg.wait_for_timeout(1500)
+          if once('all'+str(tk['a']['x'])): await shot('div_all')
+          await pg.wait_for_timeout(2500); await pg.mouse.up(); log.append('pour-all'); await pg.wait_for_timeout(900); continue
         dA,dB=await pg.evaluate('()=>[__dv.A.L,__dv.B.L]'); m=min(.15,(dA-dB)/2); ms=int(300+m/.12*1000)
         a=await cl(300,400,PS); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(min(ms,1000))
         if once('div1'): await shot('dividing')

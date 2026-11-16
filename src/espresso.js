@@ -108,29 +108,46 @@ function stream(on,t,now){[['#st1',0],['#st2',1]].forEach(([id,i])=>{const e=$(i
 /* ---------- 그림: 심사위원 ---------- */
 const JUDGES=[{name:'곰 심사위원',x:470,fur:'#c9905f',fur2:'#f6dcbb',ear:'#8f5c38',top:'#5d7fb0',tie:'#ff8a73',kind:'bear',pitch:.8},
   {name:'고양이 심사위원',x:1130,fur:'#f3b56d',fur2:'#fde6c4',ear:'#ffc2c7',top:'#7a6aa8',tie:'#f6c667',kind:'cat',pitch:1.25}];
-function judgeSVG(j,i){
-  const ears=j.kind==='bear'?`<circle cx="-92" cy="-84" r="38" fill="${j.fur}" class="o"/><circle cx="-92" cy="-84" r="19" fill="${j.ear}"/><circle cx="92" cy="-84" r="38" fill="${j.fur}" class="o"/><circle cx="92" cy="-84" r="19" fill="${j.ear}"/>`
-    :`<path d="M-118 -40L-104 -150L-32 -98Z" fill="${j.fur}" class="o"/><path d="M-100 -70L-95 -122L-58 -96Z" fill="${j.ear}"/><path d="M118 -40L104 -150L32 -98Z" fill="${j.fur}" class="o"/><path d="M100 -70L95 -122L58 -96Z" fill="${j.ear}"/>`;
-  const extra=j.kind==='bear'?`<circle cx="-48" cy="-10" r="27" fill="#fff" fill-opacity=".35" class="o4"/><circle cx="48" cy="-10" r="27" fill="#fff" fill-opacity=".35" class="o4"/><path d="M-21 -12Q0 -22 21 -12" class="o4 nf"/>`
-    :`<path d="M-18 -104V-84M0 -108V-84M18 -104V-84" stroke="#d98f45" stroke-width="8" stroke-linecap="round"/><path d="M-72 40L-124 30M-72 54L-122 62M72 40L124 30M72 54L122 62" class="o3 nf"/>`;
+/* 점토 느낌: 둥근 덩어리 + 빛 받는 쪽은 밝게, 반대쪽은 어둡게, 굵은 외곽선 대신 부드러운 그림자 */
+const lite=(c,k=.32)=>mix(c,'#ffffff',k),deep=(c,k=.22)=>mix(c,'#3a2418',k);
+const clayG=(id,c)=>`<radialGradient id="${id}" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="${lite(c,.38)}"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${deep(c,.24)}"/></radialGradient>`;
+function judgeSVG(j,i){const u='j'+i,F=`url(#${u}f)`,F2=`url(#${u}f2)`,TP=`url(#${u}t)`,EA=`url(#${u}e)`;
+  const line=`stroke="${deep(j.fur,.45)}" stroke-width="3"`;
+  const ears=j.kind==='bear'
+    ?`<circle cx="-90" cy="-82" r="40" fill="${F}" ${line}/><circle cx="-90" cy="-80" r="21" fill="${EA}"/><circle cx="90" cy="-82" r="40" fill="${F}" ${line}/><circle cx="90" cy="-80" r="21" fill="${EA}"/>`
+    :`<path d="M-120 -44Q-128 -150 -98 -150Q-70 -148 -30 -100Z" fill="${F}" ${line} stroke-linejoin="round"/><path d="M-100 -74Q-104 -124 -90 -124Q-74 -120 -56 -98Z" fill="${EA}"/>
+      <path d="M120 -44Q128 -150 98 -150Q70 -148 30 -100Z" fill="${F}" ${line} stroke-linejoin="round"/><path d="M100 -74Q104 -124 90 -124Q74 -120 56 -98Z" fill="${EA}"/>`;
+  const extra=j.kind==='bear'
+    ?`<g fill="#fff" fill-opacity=".28" stroke="#5a3a2a" stroke-width="5"><circle cx="-48" cy="-10" r="28"/><circle cx="48" cy="-10" r="28"/></g><path d="M-20 -12Q0 -22 20 -12" stroke="#5a3a2a" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-58" cy="-24" rx="9" ry="5" fill="#fff" opacity=".7" transform="rotate(-25 -58 -24)"/><ellipse cx="38" cy="-24" rx="9" ry="5" fill="#fff" opacity=".7" transform="rotate(-25 38 -24)"/>`
+    :`<path d="M-18 -102V-84M0 -106V-84M18 -102V-84" stroke="${deep(j.fur,.28)}" stroke-width="9" stroke-linecap="round" opacity=".7"/><path d="M-70 40L-122 32M-70 54L-120 62M70 40L122 32M70 54L120 62" stroke="#6b4a3a" stroke-width="3.5" stroke-linecap="round" fill="none"/>`;
   return `<g id="J${i}" transform="translate(${j.x} 600)">
-   <path d="M-170 0C-172 -100 -138 -176 -66 -194C-24 -204 24 -204 66 -194C138 -176 172 -100 170 0Z" fill="${j.top}" class="o"/>
-   <path d="M-60 -196L0 -120L60 -196" fill="#fff" class="o4"/>
-   <path d="M-14 -150L0 -164L14 -150L8 -60L0 -48L-8 -60Z" fill="${j.tie}" class="o4"/>
+   <defs>${clayG(u+'f',j.fur)}${clayG(u+'f2',j.fur2)}${clayG(u+'t',j.top)}${clayG(u+'e',j.ear)}${clayG(u+'k',j.tie)}
+     <radialGradient id="${u}eye" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#6a4a3a"/><stop offset="1" stop-color="#1a0f0a"/></radialGradient>
+     <filter id="${u}sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#3a2418" flood-opacity=".28"/></filter></defs>
+   <g filter="url(#${u}sh)">
+   <path d="M-164 0C-170 -112 -128 -190 0 -194C128 -190 170 -112 164 0Z" fill="${TP}" stroke="${deep(j.top,.4)}" stroke-width="3"/>
+   <path d="M-112 -150Q-80 -176 -40 -182" stroke="#fff" stroke-width="10" opacity=".25" fill="none" stroke-linecap="round"/>
+   <path d="M-58 -192Q-30 -150 0 -124Q30 -150 58 -192Q0 -206 -58 -192Z" fill="#fffaf2" stroke="#d8cbbb" stroke-width="3"/>
+   <path d="M-13 -148Q0 -160 13 -148Q16 -100 8 -62Q0 -50 -8 -62Q-16 -100 -13 -148Z" fill="url(#${u}k)" stroke="${deep(j.tie,.4)}" stroke-width="3"/>
    <g class="jhead"><g transform="translate(0 -312)"><g class="bob">${ears}
-    <ellipse cx="0" cy="0" rx="126" ry="112" fill="${j.fur}" class="o"/>
-    <ellipse cx="0" cy="38" rx="60" ry="44" fill="${j.fur2}"/>
-    <ellipse cx="-84" cy="30" rx="21" ry="12" fill="#ff9aa2" opacity=".55"/><ellipse cx="84" cy="30" rx="21" ry="12" fill="#ff9aa2" opacity=".55"/>
-    <g class="eOpen"><g class="blink"><circle cx="-48" cy="-10" r="12" fill="#4a2c22"/><circle cx="-52" cy="-15" r="4" fill="#fff"/><circle cx="48" cy="-10" r="12" fill="#4a2c22"/><circle cx="44" cy="-15" r="4" fill="#fff"/></g></g>
-    <path class="eHappy o nf" d="M-64 -6Q-48 -24 -32 -6M32 -6Q48 -24 64 -6" style="display:none"/>
-    <path d="M-12 14Q0 7 12 14Q9 27 0 29Q-9 27 -12 14Z" fill="#4a2c22"/>
-    <path class="mIdle o4 nf" d="M0 29V38M-19 38Q-9 50 0 38Q9 50 19 38"/>
-    <g class="mTalk" style="display:none"><path d="M0 29V36" class="o4 nf"/><ellipse cx="0" cy="47" rx="13" ry="12" fill="#7a2f2a" class="o4"/></g>
+    <ellipse cx="0" cy="0" rx="128" ry="114" fill="${F}" ${line}/>
+    <ellipse cx="-50" cy="-62" rx="44" ry="20" fill="#fff" opacity=".22" transform="rotate(-18 -50 -62)"/>
+    <ellipse cx="0" cy="40" rx="62" ry="46" fill="${F2}"/>
+    <ellipse cx="-84" cy="32" rx="22" ry="13" fill="#ff8f9a" opacity=".45"/><ellipse cx="84" cy="32" rx="22" ry="13" fill="#ff8f9a" opacity=".45"/>
+    <g class="eOpen"><g class="blink"><circle cx="-48" cy="-10" r="14" fill="url(#${u}eye)"/><circle cx="-53" cy="-16" r="5" fill="#fff"/><circle cx="-43" cy="-5" r="2" fill="#fff" opacity=".7"/>
+      <circle cx="48" cy="-10" r="14" fill="url(#${u}eye)"/><circle cx="43" cy="-16" r="5" fill="#fff"/><circle cx="53" cy="-5" r="2" fill="#fff" opacity=".7"/></g></g>
+    <path class="eHappy" d="M-64 -6Q-48 -24 -32 -6M32 -6Q48 -24 64 -6" stroke="#3a2418" stroke-width="7" fill="none" stroke-linecap="round" style="display:none"/>
+    <path d="M-14 14Q0 5 14 14Q11 29 0 31Q-11 29 -14 14Z" fill="url(#${u}eye)"/><ellipse cx="-4" cy="13" rx="5" ry="3" fill="#fff" opacity=".6"/>
+    <path class="mIdle" d="M0 31V38M-18 38Q-9 49 0 38Q9 49 18 38" stroke="#4a2c22" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <g class="mTalk" style="display:none"><path d="M0 31V36" stroke="#4a2c22" stroke-width="4.5" stroke-linecap="round"/><ellipse cx="0" cy="47" rx="14" ry="12" fill="#8a3a33" stroke="#4a2c22" stroke-width="3"/><ellipse cx="0" cy="53" rx="7" ry="4" fill="#ff9aa2"/></g>
     ${extra}</g></g></g>
-   <g transform="translate(${i?-96:96} -40) rotate(${i?8:-8})"><rect x="-44" y="-62" width="88" height="112" rx="8" fill="#c98f5c" class="o4"/><rect x="-34" y="-48" width="68" height="88" rx="4" fill="#fff" class="o3"/>
-     <rect x="-14" y="-70" width="28" height="14" rx="4" fill="#9aa6ad" class="o3"/><path d="M-24 -30H24M-24 -14H24M-24 2H10" stroke="#cfc3b2" stroke-width="5" stroke-linecap="round"/>
-     <g class="check" style="opacity:0"><path d="M-22 22l10 10 22-22" stroke="#2f9e5b" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
-   <ellipse cx="${i?-96:96}" cy="0" rx="34" ry="22" fill="${j.fur}" class="o"/><ellipse cx="${i?96:-96}" cy="-6" rx="34" ry="22" fill="${j.fur}" class="o"/>
+   <g transform="translate(${i?-96:96} -40) rotate(${i?8:-8})"><rect x="-46" y="-62" width="92" height="114" rx="16" fill="url(#${u}cb)" stroke="#8a5a3a" stroke-width="3"/><rect x="-34" y="-46" width="68" height="86" rx="9" fill="#fffdf8"/>
+     <rect x="-15" y="-70" width="30" height="16" rx="7" fill="#b8c2c8" stroke="#7d878d" stroke-width="2.5"/><path d="M-22 -28H22M-22 -12H22M-22 4H8" stroke="#ddd2c2" stroke-width="6" stroke-linecap="round"/>
+     <g class="check" style="opacity:0"><path d="M-22 20l10 10 22-22" stroke="#2f9e5b" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+   <ellipse cx="${i?-96:96}" cy="0" rx="36" ry="24" fill="${F}" ${line}/><ellipse cx="${i?96:-96}" cy="-6" rx="36" ry="24" fill="${F}" ${line}/>
+   </g>
+   <defs>${clayG(u+'cb','#d39a66')}</defs>
   </g>`}
 $('#judges').innerHTML=JUDGES.map(judgeSVG).join('');
 $('#plates').innerHTML=JUDGES.map((j,i)=>`<g transform="translate(${j.x} 700)"><rect x="-100" y="-34" width="200" height="68" rx="10" fill="#fff" class="o4"/><text y="12" text-anchor="middle" font-size="32" fill="#4a2c22">심사위원 ${i+1}</text></g>`).join('');
@@ -322,8 +339,7 @@ async function serveJudges(){
     g.innerHTML=`<g transform="scale(1.45)">${saucerSide(M.cup==='capp'?58:46)}<g transform="translate(-4 -20) scale(.9)">${spoonSide}</g></g>`;
     const cc=glassCup('j'+i,c.kind==='demi'?1.3:1,c.kind);cc.milk=c.milk;cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
   await anim(1100,t=>{tray.set({x:lerp(-320,800,t)});sets.forEach(s=>s.sp.set({x:lerp(-320,800,t)+s.off}))},E.out);SFX.clink();
-  R.lines.push(await sayLine('실례하겠습니다.',lineTag()));
-  R.lines.push(await sayLine('주문하신 '+M.name+' 두 잔 나왔습니다.',lineTag()));
+  R.lines.push(await sayLine('실례하겠습니다. 주문하신 '+M.name+' 두 잔 나왔습니다.',lineTag()));
   Panel.hint('잔을 <em>심사위원 앞</em>에 하나씩 놓아요');spots.forEach((s,i)=>$('#js'+i).style.display='');
   Guide.drag({x:sets[0].sp.x,y:sets[0].sp.y-40},{x:spots[0].x,y:spots[0].y-40});
   await Promise.all(sets.map(async s=>{const i=await drag(s.sp,s.g,{svg:svgJ,zones:spots,bounds:[60,200,1540,880]});spots[i].used=true;$('#js'+i).style.display='none';
@@ -342,7 +358,7 @@ async function serveJudges(){
 let lineNo=0,LINES_TOTAL=7;const lineTag=()=>'따라 말해요 '+(++lineNo)+'/'+LINES_TOTAL;
 function who(){const no=($('#inNo').value||'1').replace(/\D/g,'')||'1',name=$('#inName').value.trim();return{no,name}}
 async function espresso(){
-  M=MODES.esp;STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];LINES_TOTAL=7;$('#rtitle').textContent='에스프레소 결과';
+  M=MODES.esp;STEPS=['인사·자기소개','원두 설명','메뉴 설명','서빙 준비','추출','서빙'];LINES_TOTAL=6;$('#rtitle').textContent='에스프레소 결과';
   R={lines:[],prep:0,tries:0,first:null,sec:null,judge:null,cupT:null,brushT:null,brushLate:false,t:0};lineNo=0;
   resetBar();scene('judge');Guide.use('#handJ');JUDGES.forEach((j,i)=>jface(i,'idle'));JUDGES.forEach((j,i)=>{const c=$('#J'+i+' .check');c.style.opacity=0});
   const {no,name}=who();
