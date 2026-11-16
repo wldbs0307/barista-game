@@ -323,13 +323,13 @@ async function serveJudges(){
     const cc=glassCup('j'+i,c.kind==='demi'?1.3:1,c.kind);cc.milk=c.milk;cc.set(c.ml);cc.line(false);cc.g.setAttribute('class','np');cc.sp.set({x:0,y:-6});g.appendChild(cc.g);$('#fxJ').before(g);return{g,sp:new Sp(g,-320+(i?100:-100),596),off:i?100:-100}});
   await anim(1100,t=>{tray.set({x:lerp(-320,800,t)});sets.forEach(s=>s.sp.set({x:lerp(-320,800,t)+s.off}))},E.out);SFX.clink();
   R.lines.push(await sayLine('실례하겠습니다.',lineTag()));
+  R.lines.push(await sayLine('주문하신 '+M.name+' 두 잔 나왔습니다.',lineTag()));
   Panel.hint('잔을 <em>심사위원 앞</em>에 하나씩 놓아요');spots.forEach((s,i)=>$('#js'+i).style.display='');
   Guide.drag({x:sets[0].sp.x,y:sets[0].sp.y-40},{x:spots[0].x,y:spots[0].y-40});
   await Promise.all(sets.map(async s=>{const i=await drag(s.sp,s.g,{svg:svgJ,zones:spots,bounds:[60,200,1540,880]});spots[i].used=true;$('#js'+i).style.display='none';
     await s.sp.to({x:spots[i].x,y:spots[i].y,r:0,sx:1,sy:1},200,E.out);SFX.clink();nod(i);jface(i,'happy');
     const o=sets.find(x=>x!==s);if(spots.some(z=>!z.used))Guide.drag({x:o.sp.x,y:o.sp.y-40},{x:spots[1-i].x,y:spots[1-i].y-40})}));
   Guide.stop();
-  R.lines.push(await sayLine('주문하신 '+M.name+' 두 잔 나왔습니다.',lineTag()));
   Panel.hint('<em>트레이</em>를 눌러 옆에 끼고 한 발 물러나요');$('.tin',T).classList.add('pickme');Guide.tap({x:800,y:600});
   await tap(T);Guide.stop();$('.tin',T).classList.remove('pickme');SFX.pick();await tray.to({x:-340},700,E.io);
   R.lines.push(await sayLine('맛있게 드십시오.',lineTag().replace('따라 말해요','말하면서 목례해요')));

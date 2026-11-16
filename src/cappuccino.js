@@ -84,22 +84,29 @@ async function steamMilk(){
   const fx=$('#fxP');
   const puffP=(n=6)=>{for(let i=0;i<n;i++){const c=pmk('circle',{cx:TIP.x,cy:TIP.y,r:6,fill:'#fff',stroke:'#cdd7dc','stroke-width':2},fx),dx=rnd(-40,40),dy=rnd(-30,30);
     anim(700,t=>{c.setAttribute('cx',TIP.x+dx*t);c.setAttribute('cy',TIP.y+30+dy*t);c.setAttribute('r',6+14*t);c.setAttribute('opacity',1-t)},E.out).then(()=>c.remove())}};
-  const purge=async()=>{Guide.tap({x:880,y:160});await tap(knobG);Guide.stop();await knob(true);SFX.steam(.45);puffP(8);floatText(TIP.x-30,TIP.y-50,'칙!',fx);await sleep(450);await knob(false)};
-  const wipeTip=()=>new Promise(res=>{let g=null,acc=0,done=false;const home={x:CLs.x,y:CLs.y};Guide.drag({x:CLs.x,y:CLs.y},{x:TIP.x,y:TIP.y});
+  const purge=async()=>{Guide.tap({x:880,y:160});T.set('tap',{x:880,y:160},null,{svg:'prepSvg'});await tap(knobG);Guide.stop();T.clear();await knob(true);SFX.steam(.45);puffP(5);floatText(TIP.x-30,TIP.y-50,'칙!',fx);
+    await anim(450,p=>CLs.set({sx:1+Math.sin(p*28)*.05,sy:1+Math.sin(p*28+1)*.06}));CLs.set({sx:1,sy:1});await knob(false)};
+  const CL_HOME={x:560,y:470};window.__cls=CLs;
+  /* 젖은행주로 노즐 끝을 가리기 */
+  const coverTip=async hint=>{Panel.hint(hint);const zg=pmk('ellipse',{class:'ghost',cx:TIP.x,cy:TIP.y,rx:60,ry:42},$('#prepGhost'));Guide.drag({x:CLs.x,y:CLs.y},{x:TIP.x,y:TIP.y});T.set('drag',{x:CLs.x,y:CLs.y},{x:TIP.x,y:TIP.y},{svg:'prepSvg'});
+    await drag(CLs,cloth,{svg:svgP,zones:[{x:TIP.x,y:TIP.y,r:80}],bounds:[480,90,980,580]});zg.remove();T.clear();await CLs.to({x:TIP.x,y:TIP.y+6,r:-14},160,E.out);SFX.pick()};
+  const wipeTip=back=>new Promise(res=>{let g=null,acc=0,done=false;const home=CL_HOME;Guide.drag({x:CLs.x,y:CLs.y},{x:TIP.x+30,y:TIP.y});T.set('wipe',{x:CLs.x,y:CLs.y},{x:TIP.x,y:TIP.y},{svg:'prepSvg'});
     const dn=e=>{if(done)return;e.preventDefault();try{cloth.setPointerCapture(e.pointerId)}catch(_){}const p=spt(e,svgP);g={dx:p.x-CLs.x,dy:p.y-CLs.y,lx:p.x,ly:p.y};Guide.pause();SFX.pick()};
     const mv=e=>{if(!g||done)return;const p=spt(e,svgP),d=Math.hypot(p.x-g.lx,p.y-g.ly);g.lx=p.x;g.ly=p.y;CLs.set({x:p.x-g.dx,y:p.y-g.dy});
       if(Math.hypot(CLs.x-TIP.x,CLs.y-TIP.y)<70){acc+=d;resid.style.opacity=1-clamp(acc/220,0,1);if(acc>220){done=true;off();fin()}}};
-    const up=()=>{if(!g||done)return;g=null;CLs.to({...home,r:0},380,E.back).then(()=>{if(!done)Guide.resume()})};
+    const up=()=>{if(!g||done)return;g=null;Guide.resume()};
     const off=()=>{cloth.removeEventListener('pointerdown',dn);cloth.removeEventListener('pointermove',mv);cloth.removeEventListener('pointerup',up);cloth.removeEventListener('pointercancel',up)};
-    async function fin(){Guide.stop();resid.style.display='none';resid.style.opacity=1;SFX.ok();floatText(TIP.x,TIP.y-60,'반짝!',fx);await CLs.to({...home,r:0},400,E.io);res()}
+    async function fin(){Guide.stop();T.clear();resid.style.display='none';resid.style.opacity=1;SFX.ok();floatText(TIP.x,TIP.y-60,'반짝!',fx);if(back)await CLs.to({...home,r:0},400,E.io);else await CLs.to({x:TIP.x,y:TIP.y+6,r:-14},200,E.out);res()}
     cloth.addEventListener('pointerdown',dn);cloth.addEventListener('pointermove',mv);cloth.addEventListener('pointerup',up);cloth.addEventListener('pointercancel',up)});
   const surfY=()=>PT.sp.y-PT.L*PH*.9,depth=()=>TIP.y-surfY();
   const pyFor=d=>TIP.y-d+PT.L*PH*.9;
   const syncTop=(mode)=>{tfoam.setAttribute('opacity',clamp(PT.foam,0,1)*.85);tbub.setAttribute('opacity',mode==='mix'?0:clamp(PT.foam*1.3,0,1));
     const d=depth();ttip.setAttribute('opacity',d<40?1:.35);trip.setAttribute('opacity',mode==='air'?.9:0)};
   /* 1) 노즐 '칙' 빼기, 닦기 */
-  Panel.hint('스팀 밸브를 눌러 노즐 물기를 <em>\'칙\'</em> 빼요');resid.style.display='';await purge();
-  Panel.hint('<em>젖은 행주</em>로 노즐을 닦아요');await wipeTip();
+  resid.style.display='';
+  await coverTip('<em>젖은행주1</em>로 <em>노즐 끝</em>을 가려요');
+  Panel.hint('행주로 가린 채 <em>스팀 밸브</em>를 눌러 노즐 물기를 <em>\'칙\'</em> 빼요');await purge();
+  Panel.hint('<em>젖은행주1</em>로 노즐을 닦아요<small>노즐 끝을 왔다 갔다 문질러요</small>');await wipeTip(true);
   /* 2) 피쳐를 노즐에 대기 */
   Panel.hint('<em>피쳐</em>를 노즐 아래로 가져가 노즐이 살짝 잠기게 해요');
   const z={x:TIP.x-10,y:pyFor(6)*1,r:110};const zg=pmk('ellipse',{class:'ghost',cx:TIP.x,cy:TIP.y+20,rx:90,ry:60},$('#prepGhost'));
@@ -147,8 +154,9 @@ async function steamMilk(){
   R.mixL=PT.L;R.mixLate=PT.L>.95;R.mixEarly=PT.L<.86;SFX.ok();
   /* 5) 정리: 피쳐 빼고, 노즐 닦고, '칙' */
   await PT.sp.to({x:880,y:560},420,E.io);resid.style.display='';
-  Panel.hint('<em>젖은 행주</em>로 노즐을 깨끗이 닦아요');await wipeTip();
-  Panel.hint('스팀 밸브를 눌러 우유를 <em>\'칙\'</em> 빼요');await purge();
+  await coverTip('<em>젖은행주1</em>로 <em>노즐 끝</em>을 가려요');
+  Panel.hint('<em>젖은행주1</em>로 노즐을 깨끗이 닦아요<small>노즐 끝을 왔다 갔다 문질러요</small>');await wipeTip(false);
+  Panel.hint('행주로 가린 채 <em>스팀 밸브</em>를 눌러 우유를 <em>\'칙\'</em> 빼요');await purge();await CLs.to({...CL_HOME,r:0},400,E.io);
   R.steamClean=true;Steam.L=PT.L;Steam.foam=PT.foam;await toast('스티밍 끝!');closePop()}
 const Steam={L:.9,foam:.3};
 
@@ -156,7 +164,7 @@ const Steam={L:.9,foam:.3};
 async function divideMilk(){
   openPop('우유 나누기',`<rect width="1000" height="600" fill="#eaf3ea"/><rect y="500" width="1000" height="100" fill="#f6f3ee"/><path d="M0 500H1000" class="o3 nf"/>
     <text x="760" y="150" text-anchor="middle" font-size="24" fill="#5a7a62">보조 피쳐</text><text x="300" y="150" text-anchor="middle" font-size="24" fill="#5a7a62">스팀 피쳐</text>`);
-  const A=makePitcher('dA',300,520,null,true),B=makePitcher('dB',740,520);A.marks(false);B.marks(false);A.set(Steam.L,Steam.foam);B.set(0,0);
+  const A=makePitcher('dA',300,520,null,true),B=makePitcher('dB',740,520);A.marks(false);B.marks(false);A.set(Steam.L,Steam.foam);B.set(0,0);window.__dv={A,B};
   const meter=pmk('g',{class:'np'});const cnt=pmk('text',{x:500,y:110,'text-anchor':'middle','font-size':30,fill:'#4a2c22'});
   const st=pmk('path',{fill:'none',stroke:'#fffdf6','stroke-width':11,'stroke-linecap':'round',class:'np'});
   let pours=0,resets=0,poured=0;const show=()=>{cnt.textContent='따른 횟수 '+pours+'번';};show();
@@ -174,47 +182,107 @@ async function divideMilk(){
   R.pours=pours;R.divReset=resets;Steam.A=A.L;Steam.B=B.L;await sleep(800);closePop()}
 
 /* ---------- 7) 붓기: 위에서 보며 (잔마다) ---------- */
+/* 잔 안쪽 모양 (바닥 가운데가 원점, 위가 -) */
+const CUPIN=(()=>{const P=[];for(let i=0;i<=16;i++){const s=i/16;P.push([62+52*Math.pow(s,.7),-8-s*172])}
+  return [...P.map(([w,y])=>[-w,y]).reverse(),...P.map(([w,y])=>[w,y])]})();
+const polyArea=P=>{let a=0;for(let i=0;i<P.length;i++){const [x1,y1]=P[i],[x2,y2]=P[(i+1)%P.length];a+=x1*y2-x2*y1}return Math.abs(a)/2};
+const clipBelow=(P,s)=>{const o=[];for(let i=0;i<P.length;i++){const A=P[i],B=P[(i+1)%P.length],ia=A[1]>=s,ib=B[1]>=s;
+  if(ia)o.push(A);if(ia!==ib){const t=(s-A[1])/(B[1]-A[1]);o.push([A[0]+(B[0]-A[0])*t,s])}}return o};
+const rotP=(P,deg,ox,oy)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return P.map(([x,y])=>[ox+x*c-y*s,oy+x*s+y*c])};
+/* 부피 V가 되는 수면 높이 */
+function levelFor(W,V){let lo=Math.min(...W.map(p=>p[1])),hi=Math.max(...W.map(p=>p[1]));for(let i=0;i<32;i++){const m=(lo+hi)/2;if(polyArea(clipBelow(W,m))>V)lo=m;else hi=m}return (lo+hi)/2}
+const ptsD=P=>'M'+P.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')+'Z';
+
+/* ---------- 7) 붓기: 정면에서 (잔마다) ---------- */
 async function latteArt(k){
-  openPop('카푸치노 붓기 '+(k+1)+'/2',`<rect width="1000" height="600" fill="#f3e2cb"/>
-    <rect x="700" y="100" width="20" height="380" rx="10" fill="#fff" class="o3"/><text x="760" y="140" font-size="22" fill="#8a5a44">높이</text><text x="760" y="166" font-size="20" fill="#8a5a44">(15cm)</text>
-    <text x="760" y="472" font-size="22" fill="#8a5a44">가까이</text>`);
-  const cupG=pmk('g',{class:'hit'});cupG.innerHTML=`<g class="tilt"><circle cx="0" cy="8" r="160" fill="#4a2c22" opacity=".14"/><path d="M-150 -26H-226Q-248 -26 -248 0Q-248 26 -226 26H-150Z" fill="#fff" class="o"/>
-    <circle r="158" fill="#fff" class="o"/><circle r="134" fill="#7a4a28" class="o3"/><circle class="crem" r="126" fill="#b47a43"/><circle class="crem2" r="126" fill="none" stroke="#9a6233" stroke-width="5" stroke-dasharray="10 9" opacity=".7"/>
-    <circle class="ring" r="96" fill="none" stroke="#2f9e5b" stroke-width="4" stroke-dasharray="10 8" opacity="0"/><circle class="ring" r="70" fill="none" stroke="#2f9e5b" stroke-width="4" stroke-dasharray="10 8" opacity="0"/>
-    <circle class="art" r="0" fill="#fffaf0"/><circle class="art2" r="0" fill="#fff"/></g><text class="deg" x="0" y="-180" text-anchor="middle" font-size="30" fill="#e2634d" opacity="0">45°</text>`;
-  const C=new Sp(cupG,340,320),tilt=$('.tilt',cupG),art=$('.art',cupG),art2=$('.art2',cupG),crem=$('.crem',cupG),deg=$('.deg',cupG),rings=[...cupG.querySelectorAll('.ring')];
-  const pit=pmk('g',{class:'hit'});pit.innerHTML=`<g transform="scale(.42) rotate(-30)">${pitcherSide('la'+k)}</g>`;const PI=new Sp(pit,710,160);
-  const pm=pit.querySelector('.pm'),pf=pit.querySelector('.pf');const L0=k?Steam.B:Steam.A;let PL=L0;
-  const setPL=L=>{PL=L;pm.setAttribute('y',-L*PH);pm.setAttribute('height',L*PH);pf.setAttribute('y',-L*PH);pf.setAttribute('height',Math.min(L*PH,30))};setPL(PL);pit.querySelector('.nose').style.display='none';pit.querySelector('.noset').style.display='none';
-  const st=pmk('path',{fill:'none',stroke:'#fffdf6','stroke-linecap':'round',class:'np'});
+  openPop('카푸치노 붓기 '+(k+1)+'/2',`<rect width="1000" height="600" fill="#f3e2cb"/><rect y="500" width="1000" height="100" fill="#f6f3ee"/><path d="M0 500H1000" class="o3 nf"/>
+    <circle cx="900" cy="106" r="84" fill="#fff" class="o3"/><text x="900" y="214" text-anchor="middle" font-size="20" fill="#8a5a44">위에서 본 잔</text>`);
   const fx=$('#fxP');
-  /* 1) 잔 기울이기 */
-  Panel.hint('<em>잔을 톡</em> 눌러서 45° 기울여요');Guide.tap({x:340,y:320});await tap(cupG);Guide.stop();SFX.pick();
-  let tiltK=0;const setTilt=k2=>{tiltK=k2;tilt.setAttribute('transform',`scale(1 ${(1-.32*k2).toFixed(3)})`);deg.setAttribute('opacity',k2>.5?1:0)};
-  await anim(400,t=>setTilt(t),E.out);
-  /* 2) 높이서 부어 크레마 안정 */
-  Panel.hint('<em>높이(15cm)</em>에서 피쳐를 <em>꾹 누르고</em> 부어요');Guide.hold({x:PI.x,y:PI.y});
-  let prog=0;const ringP=pmk('circle',{cx:PI.x,cy:PI.y,r:56,fill:'none',stroke:'#ff8a73','stroke-width':8,'stroke-dasharray':351.9,'stroke-dashoffset':351.9,transform:`rotate(-90 ${PI.x} ${PI.y})`,class:'np'});
+  const O={x:330,y:500};   /* 잔 바닥 가운데 (기울이는 중심) */
+  const A=polyArea(CUPIN),V0=.18*A,VFULL=polyArea(clipBelow(CUPIN,-8-.88*172)),VOVER=polyArea(clipBelow(CUPIN,-8-.985*172));
+  const TILT=35;let ang=0,V=V0,foam=0;
+  const VT=polyArea(clipBelow(rotP(CUPIN,TILT,O.x,O.y),rotP([[114,-180]],TILT,O.x,O.y)[0][1]));  /* 오른쪽 끝에 닿는 양 */
+  /* 위에서 본 잔 */
+  const top=pmk('g',{class:'np'});top.innerHTML=`<circle cx="900" cy="106" r="70" fill="#7a4a28" class="o3"/><circle class="tcrem" cx="900" cy="106" r="62" fill="#b47a43"/><circle class="tart" cx="900" cy="106" r="0" fill="#fffaf0"/><circle class="tart2" cx="900" cy="106" r="0" fill="#fff"/>`;
+  const tcrem=$('.tcrem',top),tart=$('.tart',top),tart2=$('.tart2',top);
+  /* 정면 잔: 뒤(몸통) - 액체 - 앞(선) */
+  const back=pmk('g',{class:'np'}),liq=pmk('path',{class:'np',fill:'#7a4a28'}),fm=pmk('path',{class:'np',fill:'#fffaf0'}),
+    front=pmk('g',{class:'hit'}),mark=pmk('circle',{class:'np',r:16,fill:'none',stroke:'#2f9e5b','stroke-width':4,'stroke-dasharray':'7 5',opacity:0});
+  const BODY='M-124 -186C-122 -70 -100 4 -62 6H62C100 4 122 -70 124 -186';
+  back.innerHTML=`<ellipse cx="0" cy="8" rx="96" ry="10" fill="#4a2c22" opacity=".14"/><path d="${BODY}Z" fill="#e8f3f6" fill-opacity=".55"/>`;
+  front.innerHTML=`<path d="M-122 -150C-176 -150 -178 -60 -112 -58" fill="none" stroke="#4a2c22" stroke-width="18" stroke-linecap="round"/><path d="M-122 -150C-176 -150 -178 -60 -112 -58" fill="none" stroke="#f4fbfd" stroke-width="8" stroke-linecap="round"/>
+    <path d="${BODY}" fill="none" class="o4"/><ellipse cx="0" cy="-186" rx="124" ry="15" fill="none" class="o3"/><path d="M-96 -160C-96 -90 -84 -40 -60 -16" stroke="#fff" stroke-width="9" opacity=".7" fill="none" stroke-linecap="round"/>
+    <path d="M-124 -186C-122 -70 -100 4 -62 6H62C100 4 122 -70 124 -186Z" fill="#fff" fill-opacity="0"/>`;
+  let surf={x:O.x,y:O.y};
+  const clipAbove=(P,s)=>clipBelow(P.map(([x,y])=>[x,-y]),-s).map(([x,y])=>[x,-y]);
+  const draw=()=>{const tf=`translate(${O.x} ${O.y}) rotate(${ang.toFixed(2)})`;back.setAttribute('transform',tf);front.setAttribute('transform',tf);
+    const W=rotP(CUPIN,ang,O.x,O.y),s=levelFor(W,V),L=clipBelow(W,s);liq.setAttribute('d',L.length>2?ptsD(L):'');
+    const mixK=clamp((V-V0)/(VFULL-V0),0,1);liq.setAttribute('fill',mix('#6e3f20','#c99566',mixK));
+    const F=foam>0?clipAbove(L,s+foam):[];fm.setAttribute('d',F.length>2?ptsD(F):'');
+    const ys=L.filter(p=>Math.abs(p[1]-s)<.01).map(p=>p[0]);surf={x:ys.length?(Math.min(...ys)+Math.max(...ys))/2:O.x,y:s};
+    const lip=rotP([[114,-180]],ang,O.x,O.y)[0];mark.setAttribute('cx',lip[0].toFixed(1));mark.setAttribute('cy',lip[1].toFixed(1));
+    tcrem.setAttribute('fill',mix('#b47a43','#c99566',mixK))};
+  draw();
+  /* 피쳐 */
+  const pit=pmk('g',{class:'hit'});pit.innerHTML=`<g transform="scale(.5)">${pitcherSide('la'+k)}</g>`;const PI=new Sp(pit,760,500);
+  const pm=pit.querySelector('.pm'),pf=pit.querySelector('.pf');let PL=k?Steam.B:Steam.A;
+  const setPL=L=>{PL=Math.max(.04,L);pm.setAttribute('y',-PL*PH);pm.setAttribute('height',PL*PH);pf.setAttribute('y',-PL*PH);pf.setAttribute('height',Math.min(PL*PH,30))};setPL(PL);
+  pit.querySelector('.nose').style.display='none';pit.querySelector('.noset').style.display='none';
+  const spout=()=>{const a=PI.r*Math.PI/180,lx=-104*.5,ly=-246*.5;return{x:PI.x+lx*Math.cos(a)-ly*Math.sin(a),y:PI.y+lx*Math.sin(a)+ly*Math.cos(a)}};
+  const st=pmk('path',{fill:'none',stroke:'#fffdf6','stroke-linecap':'round',class:'np'});
+  const stream=w=>{if(!w)return st.setAttribute('d','');const s=spout();st.setAttribute('stroke-width',w);st.setAttribute('d',`M${s.x.toFixed(1)} ${s.y.toFixed(1)}Q${(s.x-8).toFixed(1)} ${(s.y+30).toFixed(1)} ${surf.x.toFixed(1)} ${surf.y.toFixed(1)}`)};
+  const spill=n=>{const lip=rotP([[120,-184]],ang,O.x,O.y)[0];for(let i=0;i<n;i++)setTimeout(()=>drop(lip[0]+6,lip[1],498,'#e9d3ad',5),i*60)};
+  const LA=window.__la={phase:'',ok:()=>false};
+  /* 1) 스월링: 피쳐를 동그랗게 3바퀴 */
+  const ringG=pmk('g',{class:'np'},$('#prepGhost'));ringG.innerHTML=`<circle cx="${PI.x}" cy="${PI.y-60}" r="96" fill="none" stroke="#e2634d" stroke-width="5" stroke-dasharray="12 9"/><path d="M${PI.x+96} ${PI.y-74}l-12 22l24 0z" fill="#e2634d"/>`;
+  const cnt=pmk('text',{x:PI.x,y:PI.y-190,'text-anchor':'middle','font-size':26,fill:'#4a2c22',class:'np'});cnt.textContent='0 / 3바퀴';
+  Panel.hint('피쳐를 잡고 <em>동그랗게 3바퀴</em> 돌려요<small>스월링: 우유와 거품을 골고루 섞어요</small>');LA.phase='swirl';
+  T.set('swirl',{x:PI.x,y:PI.y-60},null,{svg:'prepSvg',r:70});Guide.drag({x:PI.x+60,y:PI.y-60},{x:PI.x,y:PI.y-120});
+  await new Promise(res=>{let g=null,acc=0,done=false;const C={x:PI.x,y:PI.y-60};const an=p=>Math.atan2(p.y-C.y,p.x-C.x);
+    const dn=e=>{if(done)return;e.preventDefault();try{pit.setPointerCapture(e.pointerId)}catch(_){}g={a:an(spt(e,svgP))};Guide.pause();SFX.pick()};
+    const mv=e=>{if(!g||done)return;const a=an(spt(e,svgP));let d=a-g.a;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;g.a=a;acc+=Math.abs(d);
+      const turns=acc/(2*Math.PI);PI.set({r:Math.sin(acc*1.5)*7,x:C.x+Math.cos(acc)*5});pf.setAttribute('fill',mix('#f3e4c6','#fffaf0',clamp(turns/3,0,1)));cnt.textContent=Math.min(3,Math.floor(turns))+' / 3바퀴';
+      if(turns>=3){done=true;off();res()}};
+    const up=()=>{if(!g||done)return;g=null;Guide.resume()};
+    const off=()=>{pit.removeEventListener('pointerdown',dn);pit.removeEventListener('pointermove',mv);pit.removeEventListener('pointerup',up);pit.removeEventListener('pointercancel',up)};
+    pit.addEventListener('pointerdown',dn);pit.addEventListener('pointermove',mv);pit.addEventListener('pointerup',up);pit.addEventListener('pointercancel',up)});
+  Guide.stop();T.clear();ringG.remove();cnt.remove();await PI.to({x:760,y:500,r:0},200,E.out);SFX.ok();floatText(PI.x,PI.y-220,'스월링 끝!',fx);
+  /* 2) 잔 기울이기 */
+  Panel.hint('<em>잔을 톡</em> 눌러서 기울여요');Guide.tap({x:O.x,y:O.y-100});T.set('tap',{x:O.x,y:O.y-100},null,{svg:'prepSvg'});await tap(front);Guide.stop();T.clear();SFX.pick();
+  await anim(500,t=>{ang=TILT*t;draw()},E.out);
+  /* 3) 높이(10cm 이상)에서 잔 가운데에: 오른쪽 끝에 닿을 때까지 */
+  await PI.to({x:590,y:190,r:0},400,E.io);
+  const ruler=pmk('g',{class:'np'});ruler.innerHTML=`<path d="M650 74V${(surf.y).toFixed(0)}" stroke="#8a5a44" stroke-width="3" stroke-dasharray="8 6"/><text x="662" y="${((74+surf.y)/2).toFixed(0)}" font-size="22" fill="#8a5a44">10cm 이상</text>`;
+  mark.setAttribute('opacity',1);
+  Panel.hint('<em>높은 곳</em>에서 피쳐를 <em>꾹 누르고</em> 잔 가운데에 부어요<small>우유가 <em>초록 동그라미(오른쪽 끝)</em>에 닿으면 손을 떼요</small>');Guide.hold({x:PI.x,y:PI.y-60});
+  LA.phase='high';LA.ok=()=>V>=VT-.035*A;T.set('pour',{x:PI.x,y:PI.y-60},null,{svg:'prepSvg'});
   let snd=null;
-  await holdLoop(pit,()=>{snd=SFX.pour();PI.to({r:-25},200)},
-    dt=>{prog=Math.min(1,prog+dt/1.8);ringP.setAttribute('stroke-dashoffset',(351.9*(1-prog)).toFixed(1));setPL(PL-.03*dt);
-      st.setAttribute('stroke-width',4);st.setAttribute('d',`M${PI.x-50} ${PI.y+30}Q${PI.x-150} ${PI.y+60} 340 ${320+(1-.32*tiltK)*0}`);crem.setAttribute('fill',mix('#b47a43','#c99566',prog));if(prog>=1)return 'stop'},
-    async()=>{snd&&snd.stop();st.setAttribute('d','');await PI.to({r:0},200);if(prog>=1){ringP.remove();SFX.ok();floatText(340,140,'크레마 안정!',fx);return 'ok'}Panel.hint('조금 더 <em>꾹 누르고</em> 부어요');return false});
-  /* 3) 가까이 */
-  Panel.hint('피쳐를 <em>아래로 내려</em> 잔 가까이 대요');const zg=pmk('ellipse',{class:'ghost',cx:710,cy:440,rx:70,ry:50},$('#prepGhost'));Guide.drag({x:PI.x,y:PI.y},{x:710,y:440});
-  await drag(PI,pit,{svg:svgP,zones:[{x:710,y:440,r:80}],bounds:[560,120,980,560]});zg.remove();await PI.to({x:640,y:390,r:-20,sx:1.15,sy:1.15},260,E.out);
-  /* 4) 하얀 원 */
-  rings.forEach(r=>r.setAttribute('opacity',.9));
-  Panel.hint('<em>꾹 누르고</em> 부어서 초록 점선 사이까지 <em>하얀 원</em>을 키워요');Guide.hold({x:PI.x,y:PI.y});
-  let r=0,res='small';
-  await holdLoop(pit,()=>{snd=SFX.pour()},
-    dt=>{r=Math.min(118,r+38*dt);art.setAttribute('r',r.toFixed(1));art2.setAttribute('r',(r*.55).toFixed(1));setPL(PL-.05*dt);setTilt(clamp(1-r/100,0,1));
-      st.setAttribute('stroke-width',9);st.setAttribute('d',`M${PI.x-40} ${PI.y+20}Q${PI.x-120} ${PI.y+30} 345 322`);if(r>=118)return 'stop'},
-    async()=>{snd&&snd.stop();st.setAttribute('d','');
-      if(r<70){Panel.hint('원이 아직 작아요. <em>조금 더</em> 부어요');return false}
-      res=r<=96?'good':'big';rings.forEach(x=>x.setAttribute('opacity',0));setTilt(0);
-      if(res==='good'){SFX.great();sparkle(340,320,8,fx);floatText(340,120,'예쁜 원!',fx)}else{SFX.no();floatText(340,120,'원이 조금 커요',fx)}return 'ok'});
-  (R.art=R.art||[])[k]=res;Cup.at[k].addMilk(112);await sleep(1100);closePop()}
+  await holdLoop(pit,()=>{snd=SFX.pour();PI.to({r:-48},200)},
+    dt=>{if(PI.r>-40)return;V=Math.min(VT+.02*A,V+.17*A*dt);setPL(PL-.05*dt);draw();stream(5);if(V>=VT+.02*A)return 'stop'},
+    async()=>{snd&&snd.stop();stream(0);await PI.to({r:0},200);
+      if(V<VT-.05*A){Panel.hint('조금 더 부어요<small>우유가 <em>오른쪽 끝(초록 동그라미)</em>에 닿을 때까지</small>');return false}
+      if(V>VT){R.spill=(R.spill||0)+1;SFX.no();spill(5);floatText(560,330,'조금 흘렀어요',fx);V=VT;draw()}else{SFX.ok();floatText(560,330,'좋아요!',fx)}
+      return 'ok'});
+  T.clear();mark.setAttribute('opacity',0);ruler.remove();
+  /* 4) 잔 가까이 피쳐 코 내리기 */
+  Panel.hint('피쳐를 <em>아래로 내려</em> 피쳐 코를 <em>잔 가까이</em> 대요');const zg=pmk('ellipse',{class:'ghost',cx:600,cy:340,rx:70,ry:50},$('#prepGhost'));
+  Guide.drag({x:PI.x,y:PI.y-60},{x:600,y:330});T.set('drag',{x:PI.x,y:PI.y-60},{x:600,y:340},{svg:'prepSvg'});
+  await drag(PI,pit,{svg:svgP,zones:[{x:600,y:400,r:90}],bounds:[480,120,980,560]});zg.remove();T.clear();await PI.to({x:596,y:396,r:-20},260,E.out);
+  /* 5) 붓으면서 잔을 서서히 세우기 */
+  Panel.hint('<em>꾹 누르고</em> 부어요. 잔이 <em>서서히</em> 서요<small>잔이 똑바로 서고 가득 차면 손을 떼요</small>');Guide.hold({x:PI.x,y:PI.y-60});
+  LA.phase='close';LA.ok=()=>V>=VFULL*.97;T.set('pour',{x:PI.x,y:PI.y-60},null,{svg:'prepSvg'});
+  let res='good';
+  await holdLoop(pit,()=>{snd=SFX.pour();PI.to({r:-44},160)},
+    dt=>{if(PI.r>-36)return;V=Math.min(VOVER,V+.16*A*dt);const p=clamp((V-VT)/(VFULL-VT),0,1);ang=TILT*(1-p);foam=Math.min(14,4+12*p);setPL(PL-.06*dt);
+      PI.set({x:596+(-60)*(1-ang/TILT)*0,y:396-30*p});draw();stream(8);
+      const r=56*p;tart.setAttribute('r',r.toFixed(1));tart2.setAttribute('r',(r*.55).toFixed(1));
+      if(V>=VOVER){spill(6);return 'stop'}},
+    async()=>{snd&&snd.stop();stream(0);await PI.to({r:0},200);
+      if(V>=VOVER){res='big';R.spill=(R.spill||0)+1;SFX.no();floatText(330,250,'넘쳤어요! 가득 차면 손을 떼요',fx);tart.setAttribute('r',62);return 'ok'}
+      if(V<VFULL*.97){Panel.hint('조금 더 부어요<small>잔이 <em>똑바로 설 때까지</em></small>');return false}
+      ang=0;draw();SFX.great();sparkle(900,106,8,fx);floatText(900,40,'예쁜 원!',fx);sparkle(330,320,6,fx);return 'ok'});
+  T.clear();LA.phase='';
+  (R.art=R.art||[])[k]=res;Cup.at[k].addMilk(112);await sleep(1200);closePop()}
 
 /* ---------- 피쳐 2개 나란히 정리 ---------- */
 async function tidyPitchers(){

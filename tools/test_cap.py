@@ -92,13 +92,33 @@ async def main():
       if '왼쪽 스팀노즐' in H and once('wandL'):
         await pg.wait_for_timeout(500); await shot('wand_left'); await click(462,420); log.append('left wand'); await pg.wait_for_timeout(800); continue
       if st['ttl'].startswith('우유 스티밍') and st['pop']:
-        if '노즐 물기' in h and once('purge1'):
-          await pg.wait_for_timeout(700); await shot('steam_start'); await click(880,160,PS); log.append('purge'); await pg.wait_for_timeout(900); continue
-        if '노즐을 닦아요' in h and once('wipe1'):
-          await drag(560,470,690,300,PS,up=False)
-          for i in range(4):
-            c=await cl(720,290,PS); await pg.mouse.move(*c,steps=4); c=await cl(680,312,PS); await pg.mouse.move(*c,steps=4)
-          await pg.mouse.up(); log.append('wipe'); await pg.wait_for_timeout(700); continue
+        tk=await pg.evaluate('()=>window.__pc&&window.__pc.task')
+        if tk:
+          kk=tk['kind']; a0=tk.get('a'); b0=tk.get('b')
+          if kk=='drag':
+            await pg.wait_for_timeout(300); await drag(a0['x'],a0['y'],b0['x'],b0['y'],PS); log.append('t-drag'); await pg.wait_for_timeout(500); continue
+          if kk=='tap':
+            await pg.wait_for_timeout(300); await shot('ttap'); await click(a0['x'],a0['y'],PS); log.append('t-tap'); await pg.wait_for_timeout(900); continue
+          if kk=='wipe':
+            c=await cl(a0['x'],a0['y'],PS); await pg.mouse.move(*c); await pg.mouse.down()
+            for i in range(6):
+              c=await cl(b0['x']+25,b0['y']-8,PS); await pg.mouse.move(*c,steps=4); c=await cl(b0['x']-20,b0['y']+12,PS); await pg.mouse.move(*c,steps=4)
+            await pg.mouse.up(); log.append('t-wipe'); await pg.wait_for_timeout(800); continue
+          if kk=='swirl':
+            await pg.wait_for_timeout(400); await shot('swirl'+st['ttl'][-3]); import math
+            c=await cl(a0['x'],a0['y'],PS); await pg.mouse.move(*c); await pg.mouse.down()
+            c=await cl(a0['x']+50,a0['y'],PS); await pg.mouse.move(*c,steps=3)
+            for i in range(1,4*24+1):
+              if i==30: await shot('swirling')
+              an=i/24*2*math.pi; c=await cl(a0['x']+50*math.cos(an),a0['y']+50*math.sin(an),PS); await pg.mouse.move(*c)
+            await pg.mouse.up(); log.append('swirl'); await pg.wait_for_timeout(700); continue
+          if kk=='pour':
+            ph=await pg.evaluate('()=>__la.phase'); c=await cl(a0['x'],a0['y'],PS); await pg.mouse.move(*c); await pg.mouse.down()
+            for i in range(80):
+              await pg.wait_for_timeout(100)
+              if i==8: await shot('pour_'+ph+st['ttl'][-3])
+              if await pg.evaluate('()=>__la.ok()'): break
+            await pg.mouse.up(); log.append('pour '+ph); await pg.wait_for_timeout(900); await shot('poured_'+ph+st['ttl'][-3]); continue
         if '노즐 아래로' in h and once('dock'):
           x,y,L=await pg.evaluate('()=>[__pt.sp.x,__pt.sp.y,__pt.L]'); await drag(x,y-40,700+(x-x),300+40+L*230*.9-0, PS); await pg.wait_for_timeout(600); await shot('docked'); log.append('dock'); continue
         if '켜요' in h and once('on'):
@@ -113,29 +133,41 @@ async def main():
           await pg.mouse.up(); log.append('raise'); await pg.wait_for_timeout(1500); await shot('mixing'); continue
         if '90%</em>예요' in H and once('off'):
           await shot('at90'); await click(880,160,PS); log.append('steam off'); await pg.wait_for_timeout(900); continue
-        if '깨끗이 닦아요' in H and once('wipe2'):
-          await pg.wait_for_timeout(300); await drag(560,470,690,300,PS,up=False)
-          for i in range(4):
-            c=await cl(720,290,PS); await pg.mouse.move(*c,steps=4); c=await cl(680,312,PS); await pg.mouse.move(*c,steps=4)
-          await pg.mouse.up(); log.append('wipe2'); await pg.wait_for_timeout(700); continue
-        if '우유를' in h and '칙' in h and once('purge2'):
-          await click(880,160,PS); log.append('purge2'); await pg.wait_for_timeout(1500); continue
         continue
       if st['ttl']=='우유 나누기' and st['pop']:
         if once('div0'): await pg.wait_for_timeout(700); await shot('divide')
-        a=await cl(300,400,PS); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(1000)
+        dA,dB=await pg.evaluate('()=>[__dv.A.L,__dv.B.L]'); m=min(.15,(dA-dB)/2); ms=int(300+m/.12*1000)
+        a=await cl(300,400,PS); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(min(ms,1000))
         if once('div1'): await shot('dividing')
-        await pg.wait_for_timeout(700); await pg.mouse.up(); log.append('pour'); await pg.wait_for_timeout(900); continue
+        await pg.wait_for_timeout(max(0,ms-1000)); await pg.mouse.up(); log.append('pour'); await pg.wait_for_timeout(900); continue
       if st['ttl'].startswith('카푸치노 붓기') and st['pop']:
-        k=st['ttl'][-3]
-        if '잔을 톡' in H and once('tilt'+k):
-          await pg.wait_for_timeout(600); await shot('art'+k); await click(340,320,PS); await pg.wait_for_timeout(600); continue
-        if '높이(15cm)' in H and once('high'+k):
-          await hold(710,160,2300,PS); log.append('high'+k); await pg.wait_for_timeout(700); continue
-        if '아래로 내려' in H and once('low'+k):
-          await drag(710,160,710,440,PS); await pg.wait_for_timeout(500); continue
-        if '하얀 원' in H and once('circle'+k):
-          a=await cl(640,390,PS); await pg.mouse.move(*a); await pg.mouse.down(); await pg.wait_for_timeout(1300); await shot('circle'+k); await pg.wait_for_timeout(900); await pg.mouse.up(); log.append('circle'+k); await pg.wait_for_timeout(600); await shot('circle_done'+k); continue
+        tk=await pg.evaluate('()=>window.__pc&&window.__pc.task')
+        if tk:
+          kk=tk['kind']; a0=tk.get('a'); b0=tk.get('b')
+          if kk=='drag':
+            await pg.wait_for_timeout(300); await drag(a0['x'],a0['y'],b0['x'],b0['y'],PS); log.append('t-drag'); await pg.wait_for_timeout(500); continue
+          if kk=='tap':
+            await pg.wait_for_timeout(300); await shot('ttap'); await click(a0['x'],a0['y'],PS); log.append('t-tap'); await pg.wait_for_timeout(900); continue
+          if kk=='wipe':
+            c=await cl(a0['x'],a0['y'],PS); await pg.mouse.move(*c); await pg.mouse.down()
+            for i in range(6):
+              c=await cl(b0['x']+25,b0['y']-8,PS); await pg.mouse.move(*c,steps=4); c=await cl(b0['x']-20,b0['y']+12,PS); await pg.mouse.move(*c,steps=4)
+            await pg.mouse.up(); log.append('t-wipe'); await pg.wait_for_timeout(800); continue
+          if kk=='swirl':
+            await pg.wait_for_timeout(400); await shot('swirl'+st['ttl'][-3]); import math
+            c=await cl(a0['x'],a0['y'],PS); await pg.mouse.move(*c); await pg.mouse.down()
+            c=await cl(a0['x']+50,a0['y'],PS); await pg.mouse.move(*c,steps=3)
+            for i in range(1,4*24+1):
+              if i==30: await shot('swirling')
+              an=i/24*2*math.pi; c=await cl(a0['x']+50*math.cos(an),a0['y']+50*math.sin(an),PS); await pg.mouse.move(*c)
+            await pg.mouse.up(); log.append('swirl'); await pg.wait_for_timeout(700); continue
+          if kk=='pour':
+            ph=await pg.evaluate('()=>__la.phase'); c=await cl(a0['x'],a0['y'],PS); await pg.mouse.move(*c); await pg.mouse.down()
+            for i in range(80):
+              await pg.wait_for_timeout(100)
+              if i==8: await shot('pour_'+ph+st['ttl'][-3])
+              if await pg.evaluate('()=>__la.ok()'): break
+            await pg.mouse.up(); log.append('pour '+ph); await pg.wait_for_timeout(900); await shot('poured_'+ph+st['ttl'][-3]); continue
         continue
       if st['ttl']=='피쳐 정리' and st['pop'] and once('tidy'):
         await pg.wait_for_timeout(700); await drag(170,470,430,450,PS); await pg.wait_for_timeout(400); await drag(830,450,600,450,PS); log.append('tidy'); await pg.wait_for_timeout(1500); continue
