@@ -1310,7 +1310,7 @@ async function latteArt(k){
   let res='good';
   await holdLoop(pit,()=>{snd=SFX.pour();pouring=true},
     dt=>{if(!pouring)return;V=Math.min(VOVER,V+.14*A*dt);const p=clamp((V-VT)/(VFULL-VT),0,1);ang=TILT*(1-p);foam=Math.min(14,4+12*p);setPL(PL-.06*dt);
-      draw();putSpout(NEAR(),pourR());stream(8,NEARIN);
+      draw();putSpout(NEAR(),Math.max(-105,pourR()-42*prog()));stream(8,NEARIN);   /* 가운데로 갈수록 피쳐를 더 기울여 잔과 겹치지 않게 */
       const r=56*p;tart.setAttribute('r',r.toFixed(1));tart2.setAttribute('r',(r*.55).toFixed(1));
       if(V>=VOVER){spill(6);return 'stop'}},
     async()=>{snd&&snd.stop();stream(0);pouring=false;

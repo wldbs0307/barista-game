@@ -117,6 +117,7 @@ async def main():
             for i in range(80):
               await pg.wait_for_timeout(100)
               if i==8: await shot('pour_'+ph+st['ttl'][-3])
+              if i in (16,24) and ph=='close': await shot(f'pour_close_mid{i}_'+st['ttl'][-3])
               if await pg.evaluate('()=>__la.ok()'): break
             await pg.mouse.up(); log.append('pour '+ph); await pg.wait_for_timeout(900); await shot('poured_'+ph+st['ttl'][-3]); continue
         if '노즐 아래로' in h and once('dock'):
@@ -171,6 +172,7 @@ async def main():
             for i in range(80):
               await pg.wait_for_timeout(100)
               if i==8: await shot('pour_'+ph+st['ttl'][-3])
+              if i in (16,24) and ph=='close': await shot(f'pour_close_mid{i}_'+st['ttl'][-3])
               if await pg.evaluate('()=>__la.ok()'): break
             await pg.mouse.up(); log.append('pour '+ph); await pg.wait_for_timeout(900); await shot('poured_'+ph+st['ttl'][-3]); continue
         continue
