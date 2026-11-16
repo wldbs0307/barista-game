@@ -164,9 +164,9 @@ async function divideMilk(){
   openPop('우유 나누기',`<rect width="1000" height="600" fill="#eaf3ea"/><rect y="500" width="1000" height="100" fill="#f6f3ee"/><path d="M0 500H1000" class="o3 nf"/>
     <text x="760" y="150" text-anchor="middle" font-size="24" fill="#5a7a62">보조 피쳐</text><text x="300" y="150" text-anchor="middle" font-size="24" fill="#5a7a62">스팀 피쳐</text>`);
   const A=makePitcher('dA',300,520,null,true),B=makePitcher('dB',740,520);A.marks(false);B.marks(false);A.set(Steam.L,Steam.foam);B.set(0,0);window.__dv={A,B};
-  const meter=pmk('g',{class:'np'});const cnt=pmk('text',{x:500,y:110,'text-anchor':'middle','font-size':30,fill:'#4a2c22'});
+  const meter=pmk('g',{class:'np'});
   const st=pmk('path',{fill:'none',stroke:'#fffdf6','stroke-width':11,'stroke-linecap':'round',class:'np'});
-  let pours=0,resets=0,poured=0;const show=()=>{cnt.textContent='따른 횟수 '+pours+'번';};show();
+  let pours=0,resets=0,poured=0;const show=()=>{};
   /* 1·2) 모두 옮겨 섞기: 왼쪽 → 오른쪽 전부, 오른쪽 → 왼쪽 전부 */
   const pourAll=(F,G,pose,home,hint,spoutX)=>{Panel.hint(hint);Guide.hold({x:F.sp.x,y:F.sp.y-120});T.set('hold',{x:F.sp.x,y:F.sp.y-120},null,{svg:'prepSvg',ms:4200});let s2=null;
     return holdLoop(F.g,()=>{SFX.pick();F.sp.to(pose,260,E.out);s2=SFX.pour()},
@@ -188,7 +188,7 @@ async function divideMilk(){
       const diff=A.L-B.L;
       if(Math.abs(diff)<=.05){SFX.ok();floatText(520,240,'반반 딱!',$('#fxP'));return 'ok'}
       if(diff<-.05){resets++;SFX.no();Panel.hint('보조 피쳐가 더 많아졌어요. <em>다시 나눠요</em>');await anim(700,t=>{const tot=Steam.L;A.set(lerp(A.L,tot,t),A.foam);B.set(lerp(B.L,0,t),B.foam)});pours=0;show();return false}
-      Panel.hint('조금 더 따라요 <em>('+pours+'번)</em> · 두 피쳐가 같아지면 끝');return false});
+      Panel.hint('조금 더 따라요<small>두 피쳐가 같아지면 끝</small>');return false});
   R.pours=pours;R.divReset=resets;Steam.A=A.L;Steam.B=B.L;await sleep(800);closePop()}
 
 /* ---------- 7) 붓기: 위에서 보며 (잔마다) ---------- */
@@ -357,7 +357,7 @@ function showCapResult(){
     row('붓 청소',R.brushLate?'추출 뒤에 했어요':'추출 중에 했어요',R.brushLate?'yel':'g2')+
     row('공기 주입',`${R.air}번 내렸어요`,R.air===3?'g2':'yel')+
     row('혼합',R.mixLate?'늦게 껐어요':R.mixEarly?'일찍 껐어요':'90%에서 껐어요',R.mixLate||R.mixEarly?'yel':'g2')+
-    row('우유 나누기',`${R.pours}번`+(R.divReset?' (다시)':''),R.pours>=3&&R.pours<=4&&!R.divReset?'g2':'yel')+
+    row('우유 나누기','반반 맞췄어요'+(R.divReset?' (다시 했어요)':''),R.divReset?'yel':'g2')+
     row('붓기',good===2?'원 2개 모두 예뻐요':`예쁜 원 ${good}개`,good===2?'g2':'yel')+
     row('노즐 청소','했어요','g2')+row('서빙','잘했어요','g2');
   $('#result').classList.remove('off');SFX.great();
