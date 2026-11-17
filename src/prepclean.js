@@ -12,7 +12,7 @@ const Clock={iv:0,t0:0,limit:0,
 /* ---------- 그림: 행주 ---------- */
 const CLOTH={W1:{wet:1,n:1,plate:1},W2:{wet:1,n:2},W3:{wet:1,n:3},D1:{wet:0,n:1,plate:1},D2:{wet:0,n:2},D3:{wet:0,n:3}};
 /* 놓을 자리 (바닥 가운데) */
-const SPOT={W1:{x:478,y:656},W2:{x:990,y:546},W3:{x:996,y:660},D1:{x:1452,y:652},D2:{x:1012,y:182},D3:{x:745,y:664}};
+const SPOT={W1:{x:478,y:656},W2:{x:990,y:546},W3:{x:996,y:660},D1:{x:1400,y:654},D2:{x:1012,y:182},D3:{x:745,y:664}};
 /* 트레이 위 자리: 뒷줄 젖은 행주, 앞줄 마른 행주 */
 const TRAYSPOT={W1:{x:112,y:624},W2:{x:240,y:624},W3:{x:366,y:624},D1:{x:112,y:666},D2:{x:240,y:666},D3:{x:366,y:666}};
 const CL={};
@@ -331,7 +331,7 @@ async function prep(){
   step(2);await machineCheck();const drops=grillDrops();
   step(3);await preheat();
   step(4);await grinderCheck();T.set('brush');await brushDirt(()=>true,'<em>붓</em>으로 그라인더와 <em>넉박스 주변</em>을 쓸어요<small>도저 안과 주변 가루를 확인해요</small>');T.clear();
-  step(5);await rub(CL.D1,{x:1556,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',carry:back('D1')});
+  step(5);await rub(CL.D1,{x:P.tampRest.x,y:606,rx:70,ry:52,need:360,hint:'<em>마른행주1</em>로 <em>탬퍼</em>를 닦아요',carry:back('D1')});
   await rub(CL.W3,{x:1160,y:646,rx:110,ry:30,dots:$('#dirt2'),hint:'<em>젖은행주3</em>으로 <em>조리대 바닥</em>의 가루를 닦아요',carry:back('W3')});
   step(6);await cupsBack();
   step(7);await rub(CL.W2,{x:750,y:556,rx:300,ry:34,dots:drops,hint:'<em>젖은행주2</em>로 <em>그릴</em>의 물기를 닦아요',carry:back('W2')});
@@ -403,8 +403,8 @@ async function cleanup(){
   step(6);const D1=CL.D1,tEl=$('#tamp');tEl.classList.add('hit');
   await dragTo(TAMP,tEl,{x:TAMP.x,y:TAMP.y-40},{x:SPOT.D1.x,y:SPOT.D1.y-50},90,'<em>탬퍼</em>를 <em>마른행주1 접시</em> 위로 옮겨요',{zr:60,zry:26,anchor:()=>({x:TAMP.x,y:TAMP.y-10})});
   await TAMP.to({x:SPOT.D1.x-6,y:SPOT.D1.y-34,r:0,sx:1,sy:1},200,E.out);SFX.clink();
-  D1.detach();toTop(D1.g);await D1.sp.hop(SPOT.D1.x+96,SPOT.D1.y-6,300,30,0);   /* 행주를 탬퍼 밑에서 빼 옆에 둔다 */
-  await rub(D1,{targets:[{x:1540,y:646,rx:80,ry:26,need:300},{x:TAMP.x,y:TAMP.y-30,rx:60,ry:50,need:300}],
+  D1.detach();toTop(D1.g);await D1.sp.hop(P.tampRest.x-20,SPOT.D1.y-6,300,30,0);   /* 행주를 탬퍼 밑에서 빼 옆에 둔다 */
+  await rub(D1,{targets:[{x:P.tampRest.x,y:646,rx:70,ry:26,need:300},{x:TAMP.x,y:TAMP.y-30,rx:60,ry:50,need:300}],
     hint:k=>k?'이제 <em>마른행주1</em>로 <em>탬퍼</em>를 닦아요':'<em>마른행주1</em>로 <em>탬퍼 접시</em>를 닦아요<small>다 닦으면 손을 떼지 말고 탬퍼로 옮겨요</small>',done:'반짝!'});
   D1.g.setAttribute('class','np');
   await dragTo(TAMP,tEl,{x:TAMP.x,y:TAMP.y-40},{x:P.tampRest.x,y:P.tampRest.y-40},90,'닦은 <em>탬퍼</em>를 <em>탬퍼 접시</em> 위에 올려요',{zr:60,zry:26,anchor:()=>({x:TAMP.x,y:TAMP.y-10})});

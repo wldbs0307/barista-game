@@ -74,7 +74,7 @@ $('#brush').innerHTML=`
   <path d="M30 -8L62 -12M30 0L62 0M30 6L62 10" stroke="#b8925a" stroke-width="3"/>`;
 $('#pf2').innerHTML=$('#pf').innerHTML.replace(/ id="[^"]+"/g,'');
 const PF=new Sp($('#pf')),TAMP=new Sp($('#tamp')),RIMF=new Sp($('#rimFront')),BR=new Sp($('#brush'));
-const P={grind:{x:1330,y:494},gBtn:{x:1330,y:398},tamp:{x:1450,y:594},tampReady:{x:1450,y:536},tampRest:{x:1556,y:640},
+const P={grind:{x:1330,y:494},gBtn:{x:1330,y:398},tamp:{x:1450,y:594},tampReady:{x:1450,y:536},tampRest:{x:1538,y:640},
   tray:[{x:160,y:624},{x:300,y:624}],brush:{x:1206,y:652}};
 function setGrounds(g,tamped){const m=$('#pfMound'),f=$('#pfFlat');if(tamped){m.style.display='none';f.style.display='';return}
   f.style.display='none';if(g<=.02){m.style.display='none';return}m.style.display='';const h=(15*g*1.4).toFixed(1);m.setAttribute('d',`M-38 0C-30 ${-h} 30 ${-h} 38 0A38 8 0 0 1 -38 0Z`)}
