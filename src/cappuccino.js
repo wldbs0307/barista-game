@@ -153,8 +153,8 @@ async function steamMilk(){
   R.mixL=PT.L;R.mixLate=PT.L>.95;R.mixEarly=PT.L<.86;SFX.ok();
   /* 5) 정리: 피쳐 빼고, 노즐 닦고, '칙' */
   await PT.sp.to({x:880,y:560},420,E.io);resid.style.display='';
-  await coverTip('<em>젖은행주1</em>로 <em>노즐 끝</em>을 가려요');
-  Panel.hint('<em>젖은행주1</em>로 노즐을 깨끗이 닦아요<small>노즐 끝을 왔다 갔다 문질러요</small>');await wipeTip(false);
+  /* 행주를 노즐로 가져가 바로 문질러 닦는다 (멈추지 않고) */
+  Panel.hint('<em>젖은행주1</em>을 노즐로 가져가 <em>바로 문질러</em> 닦아요<small>노즐 끝을 왔다 갔다 문질러요</small>');await wipeTip(false);
   Panel.hint('행주로 가린 채 <em>스팀 밸브</em>를 눌러 우유를 <em>\'칙\'</em> 빼요');await purge();await CLs.to({...CL_HOME,r:0},400,E.io);
   R.steamClean=true;Steam.L=PT.L;Steam.foam=PT.foam;await toast('스티밍 끝!');closePop()}
 const Steam={L:.9,foam:.3};
@@ -337,7 +337,7 @@ async function cappuccino(){
   R.lines.push(await sayLine('두 번째로 추출해 드릴 커피는 우유 거품이 많은 카푸치노 두 잔을 준비해 드리겠습니다. 잠시만 기다려주십시오.',lineTag()));nod(0);
   step(2);Panel.hide();await trayPrep();
   step(3);scene('bar');Guide.use('#hand');await sleep(900);await milkPour();
-  step(4);await grindTamp();await brew();
+  step(4);await grindTamp();await brew();await cupsToCounter();
   step(5);await steamMilk();
   step(6);await divideMilk();await latteArt(0);await latteArt(1);await tidyPitchers();
   step(7);await toTray();Panel.hide();await serveJudges();
@@ -363,3 +363,16 @@ function showCapResult(){
   $('#result').classList.remove('off');SFX.great();
 }
 window.__game.cap=()=>({Steam})
+
+/* 에스프레소를 다 받은 카푸치노 잔 2개를 왼쪽 작업대로 옮긴다 */
+async function cupsToCounter(){
+  const S=[{x:566,y:652},{x:676,y:652}],TS=window.__pc;
+  const gh=S.map(s=>mk('ellipse',{class:'ghost',cx:s.x,cy:s.y-4,rx:50,ry:12},$('#Lprep')));
+  const zones=S.map(s=>({x:s.x,y:s.y-24,r:62,used:false}));let n=0;
+  const hint=()=>Panel.hint(`에스프레소를 받은 <em>카푸치노 잔</em>을 <em>왼쪽 작업대</em>로 옮겨요 <em>(${n}/2)</em>`);hint();
+  const point=()=>{const c=Cup.at.find(c=>c&&!c.moved),i=zones.findIndex(z=>!z.used);if(!c||i<0)return Guide.stop();
+    Guide.drag({x:c.sp.x,y:c.sp.y-30},{x:S[i].x,y:S[i].y-30});TS.set('drag',{x:c.sp.x,y:c.sp.y-24},{x:S[i].x,y:S[i].y-24})};point();
+  await Promise.all(Cup.at.map(async c=>{c.g.setAttribute('class','hit');
+    const i=await drag(c.sp,c.g,{zones,anchor:()=>({x:c.sp.x,y:c.sp.y-20})});zones[i].used=true;c.moved=true;gh[i].remove();
+    await c.sp.to({...S[i],r:0,sx:1,sy:1},160,E.out);SFX.clink();n++;if(n<2)hint();point()}));
+  TS.clear();Guide.stop();SFX.ok()}

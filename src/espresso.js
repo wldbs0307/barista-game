@@ -14,7 +14,7 @@ const MODES={
   esp:{key:'esp',name:'에스프레소',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'demi',cupName:'데미타세 잔',
     slots:[{x:552,y:548},{x:628,y:548}],other:{x:910,y:366}},
   cap:{key:'cap',name:'카푸치노',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'capp',cupName:'카푸치노 잔',
-    slots:[{x:856,y:548},{x:964,y:548}],other:{x:590,y:366}}};
+    slots:[{x:868,y:548},{x:952,y:548}],other:{x:590,y:366}}};
 let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */
