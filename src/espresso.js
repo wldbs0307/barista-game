@@ -12,9 +12,9 @@ const COL={g2:'var(--g2)',g1:'var(--g1)',yel:'var(--yel)',red:'var(--red)'};
 /* 메뉴마다 쓰는 그룹·버튼·잔 */
 const MODES={
   esp:{key:'esp',name:'에스프레소',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'demi',cupName:'데미타세 잔',
-    slots:[{x:552,y:548},{x:628,y:548}],other:{x:910,y:366}},
+    slots:[{x:556,y:548},{x:624,y:548}],other:{x:910,y:366}},
   cap:{key:'cap',name:'카푸치노',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'capp',cupName:'카푸치노 잔',
-    slots:[{x:856,y:548},{x:964,y:548}],other:{x:590,y:366}}};
+    slots:[{x:858,y:548},{x:962,y:548}],other:{x:590,y:366}}};
 let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */
@@ -54,7 +54,7 @@ $('#pf').innerHTML=`
   <path d="M-46 0C-46 30 -34 46 -22 46L22 46C34 46 46 30 46 0Z" fill="url(#gChromeH)" class="o"/>
   <path d="M18 44C30 38 40 24 42 6L31 6C29 22 23 36 12 44Z" fill="#8c9ba6" opacity=".7"/>
   <path d="M-12 44H12L10 62H-10Z" fill="#b7c3cb" class="o3"/>
-  <path d="M-8 60L-17 88M8 60L17 88" stroke="#4a2c22" stroke-width="11" stroke-linecap="round"/><path d="M-8 60L-17 88M8 60L17 88" stroke="#c9d3d9" stroke-width="5" stroke-linecap="round"/>
+  <path d="M-9 59L-32 86M9 59L32 86" stroke="#4a2c22" stroke-width="11" stroke-linecap="round"/><path d="M-9 59L-32 86M9 59L32 86" stroke="#c9d3d9" stroke-width="5" stroke-linecap="round"/>
   <ellipse cx="0" cy="0" rx="50" ry="13" fill="#dfe6ea" class="o"/>
   <ellipse cx="0" cy="0" rx="40" ry="9" fill="#5b4840" class="o3"/>
   <ellipse id="pfFlat" cx="0" cy="1.5" rx="36.5" ry="7" fill="#3f2314" style="display:none"/>
@@ -100,8 +100,9 @@ function setBrewBtn(on){const s=M.bs;$('#bPlay'+s).style.display=on?'none':'';$(
 const needle=p=>$('#needle').setAttribute('transform',`rotate(${-120+clamp(p,0,1)*240} 750 430)`);
 function puddle(k){const e=$('#puddle');e.style.display=k>.01?'':'none';e.setAttribute('rx',30+120*k);e.setAttribute('ry',3+5*k);
   const r=clamp((k-.35)/.65,0,1);$('#runoff').style.display=r>0?'':'none';$('#floorPud').setAttribute('rx',20+110*r);$('#floorPud').setAttribute('ry',2+7*r)}
+const SPX=32;   /* 포터필터 추출구 끝: 가운데에서 좌우로 32 */
 function stream(on,t,now){[['#st1',0],['#st2',1]].forEach(([id,i])=>{const e=$(id);if(!on){e.setAttribute('d','');return}
-  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=sx,ty=c?(c.kind==='demi'?M.slots[i].y+c.mlY(c.ml)*CS:Math.min(M.slots[i].y+c.mlY(c.ml),M.slots[i].y-KIND.capp.GH+16)):548,   /* 카푸치노 잔은 넓어서 줄기를 잔 입구 조금 안쪽까지만 */w=Math.sin(now/110+i)*1.2;
+  const sx=PF.x+(i?SPX:-SPX),sy=PF.y+88,c=Cup.at[i],tx=sx,ty=c?M.slots[i].y+c.mlY(c.ml)*(c.kind==='demi'?CS:1):548,w=Math.sin(now/110+i)*1.2;
   e.setAttribute('d',`M${sx} ${sy}C${sx+w} ${lerp(sy,ty,.4)} ${tx-w} ${lerp(sy,ty,.7)} ${tx} ${ty}`);
   e.setAttribute('stroke',mix('#2a140c','#b9773f',clamp((t-FLOW)/26,0,1)));e.setAttribute('stroke-width',t<FLOW+2?3:4.5);
   if(t<FLOW+2){e.setAttribute('stroke-dasharray','7 12');e.setAttribute('stroke-dashoffset',(-(now/9)%19).toFixed(1))}else e.removeAttribute('stroke-dasharray')})}
@@ -302,7 +303,7 @@ async function brew(){
     const t0=performance.now();
     const loop=new Promise(res=>{const f=now=>{if(stopped)return res();const dt=(now-last)/1000*SCALE;last=now;const t=(now-t0)/1000*SCALE;R.t=t;gaugeSet(t);
       needle(clamp(t/2,0,1)*.72+Math.sin(now/130)*.015);
-      if(t>=FLOW){stream(true,t,now);for(let i=0;i<2;i++){const c=Cup.at[i];if(c){c.set(c.ml+RATE*dt);if(c.kind==='demi'&&c.ml>CAP)puddle(clamp((c.ml-CAP)/12,0,1))}else if(Math.random()<.25)drop(PF.x+(i?17:-17)+rnd(-3,3),546,552,'#5a3220',3)}}
+      if(t>=FLOW){stream(true,t,now);for(let i=0;i<2;i++){const c=Cup.at[i];if(c){c.set(c.ml+RATE*dt);if(c.kind==='demi'&&c.ml>CAP)puddle(clamp((c.ml-CAP)/12,0,1))}else if(Math.random()<.25)drop(PF.x+(i?SPX:-SPX)+rnd(-3,3),546,552,'#5a3220',3)}}
       if(!cue&&t>=25){cue=true;SFX.tick();if(R.tries===0)Panel.hint('<em>진한 초록</em>이 됐어요! 멈출 때를 잘 봐요')}
       if(!warn&&t>40){warn=true;SFX.no();Guide.delay=0;Guide.tap(M.btn);Panel.hint('40초가 넘었어요! <em>버튼을 눌러 멈춰요</em>');Guide.delay=350}
       requestAnimationFrame(f)};requestAnimationFrame(f)});

@@ -87,7 +87,7 @@ async def play(pg,errs,b=None,start=True,until=None):
         target={'good':27,'over':46,'early':12,'late':27}[mode]; t0=asyncio.get_event_loop().time()
         await pg.wait_for_timeout(500)
         # 잔 2개 내리기
-        for i,(wx,sx) in enumerate(((556,552),(630,628))):
+        for i,(wx,sx) in enumerate(((556,556),(630,624))):
           if mode=='late' and i==1:
             while await pg.evaluate("()=>parseInt(document.querySelector('#gsec').textContent)")<18: await pg.wait_for_timeout(100)
             await shot('late_one_cup')

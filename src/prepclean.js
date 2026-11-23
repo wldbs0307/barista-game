@@ -364,7 +364,7 @@ async function cleanGroup(mode,first){
   await Promise.all([PF.to({x:M.grp.x,y:M.grp.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
   Panel.hint(`${M.side} <em>추출 버튼</em>을 눌러 <em>물로 포터필터를 헹궈요</em>`);Guide.tap(M.btn);T.set('tap',M.btn);
   await tap($('#bBtn'+M.bs));Guide.stop();T.clear();setBrewBtn(true);
-  await Promise.all([water([[PF.x-17,PF.y+92,PF.x-17,548],[PF.x+17,PF.y+92,PF.x+17,548]],1500),anim(1500,t=>PF.set({x:M.grp.x+Math.sin(t*14)*5}))]);PF.set({x:M.grp.x});
+  await Promise.all([water([[PF.x-SPX,PF.y+88,PF.x-SPX,548],[PF.x+SPX,PF.y+88,PF.x+SPX,548]],1500),anim(1500,t=>PF.set({x:M.grp.x+Math.sin(t*14)*5}))]);PF.set({x:M.grp.x});
   setBrewBtn(false);floatText(M.grp.x,330,'물로 헹궜어요');
   await twistPF('in');SFX.ok()}
 async function cleanup(){

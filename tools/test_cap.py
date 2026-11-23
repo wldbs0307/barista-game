@@ -87,7 +87,7 @@ async def play(pg,errs,b=None,start=True,until=None):
         await pg.wait_for_timeout(400); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x-120,y+28,x+180,y+28); log.append('twist in'); await pg.wait_for_timeout(800); continue
       if '추출 버튼</em>을 눌러요' in H and once('brew'):
         await pg.wait_for_timeout(400); await click(980,252); await pg.wait_for_timeout(500)
-        for wx,sx in ((722,856),(838,964)):
+        for wx,sx in ((722,858),(838,962)):
           await drag(wx,140,sx,500); await pg.wait_for_timeout(300)
         await shot('cups_down')
         a=await cl(1206,652); await pg.mouse.move(*a); await pg.mouse.down()
