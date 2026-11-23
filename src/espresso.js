@@ -12,9 +12,9 @@ const COL={g2:'var(--g2)',g1:'var(--g1)',yel:'var(--yel)',red:'var(--red)'};
 /* 메뉴마다 쓰는 그룹·버튼·잔 */
 const MODES={
   esp:{key:'esp',name:'에스프레소',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'demi',cupName:'데미타세 잔',
-    slots:[{x:544,y:548},{x:636,y:548}],other:{x:910,y:366}},
+    slots:[{x:552,y:548},{x:628,y:548}],other:{x:910,y:366}},
   cap:{key:'cap',name:'카푸치노',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'capp',cupName:'카푸치노 잔',
-    slots:[{x:846,y:548},{x:974,y:548}],other:{x:590,y:366}}};
+    slots:[{x:856,y:548},{x:964,y:548}],other:{x:590,y:366}}};
 let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */
@@ -101,7 +101,7 @@ const needle=p=>$('#needle').setAttribute('transform',`rotate(${-120+clamp(p,0,1
 function puddle(k){const e=$('#puddle');e.style.display=k>.01?'':'none';e.setAttribute('rx',30+120*k);e.setAttribute('ry',3+5*k);
   const r=clamp((k-.35)/.65,0,1);$('#runoff').style.display=r>0?'':'none';$('#floorPud').setAttribute('rx',20+110*r);$('#floorPud').setAttribute('ry',2+7*r)}
 function stream(on,t,now){[['#st1',0],['#st2',1]].forEach(([id,i])=>{const e=$(id);if(!on){e.setAttribute('d','');return}
-  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=M.slots[i].x,ty=c?M.slots[i].y+c.mlY(c.ml)*(c.kind==='demi'?CS:1):M.slots[i].y-4,w=Math.sin(now/110+i)*1.4;
+  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=sx,ty=c?M.slots[i].y+c.mlY(c.ml)*(c.kind==='demi'?CS:1):548,w=Math.sin(now/110+i)*1.2;
   e.setAttribute('d',`M${sx} ${sy}C${sx+w} ${lerp(sy,ty,.4)} ${tx-w} ${lerp(sy,ty,.7)} ${tx} ${ty}`);
   e.setAttribute('stroke',mix('#2a140c','#b9773f',clamp((t-FLOW)/26,0,1)));e.setAttribute('stroke-width',t<FLOW+2?3:4.5);
   if(t<FLOW+2){e.setAttribute('stroke-dasharray','7 12');e.setAttribute('stroke-dashoffset',(-(now/9)%19).toFixed(1))}else e.removeAttribute('stroke-dasharray')})}
@@ -218,8 +218,9 @@ async function trayPrep(){
   R.prep=mistakes}
 
 /* ---------- 5) 추출 ---------- */
-async function grindTamp(){
+async function grindTamp(redo){
   await twistPF('out');
+  if(redo)await knockOut();   /* 실격 뒤: 포터필터를 넉박스에 비우고 다시 담는다 */
   Panel.hint('<em>포터필터</em>를 그라인더에 걸어요');zone(P.grind.x,P.grind.y+30,74,64);Guide.drag({x:PF.x,y:PF.y+20},{x:P.grind.x,y:P.grind.y+20});
   await drag(PF,$('#pf'),{zone:{x:P.grind.x,y:P.grind.y,r:110}});
   await PF.to({...P.grind,r:0,sx:1,sy:1},240,E.back);SFX.snap();anim(300,t=>setHandle(lerp(-.7,1,t)));
@@ -285,7 +286,7 @@ async function brew(){
     const t0=performance.now();
     const loop=new Promise(res=>{const f=now=>{if(stopped)return res();const dt=(now-last)/1000*SCALE;last=now;const t=(now-t0)/1000*SCALE;R.t=t;gaugeSet(t);
       needle(clamp(t/2,0,1)*.72+Math.sin(now/130)*.015);
-      if(t>=FLOW){stream(true,t,now);for(let i=0;i<2;i++){const c=Cup.at[i];if(c){c.set(c.ml+RATE*dt);if(c.kind==='demi'&&c.ml>CAP)puddle(clamp((c.ml-CAP)/12,0,1))}else if(Math.random()<.2)drop(M.slots[i].x,M.grp.y+92,M.slots[i].y-6,'#5a3220',3)}}
+      if(t>=FLOW){stream(true,t,now);for(let i=0;i<2;i++){const c=Cup.at[i];if(c){c.set(c.ml+RATE*dt);if(c.kind==='demi'&&c.ml>CAP)puddle(clamp((c.ml-CAP)/12,0,1))}else if(Math.random()<.25)drop(PF.x+(i?17:-17)+rnd(-3,3),546,552,'#5a3220',3)}}
       if(!cue&&t>=25){cue=true;SFX.tick();if(R.tries===0)Panel.hint('<em>진한 초록</em>이 됐어요! 멈출 때를 잘 봐요')}
       if(!warn&&t>40){warn=true;SFX.no();Guide.delay=0;Guide.tap(M.btn);Panel.hint('40초가 넘었어요! <em>버튼을 눌러 멈춰요</em>');Guide.delay=350}
       requestAnimationFrame(f)};requestAnimationFrame(f)});
@@ -293,19 +294,23 @@ async function brew(){
     (async()=>{await cupsDown(alive);if(!run)return;zone();zone2();await brushDirt(alive);if(!run)return;
       if(!stopped&&!cue&&!warn){Panel.hint('<em>진한 초록(25~30초)</em>일 때 추출 버튼을 다시 눌러 멈춰요');Guide.stop()}})();
     await loop;run=false;Guide.stop();zone();zone2();pump.stop();SFX.pick();setBrewBtn(false);stream(false);anim(500,p=>needle(.72*(1-p)));
-    const s=Math.floor(R.t),j=judgeOf(s),missing=Cup.at.filter(Boolean).length<2;
+    const s=Math.floor(R.t),j=judgeOf(s),missing=Cup.at.filter(Boolean).length<2,
+      mls=Cup.at.filter(Boolean).map(c=>c.ml),uneven=!missing&&Math.min(...mls)<Math.max(...mls)*2/3;   /* 한 잔만 반쯤 찬 경우 */
     if(R.first==null)R.first=s;R.tries++;
-    if(j.k!=='fail'&&!missing){R.sec=s;R.judge=j;SFX.great();Cup.at.forEach(c=>c.mlt.style.display='');
+    if(j.k!=='fail'&&!missing&&!uneven){R.sec=s;R.judge=j;SFX.great();Cup.at.forEach(c=>c.mlt.style.display='');
       await toast(`<span class="big" style="background:${j.c}">${j.t}</span><span>${s}초 · 약 ${Math.round(Cup.at[0].ml)}ml</span>`,null,1700);
       Cup.at.forEach(c=>c.mlt.style.display='none');$('#gauge').classList.add('off');
       if($('#dirt').querySelector('.dt')){R.brushLate=true;await brushDirt(()=>true)}
       return}
-    SFX.no();await toast(`<span class="big" style="background:var(--red)">${missing?'다시 해요':'실격'}</span><span>${missing?'잔을 2개 다 받쳐야 해요':j.why}</span>`,null,1900);
+    const why=missing?'잔을 2개 다 받치지 않았어요':uneven?'한 잔이 다른 잔보다 너무 적어요<br><small>잔을 늦게 받치면 커피가 반만 차요</small>':j.why;
+    (R.fails=R.fails||[]).push(missing?'잔 2개 안 받침':uneven?'두 잔 양이 달라요':j.why);
+    SFX.no();Panel.hide();await failCard(why,s);
     $('#gauge').classList.add('off');
-    /* 다시: 잔을 비우고 컵 워머로 */
-    Panel.hint('잔을 비우고 <em>다시</em> 추출해요');puddle(0);
+    /* 다시: 잔을 비우고 컵 워머로, 포터필터는 비우고 원두를 새로 담아 탬핑 */
+    puddle(0);
     for(let i=0;i<2;i++){const c=Cup.all[i],w=KIND[c.kind].warm[i];c.set(0);Cup.at[i]=null;c.sp.hop(w.x,w.y,520,80,.06)}
-    await sleep(700);floatText(PF.x,PF.y-40,'커피를 새로 담았어요');await sleep(600);
+    await sleep(700);
+    await grindTamp(true);
   }
 }
 const cupTopDemi=`<circle r="44" cx="4" cy="6" fill="#4a2c22" opacity=".15"/><path d="M-36 -10H-66Q-76 -10 -76 0Q-76 10 -66 10H-36Z" fill="#fff" class="o4"/>
@@ -386,7 +391,7 @@ function showResult(){if(M.key==='cap')return showCapResult();$('#rlist').classL
   $('#rlist').innerHTML=
     row('대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel')+
     row('서빙 준비',R.prep?`스푼 방향 ${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
-    row('추출 시간',`${R.sec}초 · ${R.judge.t}`+(R.tries>1?` (실격 뒤 ${R.tries}번째)`:''),R.tries>1?'yel':R.judge.k==='best'?'g2':R.judge.k==='good'?'g1':'yel')+
+    row('추출 시간',`${R.sec}초 · ${R.judge.t}`+(R.tries>1?` (실격 ${R.tries-1}번: ${[...new Set(R.fails||[])].join(', ')})`:''),R.tries>1?'yel':R.judge.k==='best'?'g2':R.judge.k==='good'?'g1':'yel')+
     row('잔 내리기',late?'커피가 나온 뒤에 받쳤어요':'제때 받쳤어요',late?'yel':'g2')+
     row('붓 청소',R.brushLate?'추출이 끝난 뒤에 했어요':'추출하는 동안 했어요',R.brushLate?'yel':'g2')+
     row('서빙','잘했어요','g2');

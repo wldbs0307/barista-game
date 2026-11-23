@@ -68,6 +68,13 @@ svg text{font-family:var(--font)}
 #confirm.off{opacity:0;pointer-events:none}
 #confirm .card{width:56%;background:var(--paper);border:calc(var(--u)*.5) solid var(--ink);border-radius:calc(var(--u)*3);padding:calc(var(--u)*3) calc(var(--u)*3.2);box-shadow:0 calc(var(--u)*.8) 0 rgba(46,33,29,.5);display:flex;flex-direction:column;gap:calc(var(--u)*2.2)}
 #confirm h2{margin:0;font-weight:400;font-size:calc(var(--u)*3.8);text-align:center;line-height:1.35}
+#failbox{position:absolute;inset:0;z-index:14;background:rgba(46,33,29,.55);display:flex;align-items:center;justify-content:center;transition:opacity .2s}
+#failbox.off{opacity:0;pointer-events:none}
+#failbox .card{width:56%;background:var(--paper);border:calc(var(--u)*.5) solid var(--ink);border-radius:calc(var(--u)*3);padding:calc(var(--u)*2.6) calc(var(--u)*3.2);box-shadow:0 calc(var(--u)*.8) 0 rgba(46,33,29,.5);display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.4)}
+#failbox .fbig{background:var(--red);color:#fff;font-size:calc(var(--u)*6);padding:0 calc(var(--u)*4);border-radius:calc(var(--u)*3);border:calc(var(--u)*.45) solid var(--ink)}
+#failbox h2{margin:0;font-weight:400;font-size:calc(var(--u)*3.4);text-align:center;line-height:1.35}
+#failbox h2 small{display:block;font-size:.7em;color:#8a5a44}
+#failbox p{margin:0;font-size:calc(var(--u)*2.5);text-align:center;color:#6b4a3a;line-height:1.4}
 #confirm h2 b{font-weight:400;color:var(--coral-d)}
 #confirm .btns{display:flex;gap:calc(var(--u)*1.6);justify-content:center}
 #snd,#home,#redo{flex:none;width:calc(var(--u)*5.2);height:calc(var(--u)*5.2);
@@ -387,6 +394,7 @@ button:focus-visible,input:focus-visible{outline:calc(var(--u)*.5) solid #2b7fd9
   <g id="handP" class="np" style="display:none"><g transform="rotate(-20) translate(0 4)"><path d="M0 0C9 0 13 7 13 14V44C30 40 46 50 46 66V84C46 104 30 116 8 116C-12 116 -26 106 -30 88L-37 62C-39 52 -28 46 -20 55L-13 64V14C-13 7 -9 0 0 0Z" fill="#fffaf2" class="o4"/></g></g>
 </svg></div></div>
 
+<div id="failbox" class="off"><div class="card"><div class="fbig">실격</div><h2 id="fwhy"></h2><p id="fsub">포터필터를 비우고 원두를 새로 담아<br>다시 추출해요</p><div class="btns"><button class="cbtn" id="fgo" type="button">다시 추출하기</button></div></div></div>
 <div id="confirm" class="off"><div class="card"><h2 id="cq">처음부터 다시 할까요?</h2><div class="btns"><button class="cbtn" id="cyes" type="button">처음부터 다시</button><button class="cbtn sub" id="cno" type="button">계속 하기</button></div></div></div>
 <div id="result" class="off"><div class="card"><h2 id="rtitle">에스프레소 결과</h2><div id="rlist"></div>
   <div id="rbtns"><button class="cbtn" id="again" type="button">다시 하기</button><button class="cbtn sub" id="tohome" type="button">처음 화면</button></div></div></div>

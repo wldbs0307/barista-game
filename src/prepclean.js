@@ -358,17 +358,7 @@ async function prep(){
 async function cleanGroup(mode,first){
   setPFs(mode,true,first);
   await twistPF('out');
-  Panel.hint('<em>포터필터</em>를 <em>넉박스</em>로 가져가요');zone(1150,540,62,30);Guide.drag({x:PF.x,y:PF.y+20},{x:1150,y:500});T.set('drag',{x:PF.x,y:PF.y+20},{x:1150,y:500});
-  await drag(PF,$('#pf'),{zone:{x:1150,y:500,r:110}});T.clear();
-  await Promise.all([PF.to({x:1150,y:470,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(-.7,.45,t)))]);
-  Panel.hint('포터필터를 <em>톡</em> 눌러 <em>아래로 뒤집어요</em><small>커피 찌꺼기가 넉박스로 빠지게</small>');Guide.tap({x:1150,y:500});T.set('tap',{x:1150,y:500});await tap($('#pf'));Guide.stop();T.clear();
-  SFX.pick();await PF.to({y:500,r:175},420,E.io);
-  Panel.hint('뒤집은 채로 <em>톡톡</em> 눌러 커피 찌꺼기를 털어요 <em>(0/2)</em>');
-  for(let i=0;i<2;i++){Guide.tap({x:1150,y:470});T.set('tap',{x:1150,y:470});await tap($('#pf'));Guide.stop();T.clear();
-    SFX.thud();shake();await PF.to({y:516},70,E.out);await PF.to({y:500},160,E.out);if(i===0)Panel.hint('한 번 더 <em>톡</em>! <em>(1/2)</em>')}
-  setGrounds(0,false);const pk=mk('ellipse',{cx:1150,cy:504,rx:36,ry:8,fill:'#3f2314',stroke:'#4a2c22','stroke-width':3});
-  await anim(260,t=>pk.setAttribute('cy',lerp(504,556,t)),t=>t*t);pk.setAttribute('rx',30);floatText(1150,430,'쿵!');
-  await PF.to({y:470,r:0},420,E.io);
+  await knockOut();
   Panel.hint('<em>포터필터</em>를 '+M.side+' 그룹 아래로 가져가요');zone(M.grp.x,M.grp.y+40,80,64);Guide.drag({x:PF.x,y:PF.y+20},{x:M.grp.x,y:M.grp.y+40});T.set('drag',{x:PF.x,y:PF.y+20},{x:M.grp.x,y:M.grp.y+40});
   await drag(PF,$('#pf'),{zone:{x:M.grp.x,y:M.grp.y+20,r:110}});T.clear();
   await Promise.all([PF.to({x:M.grp.x,y:M.grp.y+30,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(.45,-.7,t)))]);$('#collar').style.display='';
@@ -470,3 +460,21 @@ $('#goExam').onclick=startWith(()=>RUN.exam());
 addEventListener('pointerdown',()=>{try{SFX.unlock()}catch(e){}},{once:true});
 (()=>{let k=null;try{k=sessionStorage.getItem('kb_redo');sessionStorage.removeItem('kb_redo')}catch(e){}
   if(k&&RUN[k]){$('#title').classList.add('off');RUN[k]()}})();
+
+/* 포터필터를 넉박스로 가져가 뒤집어 털기 (정리, 실격 뒤 다시 담기에서 같이 씀) */
+async function knockOut(){
+  Panel.hint('<em>포터필터</em>를 <em>넉박스</em>로 가져가요');zone(1150,540,62,30);Guide.drag({x:PF.x,y:PF.y+20},{x:1150,y:500});T.set('drag',{x:PF.x,y:PF.y+20},{x:1150,y:500});
+  await drag(PF,$('#pf'),{zone:{x:1150,y:500,r:110}});T.clear();
+  await Promise.all([PF.to({x:1150,y:470,r:0,sx:1,sy:1},220,E.out),anim(220,t=>setHandle(lerp(-.7,.45,t)))]);
+  Panel.hint('포터필터를 <em>톡</em> 눌러 <em>아래로 뒤집어요</em><small>커피 찌꺼기가 넉박스로 빠지게</small>');Guide.tap({x:1150,y:500});T.set('tap',{x:1150,y:500});await tap($('#pf'));Guide.stop();T.clear();
+  SFX.pick();await PF.to({y:500,r:175},420,E.io);
+  Panel.hint('뒤집은 채로 <em>톡톡</em> 눌러 커피 찌꺼기를 털어요 <em>(0/2)</em>');
+  for(let i=0;i<2;i++){Guide.tap({x:1150,y:470});T.set('tap',{x:1150,y:470});await tap($('#pf'));Guide.stop();T.clear();
+    SFX.thud();shake();await PF.to({y:516},70,E.out);await PF.to({y:500},160,E.out);if(i===0)Panel.hint('한 번 더 <em>톡</em>! <em>(1/2)</em>')}
+  setGrounds(0,false);const pk=mk('ellipse',{cx:1150,cy:504,rx:36,ry:8,fill:'#3f2314',stroke:'#4a2c22','stroke-width':3});
+  await anim(260,t=>pk.setAttribute('cy',lerp(504,556,t)),t=>t*t);pk.setAttribute('rx',30);floatText(1150,430,'쿵!');
+  await PF.to({y:470,r:0},420,E.io);
+}
+/* 실격 화면: 이유를 보여 주고 '다시 추출하기'를 누를 때까지 기다린다 (실전 시계는 그대로 간다) */
+function failCard(why,s){$('#fwhy').innerHTML=`${s}초 · ${why}`;$('#failbox').classList.remove('off');T.set('fail',null,null,{});
+  return new Promise(res=>{$('#fgo').onclick=()=>{SFX.pick();$('#failbox').classList.add('off');T.clear();res()}})}

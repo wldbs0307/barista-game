@@ -60,6 +60,13 @@ async def play(pg,errs,b=None,start=True,until=None):
             await click(845,y,'prepSvg'); await pg.wait_for_timeout(450)
           await drag(845,y,gx,282,'prepSvg'); await pg.wait_for_timeout(450)
         await pg.wait_for_timeout(250); await shot('prep_done'); log.append('prep'); await pg.wait_for_timeout(1800); continue
+      tk=await pg.evaluate('()=>window.__pc&&window.__pc.task')
+      if tk and tk['kind'] in ('drag','tap'):
+        await pg.wait_for_timeout(300); a0=tk['a']
+        if tk['kind']=='drag': await drag(a0['x'],a0['y'],tk['b']['x'],tk['b']['y'])
+        else: await click(a0['x'],a0['y'])
+        if 'knock' not in done: done.add('knock'); await shot('knock')
+        log.append('t-'+tk['kind']); await pg.wait_for_timeout(600); continue
       if '왼쪽으로 돌려서' in h and 'tw1' not in done:
         done.add('tw1'); await pg.wait_for_timeout(700); await shot('bar_start'); x,y=await G('[g.PF.x,g.PF.y]')
         await drag(x+150,y+28,x+20,y+28,up=False); await shot('twisting_out'); c=await cl(x-130,y+28); await pg.mouse.move(*c,steps=6); await pg.mouse.up(); log.append('twist out'); await pg.wait_for_timeout(700); await shot('unlocked'); continue
@@ -76,10 +83,13 @@ async def play(pg,errs,b=None,start=True,until=None):
         done.add('lock'); await pg.wait_for_timeout(400); x,y=await G('[g.PF.x,g.PF.y]'); await drag(x,y+20,590,400); log.append('lock'); await pg.wait_for_timeout(800); continue
       if '추출 버튼</em>을 눌러요' in await pg.inner_html('#ptext'):
         brewN+=1; await pg.wait_for_timeout(400); await click(520,252); mode=MODE if brewN==1 else 'good'
-        target={'good':27,'over':46,'early':12}[mode]; t0=asyncio.get_event_loop().time()
+        target={'good':27,'over':46,'early':12,'late':27}[mode]; t0=asyncio.get_event_loop().time()
         await pg.wait_for_timeout(500)
         # 잔 2개 내리기
-        for i,(wx,sx) in enumerate(((556,544),(630,636))):
+        for i,(wx,sx) in enumerate(((556,552),(630,628))):
+          if mode=='late' and i==1:
+            while await pg.evaluate("()=>parseInt(document.querySelector('#gsec').textContent)")<18: await pg.wait_for_timeout(100)
+            await shot('late_one_cup')
           await drag(wx,160,sx,520); await pg.wait_for_timeout(300)
         await shot('cups_down')
         # 붓 청소
@@ -97,7 +107,12 @@ async def play(pg,errs,b=None,start=True,until=None):
           if mode=='good' and t>=20 and ('g20',brewN) not in done: done.add(('g20',brewN)); await shot('brew20')
           if mode=='over' and t>=45 and 'ov' not in done: done.add('ov'); await shot('overflow')
           if t>=target: break
-        await shot('brew_stop_'+mode); await click(520,252); log.append(f'brew {mode} {t}s'); await pg.wait_for_timeout(500); await shot('brew_result'); await pg.wait_for_timeout(2600); continue
+        await shot('brew_stop_'+mode); await click(520,252); log.append(f'brew {mode} {t}s'); await pg.wait_for_timeout(700); await shot('brew_result')
+        if await pg.evaluate("()=>!document.querySelector('#failbox').classList.contains('off')"):
+          log.append('FAIL: '+(await pg.inner_text('#fwhy')).replace('\n',' ')); await pg.click('#fgo'); await pg.wait_for_timeout(600)
+          for k in ('tw1','tw2','g1','grind','tamp','lock'): done.discard(k)
+        else: await pg.wait_for_timeout(1900)
+        continue
       if '잔 받침 위</em>에 올려요' in await pg.inner_html('#ptext') and 'tray' not in done:
         done.add('tray'); await pg.wait_for_timeout(900); await shot('cup_saucer')
         await drag(845,230,240,330,'prepSvg'); await pg.wait_for_timeout(400)
