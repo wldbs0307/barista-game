@@ -63,9 +63,10 @@ async def play(pg,errs,b=None,start=True,until=None):
       tk=await pg.evaluate('()=>window.__pc&&window.__pc.task')
       if tk and tk['kind'] in ('drag','tap'):
         await pg.wait_for_timeout(300); a0=tk['a']
-        if tk['kind']=='drag': await drag(a0['x'],a0['y'],tk['b']['x'],tk['b']['y'])
-        else: await click(a0['x'],a0['y'])
-        if 'knock' not in done: done.add('knock'); await shot('knock')
+        sv=tk.get('svg','station')
+        if tk['kind']=='drag': await drag(a0['x'],a0['y'],tk['b']['x'],tk['b']['y'],sv)
+        else: await click(a0['x'],a0['y'],sv)
+        await shot('t_'+tk['kind'])
         log.append('t-'+tk['kind']); await pg.wait_for_timeout(600); continue
       if '왼쪽으로 돌려서' in h and 'tw1' not in done:
         done.add('tw1'); await pg.wait_for_timeout(700); await shot('bar_start'); x,y=await G('[g.PF.x,g.PF.y]')

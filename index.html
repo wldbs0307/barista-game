@@ -812,30 +812,42 @@ function zone2(x,y,rx,ry){const e=$('#zone2');if(x==null){e.style.display='none'
 const saucerTopR=r=>`<circle r="${r}" fill="#4a2c22" opacity=".14" cx="4" cy="6"/><circle r="${r}" fill="#fff" class="o4"/><circle r="${r*.61}" fill="#f3ece3" class="o3"/><circle r="${r*.42}" fill="#fff" opacity=".7"/>`;
 const SR_=()=>M.cup==='capp'?78:62,SXS=()=>M.cup==='capp'?[225,455]:[240,440];
 const spoonTop=`<path d="M-62 0H14" stroke="#4a2c22" stroke-width="14" stroke-linecap="round"/><path d="M-62 0H14" stroke="#d6dee3" stroke-width="7" stroke-linecap="round"/><ellipse cx="34" cy="0" rx="24" ry="15" fill="#d6dee3" class="o4"/><ellipse cx="30" cy="-4" rx="9" ry="5" fill="#fff" opacity=".8"/>`;
+/* 서빙 준비: 준비 과정에서 겹쳐 둔 그대로(받침 2개 + 위에 스푼 2개)를 트레이에 올린 다음, 트레이 위에서 나눈다 */
 async function trayPrep(){
-  const [xa,xb]=SXS(),sr=SR_(),G=[{x:xa,y:330,k:'s'},{x:xb,y:330,k:'s'},{x:xa,y:330-sr+14,k:'p'},{x:xb,y:330-sr+14,k:'p'}];
-  $('#prepGhost').innerHTML=G.map((g,i)=>g.k==='s'?`<circle id="pg${i}" class="ghost" cx="${g.x}" cy="${g.y}" r="${sr}"/>`
-    :`<g id="pg${i}" class="ghost" transform="translate(${g.x} ${g.y}) scale(.72)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0" /></g>`).join('')
-    +`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">스푼은 받침 위에, 손잡이는 왼쪽</text>`;
+  const [xa,xb]=SXS(),sr=SR_(),Y=330,spY=Y-sr+14,TS=window.__pc;
+  const spoonG=`<g transform="scale(.72)">${spoonTop}</g>`;
+  $('#prepGhost').innerHTML=[xa,xb].map((x,i)=>`<circle id="pg${i}" class="ghost" cx="${x}" cy="${Y}" r="${sr}"/>`).join('')
+    +`<text x="340" y="180" text-anchor="middle" font-size="26" fill="#fbeedd">받침 하나에 스푼 하나, 손잡이는 왼쪽</text>`;
   const it=$('#prepItems');it.innerHTML='';
-  const flipFirst=Math.random()<.5;
-  const items=[{k:'s',x:845,y:175},{k:'s',x:845,y:160},{k:'p',x:845,y:330,left:!flipFirst},{k:'p',x:845,y:450,left:flipFirst}].map(o=>{
-    const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=o.k==='s'?saucerTopR(SR_()):`<g class="sp"><g transform="scale(.72)">${spoonTop}</g></g>`;it.appendChild(g);
-    o.g=g;o.sp=new Sp(g,o.x,o.y);if(o.k==='p')o.sp.set({r:o.left?0:180});return o});
+  const mkG=html=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','hit');g.innerHTML=html;it.appendChild(g);return g};
+  /* 겹친 묶음: 아래 받침 + (위 받침 + 스푼 2개) */
+  const stackHTML=`<g transform="translate(0 8)">${saucerTopR(sr)}</g>${saucerTopR(sr)}<g transform="translate(0 -12)">${spoonG}</g><g transform="translate(0 12)">${spoonG}</g>`;
+  const stack=mkG(stackHTML),SS=new Sp(stack,845,320);
   $('#prep').classList.remove('off');Guide.use('#handP');Guide.delay=600;
-  Panel.hint('먼저 <em>잔 받침 2개</em>, 그다음 <em>스푼 2개</em>를 놓아요<small>스푼을 톡 누르면 방향이 바뀌어요</small>');
-  let mistakes=0,left=4;
-  const pointNext=()=>{const o=items.find(o=>!o.done);if(!o)return Guide.stop();const z=G.findIndex(g=>!g.used&&g.k===o.k);Guide.drag({x:o.sp.x,y:o.sp.y},{x:G[z].x,y:G[z].y})};
-  pointNext();
-  await Promise.all(items.map(async o=>{
-    const zones=G.map(g=>g.k===o.k?{x:g.x,y:g.y,r:80,get used(){return g.used}}:null);
-    const i=await drag(o.sp,o.g,{svg:svgP,zones,bounds:[60,60,960,560],
-      tap:o.k==='p'?()=>{o.left=!o.left;SFX.pick();o.sp.to({r:o.left?0:180},280,E.back)}:null,
-      accept:i=>o.k==='s'||(G[i-2].used&&o.left),
-      reject:i=>{SFX.no();if(!G[i-2].used){Panel.hint('<em>잔 받침</em>을 먼저 놓아요');return}mistakes++;Panel.hint('손잡이가 <em>왼쪽</em>으로 가게 해요<small>스푼을 톡 눌러서 돌려요</small>')}});
-    G[i].used=true;o.done=true;$('#pg'+i).classList.add('done');SFX.clink();await o.sp.to({x:G[i].x,y:G[i].y,r:o.k==='p'?0:0,sx:1,sy:1},200,E.back);
-    left--;if(!left)Panel.hint('다 놓았어요!');else Panel.hint('잘했어요! 나머지도 놓아요 <em>('+(4-left)+'/4)</em><small>스푼을 톡 누르면 방향이 바뀌어요</small>');pointNext()}));
-  Guide.stop();SFX.great();await toast('서빙 준비 끝!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;
+  let mistakes=0;
+  const dragOne=async(sp,el,to,r,hint,o={})=>{Panel.hint(hint);Guide.drag({x:sp.x,y:sp.y},to);TS.set('drag',{x:sp.x,y:sp.y},to,{svg:'prepSvg'});
+    const i=await drag(sp,el,{svg:svgP,zones:o.zones||[{x:to.x,y:to.y,r}],bounds:[60,60,960,560],accept:o.accept,reject:o.reject});Guide.stop();TS.clear();return i};
+  /* 1) 묶음째 트레이로 */
+  await dragOne(SS,stack,{x:xa,y:Y},120,'겹쳐 둔 <em>잔 받침과 스푼</em>을 그대로 <em>트레이</em>에 올려요');
+  await SS.to({x:xa,y:Y,r:0,sx:1,sy:1},200,E.back);SFX.clink();$('#pg0').classList.add('done');
+  /* 묶음을 아래 받침 / 위 받침(스푼 2개 얹힘)으로 나눈다 */
+  stack.remove();
+  const bot=mkG(saucerTopR(sr));new Sp(bot,xa,Y+8).to({y:Y},150);bot.setAttribute('class','np');
+  const top=mkG(`${saucerTopR(sr)}<g class="p1" transform="translate(0 -12)">${spoonG}</g><g class="p2" transform="translate(0 12)">${spoonG}</g>`),TP=new Sp(top,xa,Y);
+  /* 2) 위 받침을 스푼째 옆 자리로 */
+  await dragOne(TP,top,{x:xb,y:Y},110,'위에 있는 <em>잔 받침</em>을 스푼째 <em>옆 자리</em>로 옮겨요',
+    {zones:[{x:xa,y:Y,r:60},{x:xb,y:Y,r:110}],accept:i=>i===1,reject:()=>{mistakes++;SFX.no();Panel.hint('<em>옆 빈자리</em>로 옮겨요')}});
+  await TP.to({x:xb,y:Y,r:0,sx:1,sy:1},200,E.back);SFX.clink();$('#pg1').classList.add('done');
+  /* 스푼 2개를 따로 집을 수 있게 */
+  top.remove();const ts=mkG(saucerTopR(sr));new Sp(ts,xb,Y);ts.setAttribute('class','np');
+  const p1=mkG(spoonG),P1=new Sp(p1,xb,Y-12),p2=mkG(spoonG),P2=new Sp(p2,xb,Y+12);p2.setAttribute('class','np');
+  /* 3) 스푼 하나를 왼쪽 받침 위로 */
+  $('#prepGhost').insertAdjacentHTML('beforeend',`<g id="pgs" class="ghost" transform="translate(${xa} ${spY}) scale(.72)"><path d="M-62 -7H14V7H-62Z M14 0A24 15 0 1 0 58 0A24 15 0 1 0 14 0"/></g>`);
+  await dragOne(P1,p1,{x:xa,y:spY},90,'<em>스푼</em> 하나를 다른 <em>잔 받침</em> 위로 옮겨요<small>받침 하나에 스푼 하나씩</small>',
+    {zones:[{x:xb,y:Y,r:50},{x:xa,y:spY,r:90}],accept:i=>i===1,reject:()=>{mistakes++;SFX.no();Panel.hint('<em>스푼이 없는 받침</em> 위로 옮겨요')}});
+  await P1.to({x:xa,y:spY,r:0,sx:1,sy:1},200,E.back);$('#pgs').classList.add('done');SFX.clink();
+  await P2.to({x:xb,y:spY},260,E.out);   /* 남은 스푼은 받침 위쪽으로 */
+  SFX.great();await toast('서빙 준비 끝!');$('#prep').classList.add('off');Guide.use('#hand');Guide.delay=350;
   $('#trayItems').innerHTML=P.tray.map(p=>`<g transform="translate(${p.x} ${p.y})">${saucerSide(M.cup==='capp'?58:46)}<g transform="translate(-6 -22) scale(.9)">${spoonSide}</g></g>`).join('');
   R.prep=mistakes}
 
@@ -1012,7 +1024,7 @@ function showResult(){if(M.key==='cap')return showCapResult();$('#rlist').classL
   const late=R.cupT!=null&&R.cupT>FLOW;
   $('#rlist').innerHTML=
     row('대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel')+
-    row('서빙 준비',R.prep?`스푼 방향 ${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
+    row('서빙 준비',R.prep?`${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
     row('추출 시간',`${R.sec}초 · ${R.judge.t}`+(R.tries>1?` (실격 ${R.tries-1}번: ${[...new Set(R.fails||[])].join(', ')})`:''),R.tries>1?'yel':R.judge.k==='best'?'g2':R.judge.k==='good'?'g1':'yel')+
     row('잔 내리기',late?'커피가 나온 뒤에 받쳤어요':'제때 받쳤어요',late?'yel':'g2')+
     row('붓 청소',R.brushLate?'추출이 끝난 뒤에 했어요':'추출하는 동안 했어요',R.brushLate?'yel':'g2')+
@@ -1387,7 +1399,7 @@ function showCapResult(){
   $('#rlist').classList.add('two');
   $('#rlist').innerHTML=
     row('대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel')+
-    row('서빙 준비',R.prep?`스푼 ${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
+    row('서빙 준비',R.prep?`${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
     row('우유 양',R.milkTries?`코까지 (${R.milkTries}번 덜어냄)`:'코까지 딱',R.milkTries?'yel':'g2')+
     row('추출 시간',`${R.sec}초 · ${R.judge.t}`+(R.tries>1?' (다시)':''),R.tries>1?'yel':R.judge.k==='best'?'g2':R.judge.k==='good'?'g1':'yel')+
     row('잔 내리기',late?'조금 늦었어요':'제때 받쳤어요',late?'yel':'g2')+

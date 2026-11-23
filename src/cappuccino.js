@@ -350,7 +350,7 @@ function showCapResult(){
   $('#rlist').classList.add('two');
   $('#rlist').innerHTML=
     row('대사 발음',`별 평균 ${avg.toFixed(1)}`,avg>=2.5?'g2':avg>=1.8?'g1':'yel')+
-    row('서빙 준비',R.prep?`스푼 ${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
+    row('서빙 준비',R.prep?`${R.prep}번 다시`:'잘했어요',R.prep?'yel':'g2')+
     row('우유 양',R.milkTries?`코까지 (${R.milkTries}번 덜어냄)`:'코까지 딱',R.milkTries?'yel':'g2')+
     row('추출 시간',`${R.sec}초 · ${R.judge.t}`+(R.tries>1?' (다시)':''),R.tries>1?'yel':R.judge.k==='best'?'g2':R.judge.k==='good'?'g1':'yel')+
     row('잔 내리기',late?'조금 늦었어요':'제때 받쳤어요',late?'yel':'g2')+
