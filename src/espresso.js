@@ -14,7 +14,7 @@ const MODES={
   esp:{key:'esp',name:'에스프레소',side:'왼쪽',grp:{x:590,y:366},btn:{x:520,y:252},bs:'L',cup:'demi',cupName:'데미타세 잔',
     slots:[{x:552,y:548},{x:628,y:548}],other:{x:910,y:366}},
   cap:{key:'cap',name:'카푸치노',side:'오른쪽',grp:{x:910,y:366},btn:{x:980,y:252},bs:'',cup:'capp',cupName:'카푸치노 잔',
-    slots:[{x:868,y:548},{x:952,y:548}],other:{x:590,y:366}}};
+    slots:[{x:856,y:548},{x:964,y:548}],other:{x:590,y:366}}};
 let M=MODES.esp;
 
 /* ---------- 그림: 투명 데미타세 ---------- */
@@ -101,7 +101,7 @@ const needle=p=>$('#needle').setAttribute('transform',`rotate(${-120+clamp(p,0,1
 function puddle(k){const e=$('#puddle');e.style.display=k>.01?'':'none';e.setAttribute('rx',30+120*k);e.setAttribute('ry',3+5*k);
   const r=clamp((k-.35)/.65,0,1);$('#runoff').style.display=r>0?'':'none';$('#floorPud').setAttribute('rx',20+110*r);$('#floorPud').setAttribute('ry',2+7*r)}
 function stream(on,t,now){[['#st1',0],['#st2',1]].forEach(([id,i])=>{const e=$(id);if(!on){e.setAttribute('d','');return}
-  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=sx,ty=c?M.slots[i].y+c.mlY(c.ml)*(c.kind==='demi'?CS:1):548,w=Math.sin(now/110+i)*1.2;
+  const sx=PF.x+(i?17:-17),sy=PF.y+90,c=Cup.at[i],tx=sx,ty=c?(c.kind==='demi'?M.slots[i].y+c.mlY(c.ml)*CS:Math.min(M.slots[i].y+c.mlY(c.ml),M.slots[i].y-KIND.capp.GH+16)):548,   /* 카푸치노 잔은 넓어서 줄기를 잔 입구 조금 안쪽까지만 */w=Math.sin(now/110+i)*1.2;
   e.setAttribute('d',`M${sx} ${sy}C${sx+w} ${lerp(sy,ty,.4)} ${tx-w} ${lerp(sy,ty,.7)} ${tx} ${ty}`);
   e.setAttribute('stroke',mix('#2a140c','#b9773f',clamp((t-FLOW)/26,0,1)));e.setAttribute('stroke-width',t<FLOW+2?3:4.5);
   if(t<FLOW+2){e.setAttribute('stroke-dasharray','7 12');e.setAttribute('stroke-dashoffset',(-(now/9)%19).toFixed(1))}else e.removeAttribute('stroke-dasharray')})}
